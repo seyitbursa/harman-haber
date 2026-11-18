@@ -6,7 +6,8 @@ import { getMarkets } from "./markets.mjs";
 import { trendingTopics } from "./topics.mjs";
 import { getXTrends } from "./xtrends.mjs";
 import { getQuakes } from "./quakes.mjs";
-import { notify, previousState } from "./notify.mjs";
+import { notify, previousJson } from "./notify.mjs";
+import { addGists } from "./summarize.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -149,7 +150,9 @@ const stories = cluster(items).map((group, i) => {
   };
 }).sort((a, b) => b.date.localeCompare(a.date));
 
-const [markets, xtrends, quakes, prev] = await Promise.all([getMarkets(), getXTrends(), getQuakes(), previousState()]);
+const [markets, xtrends, quakes, prevJson] = await Promise.all([getMarkets(), getXTrends(), getQuakes(), previousJson()]);
+const prev = prevJson?.notified || null;     // eski sürümde durum yoksa ilk çalıştırma sayılır
+const sum = await addGists({ stories, prevGists: prevJson?.gists, prevUsage: prevJson?.gistUsage, key: process.env.GEMINI_API_KEY });
 const cfg = config.notify || {};
 const note = cfg.ntfyTopic
   ? await notify({ cfg, stories, quakes, sources: config.sources, prev, dryRun: !process.env.GITHUB_ACTIONS })
@@ -160,13 +163,14 @@ await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake } : null,
-    notified: note.state, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);
 errors.forEach(e => console.log("  ✗", e.url, "→", e.error));
 if (markets.error) console.log("  ✗ piyasa →", markets.error);
 if (xtrends.error) console.log("  ✗ X gündemi →", xtrends.error);
+console.log(`Özet: bu turda ${sum.made} yeni, bekleyen ${sum.pending}, bugün ${sum.usage.requests} istek${sum.usage.model ? " (" + sum.usage.model + ")" : ""}${process.env.GEMINI_API_KEY ? "" : " — GEMINI_API_KEY yok"}.`);
 console.log(`Depremler: ${quakes.items.length}${quakes.error ? " (hata: " + quakes.error + ")" : ""}. Bildirim: ${note.first ? "ilk çalıştırma, yalnızca işaretlendi" : note.sent.length ? note.sent.join(" | ") : "yok"}`);
 
 // Açık kalan bağlantılar yüzünden işlem asılı kalmasın

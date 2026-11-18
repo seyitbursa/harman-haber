@@ -1,15 +1,15 @@
 // Büyük haber ve deprem bildirimleri: ntfy.sh üzerinden, hesap gerektirmeden.
 // Aynı olay iki kez bildirilmesin diye, yayındaki bir önceki news.json’daki "notified" listesine bakılır.
 
-export async function previousState() {
+// Yayındaki bir önceki news.json (bildirim ve özet durumu için)
+export async function previousJson() {
   const repo = process.env.GITHUB_REPOSITORY;              // "kullanici/repo"
   if (!repo) return null;
   const [owner, name] = repo.split("/");
   try {
     const r = await fetch(`https://${owner.toLowerCase()}.github.io/${name}/news.json?t=${Date.now()}`, { headers: { "Cache-Control": "no-cache" } });
     if (!r.ok) return null;
-    const d = await r.json();
-    return d.notified || null;        // eski sürümde durum yoksa ilk çalıştırma sayılır
+    return await r.json();
   } catch { return null; }
 }
 

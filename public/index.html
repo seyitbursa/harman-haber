@@ -264,6 +264,12 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 .notif .acts a,.notif .acts button{font-size:14px;text-decoration:none}
 .notif .btn.ghost{background:var(--surface);color:var(--ink)}
 .notif p{margin:0}
+
+/* Özü (yapay zekâ özeti) */
+.gist{color:var(--ink)!important;font-weight:500}
+.gist b{color:var(--accent);font-weight:700;margin-right:4px}
+.row .gist{display:block!important;-webkit-line-clamp:unset!important;max-height:none!important;overflow:visible!important}
+.talk .gist{font-size:14px;line-height:1.4;margin:0;color:var(--ink-2)!important}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -337,6 +343,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     </div>
     <footer>
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
+      <p>“Özü” satırları haber metninden Google Gemini ile otomatik çıkarılır ve hata içerebilir; ayrıntı için habere dokun.</p>
       <p>X gündemi trends24.in, piyasa verileri Truncgil Finans, hava durumu Open-Meteo, deprem verileri AFAD kaynaklıdır. Piyasa verileri anlık değildir ve yatırım tavsiyesi değildir.</p>
     </footer>
   </div>
@@ -454,6 +461,16 @@ function saveBtn(i, category){
     if (view === "saved") render();
   };
   return b;
+}
+// Başlığın altındaki satır: varsa yapay zekâ özeti ("Özü"), yoksa kaynağın kendi özeti
+function lede(i, cls){
+  if (i.gist){
+    const p = el("p", (cls ? cls + " " : "") + "gist");
+    p.title = "Haber metninden yapay zekâyla çıkarılan özet; hata içerebilir.";
+    p.append(el("b", null, "Özü:"), document.createTextNode(i.gist));
+    return p;
+  }
+  return i.summary ? el("p", cls || null, i.summary) : null;
 }
 function weightLabel(story){
   const names = story.items.map(i => src(i.source).name);
@@ -687,7 +704,7 @@ function heroCard(story){
   const body = el("div","body");
   if (story.items.length >= 2) body.appendChild(weightLabel(story));
   const h = el("h2"); h.appendChild(link(i.title, i.url)); body.appendChild(h);
-  if (i.summary) body.appendChild(el("p", null, i.summary));
+  const ld = lede(i); if (ld) body.appendChild(ld);
   const m = meta(i); body.appendChild(m);
   c.appendChild(body);
   if (story.items.length > 1){ const cl = clusterBlock(story, story.items.slice(1)); cl.style.padding = "0 18px 18px"; cl.style.marginTop = "0"; c.appendChild(cl); }
@@ -699,6 +716,7 @@ function talkCard(story){
   w.appendChild(el("strong", null, story.items.length + " kaynak"));
   c.appendChild(w);
   const h = el("h4"); h.appendChild(link(i.title, i.url)); c.appendChild(h);
+  if (i.gist) c.appendChild(lede(i));
   c.appendChild(el("div","meta", ago(story.date)));
   return c;
 }
@@ -707,7 +725,7 @@ function row(story){
   const r = el("article","row" + (i.image ? "" : " noimg") + (read.has(i.url) ? " read" : ""));
   const m = meta(i); m.appendChild(saveBtn(i, story.category)); r.appendChild(m);
   const h = el("h4"); h.appendChild(link(i.title, i.url, r)); r.appendChild(h);
-  if (i.summary) r.appendChild(el("p", null, i.summary));
+  const ld = lede(i); if (ld) r.appendChild(ld);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
   return r;

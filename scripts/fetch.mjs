@@ -11,7 +11,7 @@ import { addGists } from "./summarize.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
-const MAX_TOTAL = 500;
+const MAX_TOTAL = 700;
 const SUMMARY_LEN = 220;
 
 const config = JSON.parse(await readFile(new URL("../feeds.json", import.meta.url), "utf8"));
@@ -161,7 +161,7 @@ const topics = trendingTopics(stories);
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
-  JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
+  JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake } : null,
     notified: note.state, gists: sum.gists, gistUsage: sum.usage, stories, errors }));
 

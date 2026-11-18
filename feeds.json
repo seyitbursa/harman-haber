@@ -8,47 +8,72 @@
     "aa": {
       "name": "Anadolu Ajansı",
       "mono": "AA",
-      "color": "#1D4ED8"
+      "color": "#1D4ED8",
+      "lean": "hukumet",
+      "leanNote": "Reuters Enstitüsü 2026: hükümete yakın Anadolu Ajansı",
+      "leanUrl": "https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2026/turkey"
     },
     "ntv": {
       "name": "NTV",
       "mono": "NTV",
-      "color": "#B91C1C"
+      "color": "#B91C1C",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: sahipleri iktidarla yakın ilişkide (Doğuş Grubu)",
+      "leanUrl": "https://turkey.mom-rsf.org/en/owners/individual-owners/"
     },
     "trt": {
       "name": "TRT Haber",
       "mono": "TRT",
-      "color": "#0369A1"
+      "color": "#0369A1",
+      "lean": "hukumet",
+      "leanNote": "Reuters Enstitüsü 2026: devlet yayıncısı",
+      "leanUrl": "https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2026/turkey"
     },
     "hurriyet": {
       "name": "Hürriyet",
       "mono": "HÜ",
-      "color": "#B45309"
+      "color": "#B45309",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: AKP’ye yakın Demirören Grubu",
+      "leanUrl": "https://bianet.org/haber/turkiye-de-medyayi-kimler-kontrol-ediyor-208089"
     },
     "haberturk": {
       "name": "Habertürk",
       "mono": "HT",
-      "color": "#6D28D9"
+      "color": "#6D28D9",
+      "lean": "hukumet",
+      "leanNote": "Reuters Enstitüsü 2026: sahibi Can Holding TMSF’ye devredildi",
+      "leanUrl": "https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2026/turkey"
     },
     "cumhuriyet": {
       "name": "Cumhuriyet",
       "mono": "CM",
-      "color": "#7F1D1D"
+      "color": "#7F1D1D",
+      "lean": "muhalefet",
+      "leanNote": "Reuters Enstitüsü 2022: hükümete yakın olmayan az sayıdaki kuruluştan",
+      "leanUrl": "https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2022/turkey"
     },
     "milliyet": {
       "name": "Milliyet",
       "mono": "ML",
-      "color": "#334155"
+      "color": "#334155",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: AKP’ye yakın Demirören Grubu",
+      "leanUrl": "https://bianet.org/haber/turkiye-de-medyayi-kimler-kontrol-ediyor-208089"
     },
     "sozcu": {
       "name": "Sözcü",
       "mono": "SZ",
-      "color": "#BE123C"
+      "color": "#BE123C",
+      "lean": null,
+      "leanNote": "Kasım 2026’da kayyum atandı; yayın çizgisi netleşene kadar etiketsiz"
     },
     "euronews": {
       "name": "Euronews",
       "mono": "EN",
-      "color": "#0E7490"
+      "color": "#0E7490",
+      "lean": "bagimsiz",
+      "leanNote": "Avrupa merkezli uluslararası yayıncı"
     },
     "webtekno": {
       "name": "Webtekno",
@@ -74,6 +99,46 @@
       "name": "Merlin’in Kazanı",
       "mono": "MK",
       "color": "#7C3AED"
+    },
+    "sabah": {
+      "name": "Sabah",
+      "mono": "SB",
+      "color": "#9F1239",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: AKP’ye yakın Turkuvaz/Kalyon Grubu",
+      "leanUrl": "https://bianet.org/haber/turkiye-de-medyayi-kimler-kontrol-ediyor-208089"
+    },
+    "yenisafak": {
+      "name": "Yeni Şafak",
+      "mono": "YŞ",
+      "color": "#166534",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: AKP’ye yakın Albayrak Grubu",
+      "leanUrl": "https://bianet.org/haber/turkiye-de-medyayi-kimler-kontrol-ediyor-208089"
+    },
+    "birgun": {
+      "name": "BirGün",
+      "mono": "BG",
+      "color": "#B91C1C",
+      "lean": "muhalefet",
+      "leanNote": "Basın İlan Kurumu’nun ilan yasağı uyguladığı, hükümeti eleştiren gazetelerden",
+      "leanUrl": "https://www.ecoi.net/de/dokument/2030332.html"
+    },
+    "bianet": {
+      "name": "Bianet",
+      "mono": "BN",
+      "color": "#0F766E",
+      "lean": "bagimsiz",
+      "leanNote": "Index on Censorship: geriye kalan özgür ifade alanlarından",
+      "leanUrl": "https://www.indexoncensorship.org/?p=131423"
+    },
+    "medyascope": {
+      "name": "Medyascope",
+      "mono": "MS",
+      "color": "#1E3A8A",
+      "lean": "bagimsiz",
+      "leanNote": "Index on Censorship: geriye kalan özgür ifade alanlarından",
+      "leanUrl": "https://www.indexoncensorship.org/?p=131423"
     }
   },
   "feeds": [
@@ -181,6 +246,44 @@
       "source": "merlin",
       "category": "oyun",
       "url": "https://www.merlininkazani.com/rss"
+    },
+    {
+      "source": "sabah",
+      "category": "gundem",
+      "url": "https://www.sabah.com.tr/rss/anasayfa.xml"
+    },
+    {
+      "source": "sabah",
+      "category": "gundem",
+      "url": "https://www.sabah.com.tr/rss/gundem.xml"
+    },
+    {
+      "source": "yenisafak",
+      "category": "gundem",
+      "url": "https://www.yenisafak.com/rss"
+    },
+    {
+      "source": "birgun",
+      "category": "gundem",
+      "url": "https://www.birgun.net/rss/home"
+    },
+    {
+      "source": "bianet",
+      "category": "gundem",
+      "url": "https://bianet.org/rss/bianet"
+    },
+    {
+      "source": "medyascope",
+      "category": "gundem",
+      "url": "https://medyascope.tv/feed/"
     }
-  ]
+  ],
+  "leanInfo": {
+    "groups": {
+      "hukumet": "Hükümete yakın",
+      "bagimsiz": "Bağımsız",
+      "muhalefet": "Muhalefete yakın"
+    },
+    "about": "Etiketler Reuters Enstitüsü Dijital Haber Raporu ve RSF/Bianet Medya Sahipliği İzleme (MOM) projesindeki değerlendirmelere dayanır. Bir haberin nasıl yazıldığını değil, onu hangi kesimden kaynakların verdiğini gösterir."
+  }
 }

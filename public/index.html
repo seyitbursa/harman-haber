@@ -134,9 +134,9 @@ a{color:inherit} button,select,input{font:inherit;color:inherit}
 .feed{background:var(--surface);border-radius:14px;margin-top:10px;box-shadow:0 1px 0 var(--line)}
 .group{font-weight:700;font-size:13px;color:var(--ink-3);padding:14px 16px 4px;border-top:1px solid var(--line)}
 .feed > .group:first-child{border-top:0}
-.row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 96px;grid-template-areas:"meta meta" "title img" "sum img" "cl cl";column-gap:14px;padding:12px 16px 14px;border-top:1px solid var(--line)}
+.row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 96px;grid-template-areas:"meta meta" "title img" "sum img" "bias bias" "cl cl";column-gap:14px;padding:12px 16px 14px;border-top:1px solid var(--line)}
 .group + .row{border-top:0}
-.row.noimg{grid-template-columns:minmax(0,1fr);grid-template-areas:"meta" "title" "sum" "cl"}
+.row.noimg{grid-template-columns:minmax(0,1fr);grid-template-areas:"meta" "title" "sum" "bias" "cl"}
 .row.read h4{color:var(--ink-3)}
 .row .meta{grid-area:meta;margin-bottom:6px}
 .row h4{grid-area:title;font-family:var(--head);font-weight:700;font-size:18px;line-height:1.22;margin:0;letter-spacing:-0.005em}
@@ -270,6 +270,37 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 .gist b{color:var(--accent);font-weight:700;margin-right:4px}
 .row .gist{display:block!important;-webkit-line-clamp:unset!important;max-height:none!important;overflow:visible!important}
 .talk .gist{font-size:14px;line-height:1.4;margin:0;color:var(--ink-2)!important}
+
+/* Kaynak dağılımı çubuğu */
+:root{--g-hukumet:#6D28D9;--g-bagimsiz:#94A3B8;--g-muhalefet:#0F766E}
+@media (prefers-color-scheme: dark){:root{--g-hukumet:#8B5CF6;--g-bagimsiz:#64748B;--g-muhalefet:#14B8A6}}
+.bias{position:relative;z-index:2;display:flex;flex-direction:column;gap:5px;border:0;background:none;padding:0;margin-top:10px;cursor:pointer;text-align:left;width:100%}
+.row .bias{grid-area:bias}
+.bias-bar{display:flex;height:16px;border-radius:5px;overflow:hidden;gap:2px;width:100%}
+.seg{display:flex;align-items:center;padding:0 6px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;min-width:4px}
+.seg.hukumet{background:var(--g-hukumet)} .seg.bagimsiz{background:var(--g-bagimsiz)} .seg.muhalefet{background:var(--g-muhalefet)}
+.bias-txt{font-size:12.5px;color:var(--ink-3);font-weight:600}
+.bias:hover .bias-txt{color:var(--accent)}
+.hero .bias .bias-bar{height:20px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin:8px 0 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.grp{border-top:1px solid var(--line);padding:12px 0}
+.grp h4{margin:0 0 6px;font-size:15px;display:flex;align-items:center;gap:8px}
+.grp h4 small{color:var(--ink-3);font-weight:600;margin-left:auto}
+.grp ul{list-style:none;margin:0;padding:0}
+.grp li{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:14px}
+.grp li a{text-decoration:none}
+.grp li a:hover{text-decoration:underline}
+.grp .none{color:var(--ink-3);font-size:13.5px}
+.notes{font-size:13px;color:var(--ink-2);margin:6px 0 0;padding-left:18px}
+.notes li{margin:4px 0}
+.lean-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.lean-row .n{flex:1 1 auto;font-weight:600;font-size:14px}
+.lean-row .n small{display:block;color:var(--ink-3);font-weight:500;font-size:12px}
+.lean-row select{height:34px;border:1px solid var(--line);border-radius:9px;background:var(--paper);padding:0 6px;font-size:13px;max-width:46%}
+.blind-intro{background:var(--surface);border-radius:14px;padding:14px 16px;margin-top:12px;box-shadow:0 1px 0 var(--line);font-size:14.5px;color:var(--ink-2)}
+.blind-intro h2{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:24px;margin:0 0 6px;color:var(--ink)}
+.blind-intro p{margin:6px 0 0}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -343,6 +374,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     </div>
     <footer>
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
+      <p>Kaynak dağılımı çubuğu, haberi hangi kesimden kaynakların verdiğini gösterir; etiketler Reuters Enstitüsü ve Medya Sahipliği İzleme (MOM) değerlendirmelerine dayanır ve Ayarlar’dan değiştirilebilir.</p>
       <p>“Özü” satırları haber metninden Google Gemini ile otomatik çıkarılır ve hata içerebilir; ayrıntı için habere dokun.</p>
       <p>X gündemi trends24.in, piyasa verileri Truncgil Finans, hava durumu Open-Meteo, deprem verileri AFAD kaynaklıdır. Piyasa verileri anlık değildir ve yatırım tavsiyesi değildir.</p>
     </footer>
@@ -357,10 +389,18 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
   <button type="button" data-sheet><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Ayarlar</button>
 </nav>
 
+<dialog class="sheet" id="biasSheet" aria-labelledby="biasTitle">
+  <div class="sheet-in">
+    <div class="sheet-h"><h2 id="biasTitle">Bu haberi kim verdi?</h2><button class="icon-btn" type="button" id="biasClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div id="biasBody"></div>
+  </div>
+</dialog>
+
 <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
   <div class="sheet-in">
     <div class="sheet-h"><h2 id="sheetTitle">Ayarlar</h2><button class="icon-btn" type="button" id="sheetClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div id="notifBox"></div>
+    <div id="leanBox"></div>
     <h3>Kaynaklar</h3>
     <p>Okumak istemediğin kaynakları kapat. Seçimin bu cihazda saklanır.</p>
     <div class="src-grid" id="srcGrid"></div>
@@ -373,6 +413,7 @@ const CATS = [
   {id:"all",label:"Tümü"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
   {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"teknoloji",label:"Teknoloji"},{id:"oyun",label:"Oyun"}
 ];
+CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"});
 const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
 CAT_LABEL.gundem = "Gündem";
 const CITY_ALIASES = {"Kocaeli":["İzmit","Gebze"],"Sakarya":["Adapazarı"],"Hatay":["Antakya","İskenderun"],"Afyonkarahisar":["Afyon"],"Mersin":["Tarsus"],"Antalya":["Alanya","Manavgat"],"Muğla":["Bodrum","Fethiye","Marmaris"],"Balıkesir":["Bandırma","Ayvalık"],"Kahramanmaraş":["Maraş"]};
@@ -605,7 +646,7 @@ function storiesFor(){
   if (view === "yerel" && !city) return [];
   let list = data.stories.map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length);
   if (re) list = list.filter(s => s.items.some(i => re.test(i.title + " " + i.summary)));
-  else if (cat !== "all") list = list.filter(s => s.category === cat);
+  else if (cat !== "all" && cat !== "kornokta") list = list.filter(s => s.category === cat);
   return list;
 }
 
@@ -616,7 +657,8 @@ function render(){
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
 
   const top = $("#top"); top.textContent = "";
-  const front = view === "feed" && !q;
+  const blind = view === "feed" && cat === "kornokta" && !q;
+  const front = view === "feed" && !q && !blind;
   let hero = null, talked = [];
 
   if (view === "feed" && !q){ const al = quakeAlert(); if (al) top.appendChild(al); }
@@ -647,6 +689,15 @@ function render(){
     bar.appendChild(clr); top.appendChild(bar);
   }
 
+  if (blind){
+    const intro = el("div","blind-intro");
+    intro.append(el("h2", null, "Kör nokta"), el("p", null, "Son 24 saatte bir kesimden en az iki kaynağın verdiği, diğer kesimin akışlarında hiç görünmeyen haberler. Bir kuruluşun habere hiç yer vermediği anlamına gelmeyebilir; yalnızca RSS akışında bulunmadığını gösterir."));
+    intro.appendChild(legend());
+    top.appendChild(intro);
+    renderBlind(list);
+    renderAside();
+    return;
+  }
   const rest = list.filter(s => s !== hero && !talked.includes(s));
   const title = view === "saved" ? "Kaydettiklerim" : view === "yerel" ? (city ? city[0] + " haberleri" : "Şehrinle ilgili haberler") : q ? "Sonuçlar" : cat === "all" ? "Son haberler" : "Son " + CAT_LABEL[cat].toLocaleLowerCase("tr") + " haberleri";
   $("#feedTitle").textContent = title;
@@ -673,6 +724,19 @@ function render(){
     }
   }
   renderAside();
+}
+
+function renderBlind(list){
+  const {gov, opp} = blindspots(list), feed = $("#feed");
+  feed.classList.remove("skel"); feed.textContent = "";
+  $("#feedHead").hidden = true;
+  const add = (title, arr, empty) => {
+    feed.appendChild(el("div","group", title + " (" + arr.length + ")"));
+    if (!arr.length){ const e = el("div","empty"); e.appendChild(el("p", null, empty)); feed.appendChild(e); }
+    arr.forEach(s => feed.appendChild(row(s)));
+  };
+  add("Yalnızca hükümete yakın kaynaklarda", gov, "Şu an bu gruba giren haber yok.");
+  add("Yalnızca muhalefete yakın ve bağımsız kaynaklarda", opp, "Şu an bu gruba giren haber yok.");
 }
 
 function groupOf(iso){
@@ -705,6 +769,7 @@ function heroCard(story){
   if (story.items.length >= 2) body.appendChild(weightLabel(story));
   const h = el("h2"); h.appendChild(link(i.title, i.url)); body.appendChild(h);
   const ld = lede(i); if (ld) body.appendChild(ld);
+  const bb = biasBar(story); if (bb) body.appendChild(bb);
   const m = meta(i); body.appendChild(m);
   c.appendChild(body);
   if (story.items.length > 1){ const cl = clusterBlock(story, story.items.slice(1)); cl.style.padding = "0 18px 18px"; cl.style.marginTop = "0"; c.appendChild(cl); }
@@ -717,6 +782,7 @@ function talkCard(story){
   c.appendChild(w);
   const h = el("h4"); h.appendChild(link(i.title, i.url)); c.appendChild(h);
   if (i.gist) c.appendChild(lede(i));
+  const bb = biasBar(story); if (bb){ bb.style.marginTop = "0"; c.appendChild(bb); }
   c.appendChild(el("div","meta", ago(story.date)));
   return c;
 }
@@ -726,6 +792,7 @@ function row(story){
   const m = meta(i); m.appendChild(saveBtn(i, story.category)); r.appendChild(m);
   const h = el("h4"); h.appendChild(link(i.title, i.url, r)); r.appendChild(h);
   const ld = lede(i); if (ld) r.appendChild(ld);
+  const bb = biasBar(story); if (bb) r.appendChild(bb);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
   return r;
@@ -734,7 +801,7 @@ function clusterBlock(story, others){
   const wrap = el("div","cluster"), btn = el("button","cl-btn"), id = "cl-" + story.id.replace(/[^\w-]/g,"");
   const open = openClusters.has(story.id);
   btn.type = "button"; btn.setAttribute("aria-expanded", open ? "true" : "false"); btn.setAttribute("aria-controls", id);
-  btn.append(stack(others.map(o => o.source)), el("span","txt", others.length === 1 ? src(others[0].source).name + " de verdi" : others.length + " kaynak daha verdi"), svgIcon("m6 9 6 6 6-6", 18, {class:"chev"}));
+  btn.append(stack(others.map(o => o.source)), el("span","txt", others.length === 1 ? src(others[0].source).name + " " + deDa(src(others[0].source).name) + " verdi" : others.length + " kaynak daha verdi"), svgIcon("m6 9 6 6 6-6", 18, {class:"chev"}));
   const ul = el("ul","others" + (open ? " open" : "")); ul.id = id;
   others.forEach(o => {
     const li = el("li"), a = link("", o.url), t = el("span","t");
@@ -795,6 +862,119 @@ function renderAside(){
 }
 
 
+
+// ---- Kaynak dağılımı (Ground News’teki “bias bar” benzeri) ----
+const GROUPS = ["hukumet","bagimsiz","muhalefet"];
+const GL = {hukumet:"Hükümete yakın", bagimsiz:"Bağımsız", muhalefet:"Muhalefete yakın"};
+const GS = {hukumet:"H", bagimsiz:"B", muhalefet:"M"};
+let leanOverride = store.get("gk-lean", {});
+const leanOf = id => (id in leanOverride) ? leanOverride[id] : (data.sources[id]?.lean || null);
+function groupSizes(){
+  const n = {hukumet:0, bagimsiz:0, muhalefet:0};
+  Object.keys(data.sources).forEach(id => { const l = leanOf(id); if (l) n[l]++; });
+  return n;
+}
+// Her grubun kaynaklarının ne kadarı haberi vermiş; grup büyüklüğü farkı dengelenir
+function biasOf(story){
+  const ids = [...new Set(story.items.map(i => i.source))];
+  const cnt = {hukumet:[], bagimsiz:[], muhalefet:[]};
+  ids.forEach(id => { const l = leanOf(id); if (l) cnt[l].push(id); });
+  const rated = GROUPS.reduce((a,g) => a + cnt[g].length, 0);
+  if (rated < 2) return null;
+  const size = groupSizes(), rate = {}, share = {}; let sum = 0;
+  GROUPS.forEach(g => { rate[g] = size[g] ? cnt[g].length / size[g] : 0; sum += rate[g]; });
+  GROUPS.forEach(g => share[g] = sum ? rate[g] / sum : 0);
+  return {cnt, share, rated, size};
+}
+function biasSummary(b){
+  const on = GROUPS.filter(g => b.cnt[g].length > 0);
+  if (on.length === 1) return "Yalnızca " + GL[on[0]].toLocaleLowerCase("tr") + " kaynaklar verdi";
+  if (on.length === 3) return "Her kesimden kaynak verdi";
+  return GL[on[0]] + " ve " + GL[on[1]].toLocaleLowerCase("tr") + " kaynaklar verdi";
+}
+function barEl(b){
+  const bar = el("span","bias-bar");
+  GROUPS.forEach(g => { if (b.share[g] > 0){ const sg = el("span","seg " + g, b.share[g] >= 0.12 ? GS[g] + " " + b.cnt[g].length : ""); sg.style.flexGrow = b.share[g]; bar.appendChild(sg); } });
+  return bar;
+}
+function biasBar(story){
+  const b = biasOf(story); if (!b) return null;
+  const btn = el("button","bias"); btn.type = "button";
+  btn.append(barEl(b), el("span","bias-txt", biasSummary(b)));
+  btn.setAttribute("aria-label", biasSummary(b) + ". " + GROUPS.map(g => `${GL[g]}: ${b.cnt[g].length} kaynak`).join(", ") + ". Ayrıntılar için dokun.");
+  btn.onclick = () => openBias(story);
+  return btn;
+}
+function legend(){
+  const lg = el("div","legend");
+  GROUPS.forEach(g => { const sp = el("span"); const i = el("i"); i.style.background = `var(--g-${g})`; sp.append(i, GS[g] + ": " + GL[g]); lg.appendChild(sp); });
+  return lg;
+}
+function openBias(story){
+  const b = biasOf(story), body = $("#biasBody"); body.textContent = "";
+  body.appendChild(el("p", null, story.items[0].title));
+  const big = barEl(b); big.style.height = "24px"; body.append(big, legend());
+  GROUPS.forEach(g => {
+    const box = el("div","grp"), h = el("h4");
+    const dot = el("i"); dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--g-${g})`;
+    h.append(dot, GL[g], el("small", null, b.cnt[g].length + " / " + b.size[g] + " kaynak"));
+    box.appendChild(h);
+    const ul = el("ul");
+    const items = story.items.filter(i => leanOf(i.source) === g);
+    if (!items.length) box.appendChild(el("div","none","Bu gruptan kaynakların akışında bu haber yok."));
+    items.forEach(i => { const li = el("li"); li.append(mono(i.source)); const t = el("span"); t.append(el("b", null, src(i.source).name + ": ")); t.appendChild(link(i.title, i.url)); li.appendChild(t); ul.appendChild(li); });
+    box.appendChild(ul); body.appendChild(box);
+  });
+  const un = story.items.filter(i => !leanOf(i.source));
+  if (un.length){ const p = el("p","hint", "Etiketsiz kaynaklar: " + [...new Set(un.map(i => src(i.source).name))].join(", ")); body.appendChild(p); }
+  body.appendChild(el("h3", null, "Çubuk nasıl hesaplanıyor?"));
+  body.appendChild(el("p", null, "Hükümete yakın grupta daha çok kaynak olduğu için ham sayılar yanıltıcı olur. Çubuk, her gruptaki kaynakların yüzde kaçının bu haberi verdiğine bakar ve grupları buna göre oranlar. Haberin içeriğinin taraflı olduğu anlamına gelmez; yalnızca kimin verdiğini gösterir."));
+  body.appendChild(el("h3", null, "Etiketler neye dayanıyor?"));
+  if (data.leanInfo?.about) body.appendChild(el("p", null, data.leanInfo.about));
+  const ul = el("ul","notes");
+  [...new Set(story.items.map(i => i.source))].filter(id => data.sources[id]?.leanNote).forEach(id => {
+    const s = data.sources[id], li = el("li"); li.append(el("b", null, s.name + ": "), s.leanNote);
+    if (id in leanOverride) li.append(" (senin değişikliğin: " + (leanOverride[id] ? GL[leanOverride[id]] : "etiketsiz") + ")");
+    if (s.leanUrl){ li.append(" "); const a = el("a", null, "Kaynak"); a.href = s.leanUrl; a.target = "_blank"; a.rel = "noopener"; li.appendChild(a); }
+    ul.appendChild(li);
+  });
+  body.appendChild(ul);
+  const ch = el("button","btn ghost","Etiketleri değiştir"); ch.type = "button"; ch.style.marginTop = "12px";
+  ch.onclick = () => { $("#biasSheet").close(); openSheet(); setTimeout(() => $("#leanBox").scrollIntoView({block:"start"}), 50); };
+  body.appendChild(ch);
+  $("#biasSheet").showModal();
+}
+$("#biasClose").onclick = () => $("#biasSheet").close();
+$("#biasSheet").addEventListener("click", e => { if (e.target === $("#biasSheet")) $("#biasSheet").close(); });
+
+function renderLeanSettings(){
+  const box = $("#leanBox"); box.textContent = "";
+  box.appendChild(el("h3", null, "Eğilim etiketleri"));
+  box.appendChild(el("p", null, "Kaynak dağılımı çubuğu bu etiketleri kullanır. Bir etikete katılmıyorsan değiştir; değişikliğin yalnızca bu cihazda geçerli olur."));
+  Object.entries(data.sources).filter(([id, s]) => "lean" in s).forEach(([id, s]) => {
+    const row = el("div","lean-row"), n = el("span","n", s.name);
+    n.appendChild(el("small", null, (id in leanOverride ? "Senin değişikliğin. " : "") + (s.leanNote || "")));
+    const sel = el("select"); sel.setAttribute("aria-label", s.name + " etiketi");
+    [["", "Etiketsiz"], ...GROUPS.map(g => [g, GL[g]])].forEach(([v, t]) => { const o = el("option", null, t); o.value = v; if ((leanOf(id) || "") === v) o.selected = true; sel.appendChild(o); });
+    sel.onchange = () => { const v = sel.value || null; if (v === (s.lean || null)) delete leanOverride[id]; else leanOverride[id] = v; store.set("gk-lean", leanOverride); renderLeanSettings(); };
+    row.append(mono(id), n, sel); box.appendChild(row);
+  });
+  if (Object.keys(leanOverride).length){ const r = el("button","btn ghost","Varsayılan etiketlere dön"); r.type = "button"; r.style.marginTop = "10px"; r.onclick = () => { leanOverride = {}; store.set("gk-lean", {}); renderLeanSettings(); }; box.appendChild(r); }
+}
+
+// ---- Kör nokta: bir kesimin akışında hiç görünmeyen haberler ----
+function blindspots(list){
+  const since = Date.now() - 24 * 3600e3, a = [], b = [];
+  list.forEach(s => {
+    if (new Date(s.date) < since) return;
+    const x = biasOf(s); if (!x) return;
+    const h = x.cnt.hukumet.length, m = x.cnt.muhalefet.length, i = x.cnt.bagimsiz.length;
+    if (h >= 2 && m === 0 && i === 0) a.push(s);
+    else if (m + i >= 2 && h === 0) b.push(s);
+  });
+  return {gov: a, opp: b};
+}
+
 // ---- Depremler (AFAD) ----
 let quakeAll = false, quakeOpen = false;
 function distKm(a, b, c, d){
@@ -804,6 +984,13 @@ function distKm(a, b, c, d){
 }
 const magClass = m => m >= 5 ? "mag m5" : m >= 4 ? "mag m4" : m >= 3 ? "mag m3" : "mag";
 const magTxt = m => m.toLocaleString("tr-TR",{minimumFractionDigits:1, maximumFractionDigits:1});
+// "de/da" bağlacı: son ünlüye göre (Sabah da, NTV de, Bianet de)
+function deDa(name){
+  const n = name.toLocaleLowerCase("tr");
+  const v = (n.match(/[aeıioöuü]/g) || []).pop();
+  if (!v) return /^[A-ZÇĞİÖŞÜ]+$/.test(name) ? "de" : "de";
+  return "aıou".includes(v) ? "da" : "de";
+}
 // Türkçe yönelme eki: Bursa’ya, İstanbul’a, İzmir’e, Van’a
 function dative(name){
   const v = (name.toLocaleLowerCase("tr").match(/[aeıioöuü]/g) || ["a"]).pop();
@@ -886,7 +1073,7 @@ function renderSheet(){
     g.appendChild(b);
   });
 }
-function openSheet(){ renderSheet(); renderNotif(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
+function openSheet(){ renderSheet(); renderNotif(); renderLeanSettings(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
 function closeSheet(){ const d = $("#sheet"); d.close ? d.close() : d.removeAttribute("open"); }
 $("#sheet").addEventListener("close", () => { shown = PAGE; render(); });
 $("#sheet").addEventListener("click", e => { if (e.target === $("#sheet")) closeSheet(); });

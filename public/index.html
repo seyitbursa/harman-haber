@@ -232,6 +232,38 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 .bottom button[aria-current="page"]{color:var(--accent)}
 .bottom svg{width:22px;height:22px}
 
+
+/* Depremler */
+.alert{display:flex;gap:12px;align-items:center;background:var(--surface);border-radius:14px;padding:12px 14px;margin-top:12px;box-shadow:inset 4px 0 0 var(--fresh),0 1px 0 var(--line);text-decoration:none}
+.alert .mag{flex:0 0 auto}
+.alert b{display:block;font-size:15px}
+.alert span{font-size:13px;color:var(--ink-2)}
+.qlist{list-style:none;margin:0;padding:0}
+.qlist li{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.qlist li:first-child{border-top:0}
+.mag{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;font-family:var(--head);font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;background:var(--paper);color:var(--ink-2)}
+.mag.m3{background:#FEF3C7;color:#92400E}
+.mag.m4{background:#FFEDD5;color:#9A3412}
+.mag.m5{background:#DC2626;color:#fff}
+@media (prefers-color-scheme: dark){.mag.m3{background:#3B2F12;color:#FCD34D}.mag.m4{background:#43230F;color:#FDBA74}.mag.m5{background:#DC2626;color:#fff}}
+.qlist .q{min-width:0;flex:1 1 auto}
+.qlist .q b{display:block;font-weight:600;font-size:14.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qlist .q small{color:var(--ink-3);font-size:12.5px}
+.qlist .near{color:var(--fresh);font-weight:700}
+.seg{display:inline-flex;background:var(--paper);border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:none;border-radius:7px;padding:4px 9px;font-size:12.5px;font-weight:600;color:var(--ink-3);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px var(--shade)}
+
+/* Ayarlar */
+.sheet h3{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:19px;margin:18px 0 0}
+.notif{background:var(--paper);border-radius:12px;padding:12px 14px;margin:8px 0 4px;font-size:14px;color:var(--ink-2)}
+.notif ol{margin:6px 0 0;padding-left:20px}
+.notif li{margin:3px 0}
+.notif code{font-family:inherit;font-weight:700;color:var(--ink);background:var(--surface);border-radius:6px;padding:1px 6px;user-select:all}
+.notif .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.notif .acts a,.notif .acts button{font-size:14px;text-decoration:none}
+.notif .btn.ghost{background:var(--surface);color:var(--ink)}
+.notif p{margin:0}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -274,7 +306,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
         </label>
         <button class="text-btn desk" type="button" data-go="yerel">Şehrim</button>
         <button class="text-btn desk" type="button" data-go="saved">Kaydettiklerim</button>
-        <button class="text-btn desk" type="button" data-sheet>Kaynaklar</button>
+        <button class="text-btn desk" type="button" data-sheet>Ayarlar</button>
         <button class="text-btn" id="install" type="button" hidden>Uygulamayı yükle</button>
         <button class="icon-btn mobile" id="searchBtn" type="button" aria-label="Ara" aria-expanded="false" aria-controls="searchRow">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -305,7 +337,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     </div>
     <footer>
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
-      <p>X gündemi trends24.in, piyasa verileri Truncgil Finans, hava durumu Open-Meteo kaynaklıdır. Piyasa verileri anlık değildir ve yatırım tavsiyesi değildir.</p>
+      <p>X gündemi trends24.in, piyasa verileri Truncgil Finans, hava durumu Open-Meteo, deprem verileri AFAD kaynaklıdır. Piyasa verileri anlık değildir ve yatırım tavsiyesi değildir.</p>
     </footer>
   </div>
   <aside class="aside" id="aside" aria-label="Yan bilgiler"></aside>
@@ -315,12 +347,14 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
   <button type="button" data-go="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/></svg>Akış</button>
   <button type="button" data-go="yerel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Şehrim</button>
   <button type="button" data-go="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>Kaydettiklerim</button>
-  <button type="button" data-sheet><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Kaynaklar</button>
+  <button type="button" data-sheet><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Ayarlar</button>
 </nav>
 
 <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
   <div class="sheet-in">
-    <div class="sheet-h"><h2 id="sheetTitle">Kaynaklar</h2><button class="icon-btn" type="button" id="sheetClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="sheet-h"><h2 id="sheetTitle">Ayarlar</h2><button class="icon-btn" type="button" id="sheetClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div id="notifBox"></div>
+    <h3>Kaynaklar</h3>
     <p>Okumak istemediğin kaynakları kapat. Seçimin bu cihazda saklanır.</p>
     <div class="src-grid" id="srcGrid"></div>
     <div class="sheet-f"><button class="btn ghost" type="button" id="allOn">Tümünü aç</button><button class="btn" type="button" id="sheetDone">Tamam</button></div>
@@ -568,6 +602,7 @@ function render(){
   const front = view === "feed" && !q;
   let hero = null, talked = [];
 
+  if (view === "feed" && !q){ const al = quakeAlert(); if (al) top.appendChild(al); }
   if (front && list.length){
     const since = Date.now() - 12 * 3600e3;
     if (cat === "all"){
@@ -582,7 +617,11 @@ function render(){
       const rail = el("div","rail"); talked.forEach(s => rail.appendChild(talkCard(s))); top.appendChild(rail);
     }
   }
-  if (view === "yerel"){ const w = weatherModule(); w.style.marginTop = "12px"; top.appendChild(w); }
+  if (view === "yerel"){
+    const al = quakeAlert(); if (al) top.appendChild(al);
+    const w = weatherModule(); w.style.marginTop = "12px"; top.appendChild(w);
+    const qm = quakeModule(); if (qm){ qm.style.marginTop = "12px"; top.appendChild(qm); }
+  }
   if (q){
     const bar = el("div","topics");
     bar.appendChild(el("span","lbl", "“" + q + "” için sonuçlar"));
@@ -732,9 +771,87 @@ function xModule(inFeed){
 }
 function renderAside(){
   const a = $("#aside"); a.textContent = "";
-  if (view !== "yerel") a.appendChild(weatherModule());
+  if (view !== "yerel"){ a.appendChild(weatherModule()); const qm = quakeModule(); if (qm) a.appendChild(qm); }
   const x = xModule(false); if (x) a.appendChild(x);
   if (view === "feed"){ const t = topicsRow(); if (t){ const m = el("section","mod"); const h = el("div","mod-h"); h.appendChild(el("h3",null,"Gündemde")); m.appendChild(h); t.querySelector(".lbl").remove(); t.style.margin = "6px 0 0"; m.appendChild(t); a.appendChild(m); } }
+}
+
+
+// ---- Depremler (AFAD) ----
+let quakeAll = false, quakeOpen = false;
+function distKm(a, b, c, d){
+  const R = 6371, r = x => x * Math.PI / 180;
+  const h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(h)));
+}
+const magClass = m => m >= 5 ? "mag m5" : m >= 4 ? "mag m4" : m >= 3 ? "mag m3" : "mag";
+const magTxt = m => m.toLocaleString("tr-TR",{minimumFractionDigits:1, maximumFractionDigits:1});
+// Türkçe yönelme eki: Bursa’ya, İstanbul’a, İzmir’e, Van’a
+function dative(name){
+  const v = (name.toLocaleLowerCase("tr").match(/[aeıioöuü]/g) || ["a"]).pop();
+  const suf = "aıou".includes(v) ? "a" : "e";
+  return name + "’" + (/[aeıioöuü]$/i.test(name.toLocaleLowerCase("tr")) ? "y" : "") + suf;
+}
+function nearCity(q){ return city ? distKm(city[1], city[2], q.lat, q.lon) : null; }
+function quakeAlert(){
+  const items = data.quakes?.items || [];
+  const recent = items.filter(q => Date.now() - new Date(q.date) < 6 * 3600e3);
+  const q = recent.find(q => q.mag >= 4.5) || (city && recent.find(q => q.mag >= 3.5 && nearCity(q) <= 100));
+  if (!q) return null;
+  const a = el("a","alert"); a.href = data.quakes.sourceUrl; a.target = "_blank"; a.rel = "noopener";
+  const t = el("div"), d = nearCity(q);
+  t.append(el("b", null, magTxt(q.mag) + " büyüklüğünde deprem: " + q.place), el("span", null, ago(q.date) + ", derinlik " + q.depth.toLocaleString("tr-TR") + " km" + (d != null && d <= 300 ? ", " + dative(city[0]) + " " + d + " km" : "")));
+  a.append(el("span", magClass(q.mag), magTxt(q.mag)), t);
+  a.setAttribute("aria-label", magTxt(q.mag) + " büyüklüğünde deprem: " + q.place + ", " + ago(q.date));
+  return a;
+}
+function quakeModule(){
+  const qd = data.quakes;
+  if (!qd || !qd.items) return null;
+  const m = el("section","mod");
+  const h = el("div","mod-h"); h.appendChild(el("h3", null, "Son depremler"));
+  const seg = el("div","seg"); seg.setAttribute("role","group"); seg.setAttribute("aria-label","Deprem süzgeci");
+  [["3+", false], ["Tümü", true]].forEach(([lab, v]) => { const b = el("button", null, lab); b.type = "button"; b.setAttribute("aria-pressed", quakeAll === v ? "true" : "false"); b.onclick = () => { quakeAll = v; render(); }; seg.appendChild(b); });
+  h.appendChild(seg); m.appendChild(h);
+  let list = qd.items.filter(q => quakeAll || q.mag >= 3 || (city && nearCity(q) <= 100));
+  if (!list.length){ m.appendChild(el("p","hint","Son 48 saatte bu süzgece uyan deprem yok.")); }
+  const lim = quakeOpen ? 40 : 6;
+  const ul = el("ul","qlist");
+  list.slice(0, lim).forEach(q => {
+    const li = el("li"), info = el("div","q"), d = nearCity(q);
+    const small = el("small"); small.append(ago(q.date) + ", " + q.depth.toLocaleString("tr-TR") + " km derinlik");
+    if (d != null && d <= 150){ small.append(", "); small.appendChild(el("span","near", dative(city[0]) + " " + d + " km")); }
+    if (q.near){ small.prepend(q.near + " yakını, "); }
+    info.append(el("b", null, q.place), small);
+    li.append(el("span", magClass(q.mag), magTxt(q.mag)), info);
+    li.setAttribute("aria-label", `${magTxt(q.mag)} büyüklüğünde, ${q.place}, ${ago(q.date)}`);
+    ul.appendChild(li);
+  });
+  m.appendChild(ul);
+  const f = el("div","mod-f");
+  if (list.length > 6){ const b = el("button", null, quakeOpen ? "Daha az göster" : "Tümünü göster (" + list.length + ")"); b.type = "button"; b.onclick = () => { quakeOpen = !quakeOpen; render(); }; f.appendChild(b); } else f.appendChild(el("span"));
+  const note = el("small"); note.append("Kaynak: "); const l = el("a", null, qd.source); l.href = qd.sourceUrl; l.target = "_blank"; l.rel = "noopener"; note.appendChild(l); f.appendChild(note);
+  m.appendChild(f);
+  return m;
+}
+
+// ---- Bildirimler (ntfy) ----
+function renderNotif(){
+  const box = $("#notifBox"); box.textContent = "";
+  const n = data.notify; if (!n) return;
+  box.appendChild(el("h3", null, "Bildirimler"));
+  const d = el("div","notif");
+  d.appendChild(el("p", null, `Bir olayı ${n.minSources} ya da daha fazla kaynak verdiğinde ve ${magTxt(n.minQuake)} ve üzeri bir deprem olduğunda bildirim gelir. Bildirimler ücretsiz ntfy uygulamasıyla çalışır, hesap gerekmez.`));
+  const ol = el("ol");
+  const li1 = el("li"); li1.append("Telefonuna ntfy uygulamasını kur (App Store ya da Google Play’de “ntfy”).");
+  const li2 = el("li"); li2.append("Uygulamada + simgesine dokun ve şu konuyu yaz: "); li2.appendChild(el("code", null, n.topic));
+  ol.append(li1, li2); d.appendChild(ol);
+  const acts = el("div","acts");
+  const copy = el("button","btn ghost","Konuyu kopyala"); copy.type = "button";
+  copy.onclick = async () => { try{ await navigator.clipboard.writeText(n.topic); copy.textContent = "Kopyalandı"; }catch(e){ copy.textContent = n.topic; } };
+  const web = el("a","btn ghost","Bilgisayarda tarayıcıdan aç"); web.href = "https://ntfy.sh/" + n.topic; web.target = "_blank"; web.rel = "noopener";
+  acts.append(copy, web); d.appendChild(acts);
+  box.appendChild(d);
 }
 
 // ---- Kaynaklar paneli ----
@@ -751,7 +868,7 @@ function renderSheet(){
     g.appendChild(b);
   });
 }
-function openSheet(){ renderSheet(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
+function openSheet(){ renderSheet(); renderNotif(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
 function closeSheet(){ const d = $("#sheet"); d.close ? d.close() : d.removeAttribute("open"); }
 $("#sheet").addEventListener("close", () => { shown = PAGE; render(); });
 $("#sheet").addEventListener("click", e => { if (e.target === $("#sheet")) closeSheet(); });

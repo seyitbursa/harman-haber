@@ -5,6 +5,8 @@ import { cluster } from "./cluster.mjs";
 import { getMarkets } from "./markets.mjs";
 import { trendingTopics } from "./topics.mjs";
 import { getXTrends } from "./xtrends.mjs";
+import { getQuakes } from "./quakes.mjs";
+import { notify, previousState } from "./notify.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -147,18 +149,25 @@ const stories = cluster(items).map((group, i) => {
   };
 }).sort((a, b) => b.date.localeCompare(a.date));
 
-const [markets, xtrends] = await Promise.all([getMarkets(), getXTrends()]);
+const [markets, xtrends, quakes, prev] = await Promise.all([getMarkets(), getXTrends(), getQuakes(), previousState()]);
+const cfg = config.notify || {};
+const note = cfg.ntfyTopic
+  ? await notify({ cfg, stories, quakes, sources: config.sources, prev, dryRun: !process.env.GITHUB_ACTIONS })
+  : { state: null, sent: [], first: false };
 const topics = trendingTopics(stories);
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
-  JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, stories, errors }));
+  JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
+    notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake } : null,
+    notified: note.state, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);
 errors.forEach(e => console.log("  ✗", e.url, "→", e.error));
 if (markets.error) console.log("  ✗ piyasa →", markets.error);
 if (xtrends.error) console.log("  ✗ X gündemi →", xtrends.error);
+console.log(`Depremler: ${quakes.items.length}${quakes.error ? " (hata: " + quakes.error + ")" : ""}. Bildirim: ${note.first ? "ilk çalıştırma, yalnızca işaretlendi" : note.sent.length ? note.sent.join(" | ") : "yok"}`);
 
 // Açık kalan bağlantılar yüzünden işlem asılı kalmasın
 process.exit(0);

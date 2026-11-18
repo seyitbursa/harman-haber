@@ -1,4 +1,9 @@
 {
+  "notify": {
+    "ntfyTopic": "gundem-kutusu-35aed6a3",
+    "minSources": 5,
+    "minQuake": 5.0
+  },
   "sources": {
     "aa": {
       "name": "Anadolu Ajansı",

@@ -2,7 +2,8 @@
   "notify": {
     "ntfyTopic": "gundem-kutusu-35aed6a3",
     "minSources": 5,
-    "minQuake": 5.0
+    "minQuake": 5.0,
+    "reportTopic": "gundem-kutusu-bildirim-0e60bd5b"
   },
   "sources": {
     "aa": {

@@ -324,6 +324,26 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 .tlink{position:relative;z-index:2;grid-area:tl;justify-self:start;border:0;background:none;padding:6px 0 0;color:var(--accent);font-weight:600;font-size:13px;cursor:pointer}
 .row{grid-template-areas:"meta meta" "title img" "sum img" "bias bias" "cl cl" "tl tl"}
 .row.noimg{grid-template-areas:"meta" "title" "sum" "bias" "cl" "tl"}
+
+/* Paylaş, menü, bildirim */
+.acts{position:relative;z-index:2;margin-left:auto;display:flex;gap:2px;margin-top:-6px;margin-bottom:-6px}
+.acts .save{margin:0}
+.act{border:0;background:none;cursor:pointer;color:var(--ink-3);width:32px;height:32px;display:grid;place-items:center;border-radius:8px}
+.act:hover{background:var(--paper);color:var(--ink)}
+.hero .meta .acts{margin-top:0;margin-bottom:0}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);transform:translate(-50%,20px);opacity:0;z-index:40;background:var(--ink);color:var(--paper);font-weight:600;font-size:14px;padding:10px 16px;border-radius:12px;pointer-events:none;transition:opacity .2s,transform .2s;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (min-width:900px){.toast{bottom:32px}}
+.menu-list{list-style:none;margin:6px 0 0;padding:0}
+.menu-list button,.menu-list a{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;padding:13px 4px;font-size:16px;font-weight:500;text-align:left;cursor:pointer;color:var(--ink);text-decoration:none;border-top:1px solid var(--line)}
+.menu-list li:first-child button,.menu-list li:first-child a{border-top:0}
+.menu-list svg{flex:0 0 auto;color:var(--ink-3)}
+.menu-list button:hover{color:var(--accent)}
+.menu-title{font-size:14px;color:var(--ink-2);margin:4px 0 0;line-height:1.4}
+.report textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:10px 12px;font-size:15px;resize:vertical}
+.report .quote{background:var(--paper);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--ink-2);margin:10px 0}
+.report .quote b{color:var(--accent)}
+.topic-head .share-row{display:flex;gap:8px;margin-top:14px}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -411,6 +431,14 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
   <button type="button" data-go="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>Kaydettiklerim</button>
   <button type="button" data-sheet><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Ayarlar</button>
 </nav>
+
+<dialog class="sheet" id="actSheet" aria-labelledby="actTitle">
+  <div class="sheet-in">
+    <div class="sheet-h"><h2 id="actTitle">Haber</h2><button class="icon-btn" type="button" id="actClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div id="actBody"></div>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog class="sheet" id="biasSheet" aria-labelledby="biasTitle">
   <div class="sheet-in">
@@ -795,7 +823,7 @@ function heroCard(story){
   const h = el("h2"); h.appendChild(link(i.title, i.url)); body.appendChild(h);
   const ld = lede(i); if (ld) body.appendChild(ld);
   const bb = biasBar(story); if (bb) body.appendChild(bb);
-  const m = meta(i); body.appendChild(m);
+  const m = meta(i); m.appendChild(actions(i, story)); body.appendChild(m);
   c.appendChild(body);
   if (story.items.length > 1){ const cl = clusterBlock(story, story.items.slice(1)); cl.style.padding = "0 18px 18px"; cl.style.marginTop = "0"; c.appendChild(cl); }
   return c;
@@ -814,7 +842,7 @@ function talkCard(story){
 function row(story, inTopic){
   const i = story.items[0];
   const r = el("article","row" + (i.image ? "" : " noimg") + (read.has(i.url) ? " read" : ""));
-  const m = meta(i); m.appendChild(saveBtn(i, story.category)); r.appendChild(m);
+  const m = meta(i); m.appendChild(actions(i, story)); r.appendChild(m);
   const h = el("h4"); h.appendChild(link(i.title, i.url, r)); r.appendChild(h);
   const ld = lede(i); if (ld) r.appendChild(ld);
   const bb = biasBar(story); if (bb) r.appendChild(bb);
@@ -891,6 +919,99 @@ function renderAside(){
 
 
 
+
+// ---- Paylaş ve haber menüsü ----
+const SITE = location.origin + location.pathname;
+let toastTimer;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200); }
+async function shareOrCopy({title, text, url}){
+  if (navigator.share){
+    try { await navigator.share({title, text, url}); return; }
+    catch(e){ if (e.name === "AbortError") return; }
+  }
+  try { await navigator.clipboard.writeText([text, url].filter(Boolean).join("\n")); toast("Bağlantı kopyalandı"); }
+  catch(e){ prompt("Bağlantıyı kopyala:", url); }
+}
+function shareStory(i){
+  const text = i.title + (i.gist ? "\nÖzü: " + i.gist : "") + "\n(" + src(i.source).name + ")";
+  shareOrCopy({title: i.title, text, url: i.url});
+}
+function shareTopic(t){
+  shareOrCopy({title: t.title || t.label, text: (t.title || t.label) + (t.summary ? "\n" + t.summary : "") + "\nGündem Kutusu’nda tüm kaynaklarıyla:", url: SITE + "#konu-" + t.slug});
+}
+const ICON = {
+  share: "M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5",
+  more: "M5 12h.01M12 12h.01M19 12h.01",
+  hide: "M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A9.8 9.8 0 0 1 12 5c5 0 9 5 9 7a10.6 10.6 0 0 1-2.4 3.3M6.6 6.6C4.3 8 3 10.4 3 12c0 2 4 7 9 7a9.6 9.6 0 0 0 4.4-1.1",
+  read: "M20 6 9 17l-5-5",
+  unread: "M12 8v4M12 16h.01M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
+  topic: "M4 6h16M4 12h16M4 18h10",
+  flag: "M5 21V4h11l-1.5 4L16 12H5",
+  open: "M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"
+};
+function actions(i, story){
+  const box = el("span","acts");
+  const sh = el("button","act"); sh.type = "button"; sh.setAttribute("aria-label","Paylaş"); sh.appendChild(svgIcon(ICON.share));
+  sh.onclick = () => shareStory(i);
+  const mo = el("button","act"); mo.type = "button"; mo.setAttribute("aria-label","Diğer işlemler"); mo.appendChild(svgIcon(ICON.more, 20, {"stroke-width":"3"}));
+  mo.onclick = () => openActions(i, story);
+  box.append(saveBtn(i, story.category), sh, mo);
+  return box;
+}
+function menuItem(label, icon, fn){
+  const li = el("li"), b = el("button"); b.type = "button"; b.append(svgIcon(icon, 20), document.createTextNode(label));
+  b.onclick = fn; li.appendChild(b); return li;
+}
+function openActions(i, story){
+  const body = $("#actBody"); body.textContent = "";
+  $("#actTitle").textContent = src(i.source).name;
+  body.appendChild(el("p","menu-title", i.title));
+  const ul = el("ul","menu-list");
+  ul.appendChild(menuItem("Haberi kaynağında aç", ICON.open, () => { $("#actSheet").close(); window.open(i.url, "_blank", "noopener"); read.add(i.url); store.set("gk-read",[...read].slice(-800)); }));
+  ul.appendChild(menuItem("Paylaş", ICON.share, () => { $("#actSheet").close(); shareStory(i); }));
+  const tp = topicOfStory(story.id);
+  if (tp && view !== "topic") ul.appendChild(menuItem((tp.title || tp.label) + " konusuna git", ICON.topic, () => { $("#actSheet").close(); goTopic(tp); }));
+  const isRead = read.has(i.url);
+  ul.appendChild(menuItem(isRead ? "Okunmadı olarak işaretle" : "Okundu olarak işaretle", isRead ? ICON.unread : ICON.read, () => {
+    isRead ? read.delete(i.url) : read.add(i.url); store.set("gk-read",[...read].slice(-800));
+    $("#actSheet").close(); render(); toast(isRead ? "Okunmadı olarak işaretlendi" : "Okundu olarak işaretlendi");
+  }));
+  ul.appendChild(menuItem(src(i.source).name + " haberlerini gizle", ICON.hide, () => {
+    off.add(i.source); store.set("gk-off",[...off]); $("#actSheet").close(); render();
+    toast(src(i.source).name + " gizlendi. Ayarlar’dan geri açabilirsin.");
+  }));
+  if (i.gist && data.notify?.reportTopic) ul.appendChild(menuItem("Özette hata bildir", ICON.flag, () => openReport(i)));
+  body.appendChild(ul);
+  if (!$("#actSheet").open) $("#actSheet").showModal();
+}
+function openReport(i){
+  const body = $("#actBody"); body.textContent = "";
+  $("#actTitle").textContent = "Özette hata bildir";
+  const f = el("div","report");
+  const q = el("div","quote"); q.append(el("b", null, "Özü: "), i.gist); f.appendChild(q);
+  const key = "gk-rep-" + i.url;
+  if (store.get(key, false)){ f.appendChild(el("p","hint","Bu özet için zaten bildirim gönderdin. Teşekkürler.")); body.appendChild(f); return; }
+  const lab = el("label"); lab.appendChild(el("span","menu-title","Neresi yanlış? (isteğe bağlı)"));
+  const ta = el("textarea"); ta.maxLength = 400; ta.placeholder = "Örneğin: haberde 4 değil 3 kişi yaralanmış."; lab.appendChild(ta); f.appendChild(lab);
+  const row = el("div","sheet-f");
+  const cancel = el("button","btn ghost","Vazgeç"); cancel.type = "button"; cancel.onclick = () => $("#actSheet").close();
+  const send = el("button","btn","Bildir"); send.type = "button";
+  send.onclick = async () => {
+    send.disabled = true; send.textContent = "Gönderiliyor…";
+    try{
+      const r = await fetch("https://ntfy.sh/", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({
+        topic: data.notify.reportTopic, title: "Özet hatası: " + src(i.source).name,
+        message: `Başlık: ${i.title}\nÖzü: ${i.gist}\nNot: ${ta.value.trim() || "(yok)"}`, click: i.url, tags: ["triangular_flag_on_post"]})});
+      if (!r.ok) throw new Error(r.status);
+      store.set(key, true); $("#actSheet").close(); toast("Bildirildi, teşekkürler");
+    }catch(e){ send.disabled = false; send.textContent = "Bildir"; toast("Gönderilemedi. İnternet bağlantını kontrol edip tekrar dene."); }
+  };
+  row.append(cancel, send); f.appendChild(row);
+  body.appendChild(f);
+}
+$("#actClose").onclick = () => $("#actSheet").close();
+$("#actSheet").addEventListener("click", e => { if (e.target === $("#actSheet")) $("#actSheet").close(); });
+
 // ---- Konu sayfaları ----
 let topicSlug = null;
 function topicOfStory(id){ return (data.topics || []).find(t => (t.storyIds || []).includes(id)); }
@@ -918,6 +1039,7 @@ function renderTopic(){
     p.append(el("b", null, "Özet:"), document.createTextNode(t.summary)); head.appendChild(p);
   }
   const bb = biasBar(all); if (bb) head.appendChild(bb);
+  const sr = el("div","share-row"), sb = el("button","btn ghost","Konuyu paylaş"); sb.type = "button"; sb.onclick = () => shareTopic(t); sr.appendChild(sb); head.appendChild(sr);
   top.appendChild(head);
   // Kesimlere göre başlıklar
   const sec = el("div","sec"); sec.appendChild(el("h3", null, "Kim nasıl verdi?")); top.appendChild(sec);

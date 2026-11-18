@@ -3,6 +3,7 @@ import Parser from "rss-parser";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { cluster } from "./cluster.mjs";
 import { getMarkets } from "./markets.mjs";
+import { trendingTopics } from "./topics.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -11,13 +12,12 @@ const SUMMARY_LEN = 220;
 
 const config = JSON.parse(await readFile(new URL("../feeds.json", import.meta.url), "utf8"));
 
-const parser = new Parser({
-  timeout: 20000,
-  headers: {
+const HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
     "Accept": "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.8",
     "Accept-Language": "tr-TR,tr;q=0.9"
-  },
+};
+const parser = new Parser({
   customFields: { item: [["media:content", "mediaContent", { keepArray: true }], ["media:thumbnail", "mediaThumb"], ["image", "image"]] }
 });
 
@@ -26,10 +26,14 @@ const RULES = [
   ["spor",      /\b(spor|futbol|basketbol|voleybol|super-?lig|süper lig|transfer)\b/i],
   ["ekonomi",   /\b(ekonomi|finans|borsa|piyasa|dolar|altin|altın|enflasyon|is-dunyasi|iş dünyası)\b/i],
   ["dunya",     /\b(dunya|dünya|world|uluslararasi|uluslararası)\b/i],
-  ["teknoloji", /\b(teknoloji|tekno|bilim|bilim-teknoloji|yapay-zeka|yapay zeka|oyun|otomobil)\b/i],
+  ["teknoloji", /\b(teknoloji|tekno|bilim|bilim-teknoloji|yapay-zeka|yapay zeka|otomobil)\b/i],
   ["siyaset",   /\b(siyaset|politika|meclis|tbmm|secim|seçim)\b/i],
 ];
+// Oyun haberleri teknoloji ve genel akışlardan da ayıklanır
+const GAME = /\b(oyun|oyunu|oyunları|oyuncu|playstation|ps5|ps4|xbox|nintendo|switch 2|steam|epic games|gta|game pass|the game awards|e-?spor|valorant|fortnite|minecraft|roblox|unity|unreal engine|ubisoft|electronic arts|activision|blizzard|riot games|mobil oyun)\b/i;
 function guessCategory(item, fallback) {
+  if (fallback === "oyun") return fallback;
+  if ((fallback === "gundem" || fallback === "teknoloji") && GAME.test(item.title || "")) return "oyun";
   if (fallback !== "gundem") return fallback;
   let path = "";
   try { path = new URL(item.link).pathname.split("/").slice(0, 3).join(" "); } catch {}
@@ -38,6 +42,15 @@ function guessCategory(item, fallback) {
   for (const [cat, re] of RULES) if (re.test(hay)) return cat;
   return fallback;
 }
+
+function sanitize(xml) {
+  return xml
+    .replace(/<(?!!\[CDATA\[|!--)[^>]+>/g, tag => tag.replace(/(\s[\w:-]+=)([^"'\s>][^\s>]*)/g, '$1"$2"'))
+    .replace(/<\/enclosure>/g, "")
+    .replace(/<enclosure([^>]*?)\/?>/g, "<enclosure$1/>")     // kapatılmamış enclosure etiketleri
+    .replace(/&(?!(?:[a-zA-Z]+|#\d+|#x[\da-fA-F]+);)/g, "&amp;");
+}
+const absolute = u => (typeof u === "string" && u.startsWith("//")) ? "https:" + u : u;
 
 function pickImage(item) {
   const fromArr = a => Array.isArray(a) ? a.map(x => x?.$?.url).find(Boolean) : null;
@@ -49,30 +62,54 @@ function pickImage(item) {
     || null;
 }
 
+const NAMED = { amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'", nbsp: " ", rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", hellip: "…", ndash: "–", mdash: "—" };
+const decode = t => t
+  .replace(/&#x([\da-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+  .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d))
+  .replace(/&([a-z]+);/gi, (m, n) => NAMED[n.toLowerCase()] ?? m);
 function clean(text = "") {
-  const t = text.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  const t = decode(decode(text)).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   return t.length > SUMMARY_LEN ? t.slice(0, SUMMARY_LEN).replace(/\s+\S*$/, "") + "…" : t;
 }
 const norm = s => s.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N} ]/gu, "").replace(/\s+/g, " ").trim();
+
+// Saat dilimi belirtilmemiş tarihler ("2026-11-18 16:30:00") Türkiye saati kabul edilir; ileri tarihler şimdiye çekilir
+function parseDate(pub, iso) {
+  let d;
+  if (pub && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(pub.trim())) d = new Date(pub.trim().replace(" ", "T") + "+03:00");
+  else d = new Date(iso || pub || Date.now());
+  if (isNaN(d)) d = new Date();
+  return d > new Date() ? new Date() : d;
+}
 
 const cutoff = Date.now() - MAX_AGE_HOURS * 3600e3;
 const errors = [];
 
 const results = await Promise.allSettled(config.feeds.map(async f => {
-  const feed = await Promise.race([
-    parser.parseURL(f.url),
-    new Promise((_, reject) => setTimeout(() => reject(new Error("zaman aşımı")), 25000))
-  ]);
+  // Akışı kendimiz indirip küçük XML hatalarını (tırnaksız öznitelik, "//" ile başlayan adres) düzeltiyoruz
+  const once = async () => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 25000);
+    try {
+      const r = await fetch(f.url, { headers: HEADERS, signal: ctrl.signal, redirect: "follow" });
+      if (!r.ok) throw new Error("Status code " + r.status);
+      return parser.parseString(sanitize(await r.text()));
+    } finally { clearTimeout(timer); }
+  };
+  // Bazı siteler (ör. Euronews) ara sıra isteği reddediyor: 3 saniye bekleyip bir kez daha dene
+  let feed;
+  try { feed = await once(); }
+  catch { await new Promise(r => setTimeout(r, 3000)); feed = await once(); }
   return feed.items.slice(0, MAX_PER_FEED).map(it => {
-    const date = new Date(it.isoDate || it.pubDate || Date.now());
+    const date = parseDate(it.pubDate, it.isoDate);
     return {
       title: clean(it.title || ""),
       summary: clean(it.contentSnippet || it.summary || it.content || ""),
-      url: it.link,
-      image: pickImage(it),
+      url: absolute(it.link),
+      image: absolute(pickImage(it)),
       source: f.source,
       category: guessCategory(it, f.category),
-      date: isNaN(date) ? new Date().toISOString() : date.toISOString()
+      date: date.toISOString()
     };
   });
 }));
@@ -110,13 +147,14 @@ const stories = cluster(items).map((group, i) => {
 }).sort((a, b) => b.date.localeCompare(a.date));
 
 const markets = await getMarkets();
+const topics = trendingTopics(stories);
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
-  JSON.stringify({ version: 2, updatedAt: new Date().toISOString(), sources: config.sources, markets, stories, errors }));
+  JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
-console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}; ${errors.length} akış hata verdi.`);
+console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu; ${errors.length} akış hata verdi.`);
 errors.forEach(e => console.log("  ✗", e.url, "→", e.error));
 if (markets.error) console.log("  ✗ piyasa →", markets.error);
 

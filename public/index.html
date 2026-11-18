@@ -4,7 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gündem Kutusu</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗞️</text></svg>">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#18202F" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gündem">
+<meta name="description" content="Türk haber kaynaklarını tek sayfada toplayan canlı gündem.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -131,6 +138,39 @@ main .wrap{padding-top:20px;padding-bottom:48px}
 .others .t{font-size:14px;line-height:1.35;color:var(--ink-2)}
 .others .t b{display:block;color:var(--ink-3);font-size:12px;font-weight:600;margin-bottom:1px}
 .badge-hot{display:inline-flex;align-items:center;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;margin-left:auto;flex:0 0 auto}
+
+/* Gündemdeki konular */
+.topics{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 14px;align-items:center}
+.topics::-webkit-scrollbar{display:none}
+.topics[hidden]{display:none}
+.topics-label{flex:0 0 auto;font-family:var(--head);font-weight:700;font-size:15px;margin-right:4px}
+.topic{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 11px;font-size:14px;cursor:pointer;color:var(--ink)}
+.topic::before{content:"#";color:var(--accent);font-weight:700;margin-right:2px}
+.topic[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.topic[aria-pressed="true"]::before{color:inherit}
+
+/* Hava durumu ve Şehrim */
+.tick.wx{border:0;cursor:pointer;font:inherit;color:inherit}
+.local[hidden]{display:none}
+.local{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+.local-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.city-pick{display:flex;align-items:center;gap:10px;font-weight:600}
+.city-pick select{font:inherit;font-weight:600;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.local-hint{color:var(--ink-2);margin:12px 0 0}
+.wx-now{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"icon temp" "meta meta";gap:4px 14px;align-items:center;margin-top:16px}
+.wx-icon{grid-area:icon;font-size:52px;line-height:1}
+.wx-temp{font-family:var(--head);font-weight:800;font-size:44px;line-height:1}
+.wx-desc{color:var(--ink-2)}
+.wx-meta{grid-area:meta;display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--ink-3);font-size:14px;margin-top:6px}
+.wx-days{display:grid;grid-template-columns:repeat(5,minmax(64px,1fr));gap:8px;margin-top:16px;overflow-x:auto}
+.wx-day{background:var(--surface-2);border-radius:10px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;text-align:center}
+.wx-day b{font-weight:600}
+.wx-day .wx-i{font-size:22px}
+.wx-day small{color:var(--accent);font-size:11px;font-weight:600}
+.wx-src{font-size:11px;color:var(--ink-3);margin:10px 0 0}
+.local-title{font-family:var(--head);font-size:20px;margin:18px 0 0}
+.install{background:var(--accent);color:var(--accent-ink)!important;border-radius:8px;padding:3px 10px!important}
+.install[hidden]{display:none}
 footer{color:var(--ink-3);font-size:13px;border-top:1px solid var(--line);padding:20px 0 32px}
 footer p{margin:0 0 6px;max-width:70ch}
 @media (max-width:560px){.top .wrap{flex-direction:column;align-items:stretch}.search{flex:1 1 auto}.meta-line span:last-child{display:none}}
@@ -142,7 +182,7 @@ footer p{margin:0 0 6px;max-width:70ch}
   <div class="wrap">
     <div class="brand">
       <h1>Gündem Kutusu</h1>
-      <div class="status"><span class="dot" id="dot"></span><span id="updated">Yükleniyor…</span><button id="refresh" type="button">Yenile</button></div>
+      <div class="status"><span class="dot" id="dot"></span><span id="updated">Yükleniyor…</span><button id="refresh" type="button">Yenile</button><button id="install" class="install" type="button" hidden>Uygulamayı yükle</button></div>
     </div>
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -164,6 +204,8 @@ footer p{margin:0 0 6px;max-width:70ch}
 
 <main>
   <div class="wrap">
+    <section class="local" id="local" hidden aria-label="Şehrim"></section>
+    <div class="topics" id="topics" role="group" aria-label="Gündemdeki konular" hidden></div>
     <button class="newbar" id="newbar" type="button"></button>
     <div class="meta-line"><span id="count"></span><span>Kaynak seçimin bu cihazda hatırlanır</span></div>
     <div class="feed" id="feed" aria-live="polite"></div>
@@ -173,13 +215,13 @@ footer p{margin:0 0 6px;max-width:70ch}
 
 <footer><div class="wrap">
   <p>Başlık ve özetler yayıncıların RSS akışlarından otomatik alınır; haberin tamamı için karta dokun, orijinal sitede açılır.</p>
-  <p>Haberler ve piyasa verileri yaklaşık 15 dakikada bir güncellenir; piyasa verileri anlık değildir ve yatırım tavsiyesi değildir.</p>
+  <p>Haberler ve piyasa verileri yaklaşık 15 dakikada bir güncellenir; piyasa verileri anlık değildir ve yatırım tavsiyesi değildir. Hava durumu Open-Meteo’dan alınır.</p>
 </div></footer>
 
 <script>
 const CATS = [
-  {id:"all",label:"Tümü"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
-  {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"teknoloji",label:"Teknoloji"},{id:"saved",label:"Kaydedilenler"}
+  {id:"all",label:"Tümü"},{id:"yerel",label:"Şehrim"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
+  {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"teknoloji",label:"Teknoloji"},{id:"oyun",label:"Oyun"},{id:"saved",label:"Kaydedilenler"}
 ];
 const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
 const PAGE = 30;
@@ -194,11 +236,26 @@ let read = new Set(store.get("gk-read", []));
 let cat = CATS.some(c => c.id === location.hash.slice(1)) ? location.hash.slice(1) : "all";
 let shown = PAGE;
 const openClusters = new Set();
+let city = store.get("gk-city", null);           // [ad, enlem, boylam]
+let activeTopic = null;
+const ILLER = [["Adana", 36.986, 35.325], ["Adıyaman", 37.764, 38.276], ["Afyonkarahisar", 38.757, 30.543], ["Ağrı", 39.715, 43.04], ["Amasya", 40.653, 35.833], ["Ankara", 39.92, 32.854], ["Antalya", 36.908, 30.696], ["Artvin", 41.182, 41.822], ["Aydın", 37.845, 27.84], ["Balıkesir", 39.649, 27.886], ["Bilecik", 40.142, 29.979], ["Bingöl", 38.885, 40.494], ["Bitlis", 38.401, 42.108], ["Bolu", 40.736, 31.606], ["Burdur", 37.72, 30.291], ["Bursa", 40.196, 29.06], ["Çanakkale", 40.156, 26.413], ["Çankırı", 40.6, 33.615], ["Çorum", 40.549, 34.953], ["Denizli", 37.774, 29.087], ["Diyarbakır", 37.914, 40.217], ["Edirne", 41.677, 26.556], ["Elazığ", 38.674, 39.223], ["Erzincan", 39.739, 39.49], ["Erzurum", 39.909, 41.277], ["Eskişehir", 39.777, 30.521], ["Gaziantep", 37.059, 37.383], ["Giresun", 40.917, 38.387], ["Gümüşhane", 40.46, 39.472], ["Hakkari", 37.574, 43.741], ["Hatay", 36.207, 36.157], ["Isparta", 37.764, 30.552], ["Mersin", 36.812, 34.639], ["İstanbul", 41.014, 28.95], ["İzmir", 38.413, 27.138], ["Kars", 40.598, 43.085], ["Kastamonu", 41.378, 33.775], ["Kayseri", 38.732, 35.485], ["Kırklareli", 41.735, 27.225], ["Kırşehir", 39.146, 34.164], ["Kocaeli", 40.765, 29.929], ["Konya", 37.871, 32.485], ["Kütahya", 39.424, 29.983], ["Malatya", 38.35, 38.317], ["Manisa", 38.612, 27.426], ["Kahramanmaraş", 37.585, 36.926], ["Mardin", 37.313, 40.744], ["Muğla", 37.218, 28.366], ["Muş", 38.732, 41.485], ["Nevşehir", 38.625, 34.712], ["Niğde", 37.966, 34.679], ["Ordu", 40.978, 37.89], ["Rize", 41.021, 40.522], ["Sakarya", 40.781, 30.403], ["Samsun", 41.28, 36.336], ["Siirt", 37.929, 41.941], ["Sinop", 42.027, 35.163], ["Sivas", 39.748, 37.016], ["Tekirdağ", 40.978, 27.511], ["Tokat", 40.314, 36.554], ["Trabzon", 41.005, 39.727], ["Tunceli", 39.099, 39.544], ["Şanlıurfa", 37.167, 38.794], ["Uşak", 38.674, 29.406], ["Van", 38.495, 43.383], ["Yozgat", 39.82, 34.804], ["Zonguldak", 41.451, 31.793], ["Aksaray", 38.373, 34.025], ["Bayburt", 40.256, 40.223], ["Karaman", 37.181, 33.215], ["Kırıkkale", 39.845, 33.506], ["Batman", 37.887, 41.132], ["Şırnak", 37.514, 42.454], ["Bartın", 41.636, 32.337], ["Ardahan", 41.109, 42.702], ["Iğdır", 39.924, 44.045], ["Yalova", 40.655, 29.277], ["Karabük", 41.205, 32.628], ["Kilis", 36.716, 37.115], ["Osmaniye", 37.074, 36.248], ["Düzce", 40.839, 31.164]];
+// Haberlerde ilin yerine geçebilen yer adları
+const CITY_ALIASES = {"Kocaeli":["İzmit","Gebze"],"Sakarya":["Adapazarı"],"Hatay":["Antakya","İskenderun"],"Afyonkarahisar":["Afyon"],"Mersin":["Tarsus"],"Antalya":["Alanya","Manavgat"],"Muğla":["Bodrum","Fethiye","Marmaris"],"Balıkesir":["Bandırma","Ayvalık"],"Kahramanmaraş":["Maraş"]};
 
 const $ = s => document.querySelector(s);
 const el = (t,c,x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
 const norm = s => (s || "").toLocaleLowerCase("tr");
 const src = id => data.sources[id] || {name:id, mono:"?", color:"#64748B"};
+// Arama: her kelimenin ilk 6 harfi, haberdeki bir kelimenin başıyla eşleşmeli ("davası" ↔ "davasında")
+const words = t => norm(t).replace(/['’‘`]/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+function matches(text, q){
+  const tw = words(text);
+  return words(q).every(w => { const pre = w.slice(0, Math.min(w.length, 6)); return tw.some(x => x.startsWith(pre)); });
+}
+function cityRegex(name){
+  const names = [name, ...(CITY_ALIASES[name] || [])].flatMap(n => [n, n.toLocaleUpperCase("tr")]);
+  return new RegExp("(^|[^\\p{L}])(" + names.join("|") + ")(?=['’‘]|[^\\p{L}]|$)", "u");
+}
 const allUrls = d => new Set((d.stories || []).flatMap(s => s.items.map(i => i.url)));
 
 function ago(iso){
@@ -244,7 +301,8 @@ function renderAll(){ renderStatus(); renderTicker(); renderSources(); renderCat
 function renderTicker(){
   const m = data.markets || {items:[]}, row = $("#tickerRow");
   row.textContent = "";
-  $("#ticker").hidden = !m.items.length;
+  $("#ticker").hidden = false;
+  row.appendChild(weatherTick());
   m.items.forEach(x => {
     const t = el("div","tick");
     const dir = x.change > 0 ? "up" : x.change < 0 ? "down" : "flat";
@@ -306,14 +364,18 @@ function visibleStories(){
     return Object.values(savedMap).sort((a,b) => b.date.localeCompare(a.date))
       .map(i => ({id:"s-" + i.url, category:i.category || "gundem", date:i.date, items:[i]}));
   }
+  const re = cat === "yerel" && city ? cityRegex(city[0]) : null;
   return data.stories.map(s => ({...s, items: s.items.filter(i => !off.has(i.source))}))
-    .filter(s => s.items.length && (cat === "all" || s.category === cat));
+    .filter(s => s.items.length && (re ? s.items.some(i => re.test(i.title + " " + i.summary)) : (cat === "all" || s.category === cat)));
 }
 
 function renderFeed(){
-  const q = norm($("#q").value.trim());
+  const q = $("#q").value.trim();
+  renderTopics(); renderLocalPanel();
+  if (cat === "yerel" && !city){ $("#feed").textContent = ""; $("#count").textContent = ""; $("#more").hidden = true; return; }
   let list = visibleStories();
-  if (q) list = list.filter(s => s.items.some(i => norm(i.title + " " + i.summary + " " + src(i.source).name).includes(q)));
+  const query = activeTopic || q;
+  if (query) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, query)));
   const feed = $("#feed"); feed.textContent = "";
   const multi = list.filter(s => s.items.length > 1).length;
   $("#count").textContent = list.length + " haber" + (multi ? " · " + multi + " olayı birden çok kaynak verdi" : "");
@@ -321,19 +383,20 @@ function renderFeed(){
     const e = el("div","empty");
     if (!data.stories.length) e.append(el("h3",null,"Haberler yükleniyor"));
     else if (cat === "saved" && !q) e.append(el("h3",null,"Henüz kaydettiğin haber yok"), el("p",null,"Bir haberin altındaki Kaydet’e dokun, burada toplansın."));
-    else if (q) e.append(el("h3",null,"“" + $("#q").value.trim() + "” için sonuç yok"), el("p",null,"Farklı bir kelime dene ya da kapalı kaynakları aç."));
+    else if (query) e.append(el("h3",null,"“" + query + "” için sonuç yok"), el("p",null,"Farklı bir kelime dene ya da kapalı kaynakları aç."));
+    else if (cat === "yerel") e.append(el("h3",null, city[0] + " ile ilgili güncel haber bulunamadı"), el("p",null,"Ulusal kaynaklarda şehrinin adı geçen haberler burada listelenir; 15 dakikada bir tekrar bakılır."));
     else { e.append(el("h3",null,"Bu kategoride açık kaynak kalmadı"), el("p",null,"Yukarıdaki raftan kaynak aç.")); const b = el("button",null,"Tüm kaynakları aç"); b.type = "button"; b.onclick = openAll; e.appendChild(b); }
     feed.appendChild(e); $("#more").hidden = true; return;
   }
   // Manşet: son 12 saatte en çok kaynağın verdiği olay (en az 3 kaynak); yoksa en yeni haber
   let leadIdx = 0;
-  if (!q && cat !== "saved"){
+  if (!query && cat !== "saved" && cat !== "yerel"){
     const since = Date.now() - 12 * 3600e3;
     let best = -1;
     list.forEach((s, i) => { if (s.items.length >= 3 && new Date(s.date) > since && s.items.length > best){ best = s.items.length; leadIdx = i; } });
     if (leadIdx) list = [list[leadIdx], ...list.slice(0, leadIdx), ...list.slice(leadIdx + 1)];
   }
-  list.slice(0, shown).forEach((s, idx) => feed.appendChild(card(s, idx === 0 && !q && cat !== "saved")));
+  list.slice(0, shown).forEach((s, idx) => feed.appendChild(card(s, idx === 0 && !query && cat !== "saved" && cat !== "yerel")));
   $("#more").hidden = list.length <= shown;
 }
 
@@ -392,11 +455,102 @@ function clusterBlock(story, others){
   return wrap;
 }
 
+
+// ---- Gündemdeki konular ----
+function renderTopics(){
+  const box = $("#topics"), list = data.topics || [];
+  box.textContent = "";
+  const show = list.length && (cat === "all" || cat === "gundem") && !$("#q").value.trim();
+  box.hidden = !show;
+  if (!show) return;
+  box.appendChild(el("span","topics-label","Gündemde"));
+  list.forEach(t => {
+    const b = el("button","topic", t.label); b.type = "button";
+    b.setAttribute("aria-pressed", activeTopic === t.label ? "true" : "false");
+    b.title = t.sources + " kaynak, " + t.stories + " haber";
+    b.onclick = () => { activeTopic = activeTopic === t.label ? null : t.label; shown = PAGE; renderFeed(); };
+    box.appendChild(b);
+  });
+}
+
+// ---- Hava durumu (Open-Meteo) ----
+const WMO = {0:["Açık","☀️"],1:["Çoğunlukla açık","🌤️"],2:["Parçalı bulutlu","⛅"],3:["Kapalı","☁️"],45:["Sisli","🌫️"],48:["Kırağılı sis","🌫️"],
+  51:["Hafif çisenti","🌦️"],53:["Çisenti","🌦️"],55:["Yoğun çisenti","🌧️"],56:["Donan çisenti","🌧️"],57:["Donan çisenti","🌧️"],
+  61:["Hafif yağmur","🌦️"],63:["Yağmurlu","🌧️"],65:["Kuvvetli yağmur","🌧️"],66:["Donan yağmur","🌧️"],67:["Donan yağmur","🌧️"],
+  71:["Hafif kar","🌨️"],73:["Karlı","🌨️"],75:["Yoğun kar","❄️"],77:["Kar taneleri","🌨️"],80:["Sağanak","🌦️"],81:["Sağanak","🌧️"],82:["Şiddetli sağanak","⛈️"],
+  85:["Kar sağanağı","🌨️"],86:["Yoğun kar sağanağı","❄️"],95:["Gök gürültülü fırtına","⛈️"],96:["Dolulu fırtına","⛈️"],99:["Dolulu fırtına","⛈️"]};
+const wmo = (c, isDay = 1) => { const w = WMO[c] || ["—","🌡️"]; return !isDay && c <= 2 ? [c === 0 ? "Açık" : w[0], c === 0 ? "🌙" : "☁️"] : w; };
+let weather = null;
+async function loadWeather(){
+  if (!city) { weather = null; return; }
+  const key = "gk-wx2-" + city[0], cached = store.get(key, null);
+  if (cached && Date.now() - cached.at < 30 * 60000){ weather = cached.data; return; }
+  try{
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${city[1]}&longitude=${city[2]}&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FIstanbul&forecast_days=5`;
+    const r = await fetch(u); if (!r.ok) throw new Error(r.status);
+    weather = await r.json(); store.set(key, {at: Date.now(), data: weather});
+  }catch(e){ weather = cached ? cached.data : null; }
+}
+function weatherTick(){
+  const b = el("button","tick wx"); b.type = "button";
+  if (!city){ b.append(el("span","l","Hava durumu"), el("span","v","Şehrini seç")); }
+  else if (!weather){ b.append(el("span","l",city[0]), el("span","v","…")); }
+  else {
+    const c = weather.current, [label, icon] = wmo(c.weather_code, c.is_day);
+    b.append(el("span","l",city[0]), el("span","v", icon + " " + Math.round(c.temperature_2m) + "°"));
+    b.setAttribute("aria-label", `${city[0]} ${Math.round(c.temperature_2m)} derece, ${label}. Şehrim sekmesini aç`);
+  }
+  b.onclick = () => { location.hash = "yerel"; window.scrollTo({top: $("nav.cats").offsetTop}); };
+  return b;
+}
+function renderLocalPanel(){
+  const p = $("#local");
+  p.hidden = cat !== "yerel";
+  if (p.hidden) return;
+  p.textContent = "";
+  const head = el("div","local-head");
+  const lab = el("label","city-pick"); lab.append(el("span",null,"Şehrin"));
+  const sel = el("select"); sel.setAttribute("aria-label","Şehir seç");
+  const ph = el("option",null,"Seç…"); ph.value = ""; sel.appendChild(ph);
+  [...ILLER].sort((a,b) => a[0].localeCompare(b[0],"tr")).forEach(([n]) => { const o = el("option",null,n); o.value = n; if (city && city[0] === n) o.selected = true; sel.appendChild(o); });
+  sel.onchange = async () => { city = ILLER.find(x => x[0] === sel.value) || null; store.set("gk-city", city); weather = null; renderTicker(); renderFeed(); await loadWeather(); renderTicker(); renderLocalPanel(); };
+  lab.appendChild(sel); head.appendChild(lab); p.appendChild(head);
+  if (!city){ p.appendChild(el("p","local-hint","Şehrini seç; hava durumunu ve ulusal kaynaklarda şehrinin adı geçen haberleri burada görelim.")); return; }
+  if (!weather){ p.appendChild(el("p","local-hint","Hava durumu yükleniyor…")); return; }
+  const c = weather.current, [label, icon] = wmo(c.weather_code, c.is_day);
+  const now = el("div","wx-now");
+  now.append(el("span","wx-icon",icon));
+  const t = el("div"); t.append(el("div","wx-temp", Math.round(c.temperature_2m) + "°"), el("div","wx-desc", label));
+  const meta = el("div","wx-meta");
+  meta.append(el("span",null,"Hissedilen " + Math.round(c.apparent_temperature) + "°"), el("span",null,"Rüzgâr " + Math.round(c.wind_speed_10m) + " km/sa"), el("span",null,"Nem %" + c.relative_humidity_2m));
+  now.append(t, meta); p.appendChild(now);
+  const days = el("div","wx-days"), d = weather.daily;
+  d.time.forEach((day, i) => {
+    const box = el("div","wx-day");
+    const name = i === 0 ? "Bugün" : new Date(day + "T12:00:00").toLocaleDateString("tr-TR",{weekday:"short"});
+    const [dl, di] = wmo(d.weather_code[i]);
+    box.append(el("b",null,name), el("span","wx-i",di), el("span",null, Math.round(d.temperature_2m_max[i]) + "° / " + Math.round(d.temperature_2m_min[i]) + "°"));
+    if (d.precipitation_probability_max[i] >= 30) box.appendChild(el("small",null,"Yağış %" + d.precipitation_probability_max[i]));
+    box.setAttribute("aria-label", `${name}: ${dl}, en yüksek ${Math.round(d.temperature_2m_max[i])}, en düşük ${Math.round(d.temperature_2m_min[i])} derece`);
+    days.appendChild(box);
+  });
+  p.appendChild(days);
+  p.appendChild(el("p","wx-src","Hava durumu: Open-Meteo"));
+  p.appendChild(el("h2","local-title", city[0] + " haberleri"));
+}
+
+// ---- Uygulama olarak kurma (PWA) ----
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("#install").hidden = false; });
+window.addEventListener("appinstalled", () => { $("#install").hidden = true; });
+$("#install").onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $("#install").hidden = true; };
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+
 function markRead(url, cardEl){ read.add(url); store.set("gk-read",[...read].slice(-800)); if (cardEl) cardEl.classList.add("read"); }
 function openAll(){ off.clear(); store.set("gk-off",[]); renderSources(); renderFeed(); }
 
 $("#allSources").onclick = openAll;
-$("#q").addEventListener("input", () => { shown = PAGE; renderFeed(); });
+$("#q").addEventListener("input", () => { activeTopic = null; shown = PAGE; renderFeed(); });
 $("#more").onclick = () => { shown += PAGE; renderFeed(); };
 $("#refresh").onclick = () => load(true);
 $("#newbar").onclick = () => { if (pending){ data = pending; pending = null; } $("#newbar").classList.remove("show"); renderAll(); window.scrollTo({top:0}); };
@@ -404,6 +558,8 @@ window.addEventListener("hashchange", () => { const h = location.hash.slice(1); 
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(false); });
 
 renderCats(); renderFeed(); load(true);
+loadWeather().then(() => { renderTicker(); if (cat === "yerel") renderLocalPanel(); });
+setInterval(() => loadWeather().then(renderTicker), 30 * 60 * 1000);
 setInterval(() => load(false), 5 * 60 * 1000);
 setInterval(renderStatus, 60 * 1000);
 </script>

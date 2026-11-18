@@ -1,0 +1,16 @@
+{
+  "name": "Gündem Kutusu",
+  "short_name": "Gündem",
+  "description": "Türk haber kaynaklarını tek sayfada toplayan canlı gündem.",
+  "lang": "tr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E9EDF3",
+  "theme_color": "#2350E6",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

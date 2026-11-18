@@ -1,37 +1,181 @@
 {
   "sources": {
-    "aa":         { "name": "Anadolu Ajansı", "mono": "AA",  "color": "#1D4ED8" },
-    "ntv":        { "name": "NTV",            "mono": "NTV", "color": "#B91C1C" },
-    "trt":        { "name": "TRT Haber",      "mono": "TRT", "color": "#0369A1" },
-    "hurriyet":   { "name": "Hürriyet",       "mono": "HÜ",  "color": "#B45309" },
-    "haberturk":  { "name": "Habertürk",      "mono": "HT",  "color": "#6D28D9" },
-    "cumhuriyet": { "name": "Cumhuriyet",     "mono": "CM",  "color": "#7F1D1D" },
-    "milliyet":   { "name": "Milliyet",       "mono": "ML",  "color": "#334155" },
-    "sozcu":      { "name": "Sözcü",          "mono": "SZ",  "color": "#BE123C" },
-    "euronews":   { "name": "Euronews",       "mono": "EN",  "color": "#0E7490" },
-    "webtekno":   { "name": "Webtekno",       "mono": "WT",  "color": "#15803D" },
-    "shiftdelete":{ "name": "ShiftDelete",    "mono": "SD",  "color": "#C2410C" },
-    "donanimhaber":{ "name": "DonanımHaber",  "mono": "DH",  "color": "#4D7C0F" }
+    "aa": {
+      "name": "Anadolu Ajansı",
+      "mono": "AA",
+      "color": "#1D4ED8"
+    },
+    "ntv": {
+      "name": "NTV",
+      "mono": "NTV",
+      "color": "#B91C1C"
+    },
+    "trt": {
+      "name": "TRT Haber",
+      "mono": "TRT",
+      "color": "#0369A1"
+    },
+    "hurriyet": {
+      "name": "Hürriyet",
+      "mono": "HÜ",
+      "color": "#B45309"
+    },
+    "haberturk": {
+      "name": "Habertürk",
+      "mono": "HT",
+      "color": "#6D28D9"
+    },
+    "cumhuriyet": {
+      "name": "Cumhuriyet",
+      "mono": "CM",
+      "color": "#7F1D1D"
+    },
+    "milliyet": {
+      "name": "Milliyet",
+      "mono": "ML",
+      "color": "#334155"
+    },
+    "sozcu": {
+      "name": "Sözcü",
+      "mono": "SZ",
+      "color": "#BE123C"
+    },
+    "euronews": {
+      "name": "Euronews",
+      "mono": "EN",
+      "color": "#0E7490"
+    },
+    "webtekno": {
+      "name": "Webtekno",
+      "mono": "WT",
+      "color": "#15803D"
+    },
+    "shiftdelete": {
+      "name": "ShiftDelete",
+      "mono": "SD",
+      "color": "#C2410C"
+    },
+    "donanimhaber": {
+      "name": "DonanımHaber",
+      "mono": "DH",
+      "color": "#4D7C0F"
+    },
+    "oyungezer": {
+      "name": "Oyungezer",
+      "mono": "OG",
+      "color": "#DB2777"
+    },
+    "merlin": {
+      "name": "Merlin’in Kazanı",
+      "mono": "MK",
+      "color": "#7C3AED"
+    }
   },
   "feeds": [
-    { "source": "aa",          "category": "gundem",    "url": "https://www.aa.com.tr/tr/rss/default?cat=guncel" },
-    { "source": "ntv",         "category": "gundem",    "url": "https://www.ntv.com.tr/gundem.rss" },
-    { "source": "ntv",         "category": "ekonomi",   "url": "https://www.ntv.com.tr/ekonomi.rss" },
-    { "source": "ntv",         "category": "dunya",     "url": "https://www.ntv.com.tr/dunya.rss" },
-    { "source": "ntv",         "category": "teknoloji", "url": "https://www.ntv.com.tr/teknoloji.rss" },
-    { "source": "trt",         "category": "gundem",    "url": "https://www.trthaber.com/gundem_articles.rss" },
-    { "source": "trt",         "category": "ekonomi",   "url": "https://www.trthaber.com/ekonomi_articles.rss" },
-    { "source": "trt",         "category": "dunya",     "url": "https://www.trthaber.com/dunya_articles.rss" },
-    { "source": "trt",         "category": "spor",      "url": "https://www.trthaber.com/spor_articles.rss" },
-    { "source": "trt",         "category": "teknoloji", "url": "https://www.trthaber.com/bilim_teknoloji_articles.rss" },
-    { "source": "hurriyet",    "category": "gundem",    "url": "https://www.hurriyet.com.tr/rss/anasayfa" },
-    { "source": "haberturk",   "category": "gundem",    "url": "https://www.haberturk.com/rss" },
-    { "source": "cumhuriyet",  "category": "gundem",    "url": "https://www.cumhuriyet.com.tr/rss/son_dakika.xml" },
-    { "source": "milliyet",    "category": "gundem",    "url": "https://www.milliyet.com.tr/rss/rssnew/gundemrss.xml" },
-    { "source": "sozcu",       "category": "gundem",    "url": "https://www.sozcu.com.tr/rss/tum-haberler.xml" },
-    { "source": "euronews",    "category": "dunya",     "url": "https://tr.euronews.com/rss" },
-    { "source": "webtekno",    "category": "teknoloji", "url": "https://www.webtekno.com/rss.xml" },
-    { "source": "shiftdelete", "category": "teknoloji", "url": "https://shiftdelete.net/feed" },
-    { "source": "donanimhaber","category": "teknoloji", "url": "https://www.donanimhaber.com/rss/tum/" }
+    {
+      "source": "aa",
+      "category": "gundem",
+      "url": "https://www.aa.com.tr/tr/rss/default?cat=guncel"
+    },
+    {
+      "source": "ntv",
+      "category": "gundem",
+      "url": "https://www.ntv.com.tr/gundem.rss"
+    },
+    {
+      "source": "ntv",
+      "category": "ekonomi",
+      "url": "https://www.ntv.com.tr/ekonomi.rss"
+    },
+    {
+      "source": "ntv",
+      "category": "dunya",
+      "url": "https://www.ntv.com.tr/dunya.rss"
+    },
+    {
+      "source": "ntv",
+      "category": "teknoloji",
+      "url": "https://www.ntv.com.tr/teknoloji.rss"
+    },
+    {
+      "source": "trt",
+      "category": "gundem",
+      "url": "https://www.trthaber.com/gundem_articles.rss"
+    },
+    {
+      "source": "trt",
+      "category": "ekonomi",
+      "url": "https://www.trthaber.com/ekonomi_articles.rss"
+    },
+    {
+      "source": "trt",
+      "category": "dunya",
+      "url": "https://www.trthaber.com/dunya_articles.rss"
+    },
+    {
+      "source": "trt",
+      "category": "spor",
+      "url": "https://www.trthaber.com/spor_articles.rss"
+    },
+    {
+      "source": "trt",
+      "category": "teknoloji",
+      "url": "https://www.trthaber.com/bilim_teknoloji_articles.rss"
+    },
+    {
+      "source": "hurriyet",
+      "category": "gundem",
+      "url": "https://www.hurriyet.com.tr/rss/anasayfa"
+    },
+    {
+      "source": "haberturk",
+      "category": "gundem",
+      "url": "https://www.haberturk.com/rss"
+    },
+    {
+      "source": "cumhuriyet",
+      "category": "gundem",
+      "url": "https://www.cumhuriyet.com.tr/rss/son_dakika.xml"
+    },
+    {
+      "source": "milliyet",
+      "category": "gundem",
+      "url": "https://www.milliyet.com.tr/rss/rssnew/gundemrss.xml"
+    },
+    {
+      "source": "sozcu",
+      "category": "gundem",
+      "url": "https://www.sozcu.com.tr/rss/tum-haberler.xml"
+    },
+    {
+      "source": "euronews",
+      "category": "dunya",
+      "url": "https://tr.euronews.com/rss"
+    },
+    {
+      "source": "webtekno",
+      "category": "teknoloji",
+      "url": "https://www.webtekno.com/rss.xml"
+    },
+    {
+      "source": "shiftdelete",
+      "category": "teknoloji",
+      "url": "https://shiftdelete.net/feed"
+    },
+    {
+      "source": "donanimhaber",
+      "category": "teknoloji",
+      "url": "https://www.donanimhaber.com/rss/tum/"
+    },
+    {
+      "source": "oyungezer",
+      "category": "oyun",
+      "url": "https://www.oyungezer.com.tr/rss"
+    },
+    {
+      "source": "merlin",
+      "category": "oyun",
+      "url": "https://www.merlininkazani.com/rss"
+    }
   ]
 }

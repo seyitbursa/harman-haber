@@ -76,6 +76,7 @@ a{color:inherit} button,select,input{font:inherit;color:inherit}
 /* Piyasa ve hava şeridi */
 .ticker{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;padding:10px 0;font-size:13px;white-space:nowrap;align-items:baseline}
 .ticker::-webkit-scrollbar{display:none}
+.ticker[hidden]{display:none}
 .tk{display:flex;gap:6px;align-items:baseline;flex:0 0 auto}
 .tk .l{color:var(--ink-3)}
 .tk .v{font-weight:600;font-variant-numeric:tabular-nums}
@@ -116,6 +117,7 @@ a{color:inherit} button,select,input{font:inherit;color:inherit}
 
 /* ---------- Bölüm başlıkları ---------- */
 .sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 0 4px}
+.sec[hidden]{display:none}
 .sec h3{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:22px;letter-spacing:-0.01em;margin:0}
 .sec small{color:var(--ink-3);font-size:13px}
 
@@ -232,8 +234,8 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 .btn.ghost{background:var(--paper);color:var(--ink)}
 
 /* ---------- Alt gezinme (telefon) ---------- */
-.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
-.bottom button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 9px;font-size:11.5px;font-weight:600;color:var(--ink-3);cursor:pointer}
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+.bottom button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 9px;font-size:11px;font-weight:600;color:var(--ink-3);cursor:pointer}
 .bottom button[aria-current="page"]{color:var(--accent)}
 .bottom svg{width:22px;height:22px}
 
@@ -349,6 +351,64 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 .report .quote{background:var(--paper);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--ink-2);margin:10px 0}
 .report .quote b{color:var(--accent)}
 .topic-head .share-row{display:flex;gap:8px;margin-top:14px}
+
+/* ---------- Oyunlar ---------- */
+.games{display:grid;gap:12px;margin-top:12px}
+.game-card{position:relative;display:flex;gap:14px;align-items:center;background:var(--surface);border-radius:16px;padding:16px;box-shadow:0 1px 0 var(--line);border:0;text-align:left;cursor:pointer;width:100%}
+.game-card:hover{box-shadow:0 1px 0 var(--line),0 8px 24px -16px var(--shade)}
+.game-card .gi{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,18px);gap:3px}
+.game-card .gi i{width:18px;height:18px;border-radius:4px;background:var(--line)}
+.game-card .gi i.c{background:var(--k-correct)} .game-card .gi i.p{background:var(--k-present)}
+.game-card h3{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:22px;margin:0}
+.game-card p{margin:2px 0 0;color:var(--ink-2);font-size:14px}
+.game-card .st{margin-left:auto;flex:0 0 auto;font-size:13px;font-weight:700;color:var(--accent);text-align:right}
+.games .soon{color:var(--ink-3);font-size:14px;text-align:center;padding:10px}
+:root{--k-correct:#16A34A;--k-present:#D97706;--k-absent:#64748B;--k-empty:var(--line)}
+@media (prefers-color-scheme: dark){:root{--k-correct:#22C55E;--k-present:#F59E0B;--k-absent:#475569}}
+:root.hc{--k-correct:#E8590C;--k-present:#1C7ED6}
+.wg{max-width:420px;margin:8px auto 0;display:flex;flex-direction:column;align-items:center}
+.wg-head{width:100%;display:flex;align-items:center;justify-content:space-between;margin:6px 0 12px}
+.wg-head h2{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:26px;margin:0}
+.wg-head small{display:block;color:var(--ink-3);font-size:13px;font-weight:500;font-family:var(--body)}
+.wg-head .icons{display:flex;gap:2px}
+.board{display:grid;grid-template-rows:repeat(6,1fr);gap:6px;width:min(100%,330px,calc((100dvh - 470px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .83))}
+body.in-game .tabs{display:none}
+@media (min-width:900px){body.in-game .tabs{display:flex}}
+.brow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.brow.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.tile{aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--line);border-radius:8px;font-family:var(--head);font-weight:800;font-size:30px;text-transform:none;background:var(--surface);color:var(--ink);user-select:none}
+.tile.filled{border-color:var(--ink-3)}
+.tile.c,.tile.p,.tile.a{color:#fff;border-color:transparent}
+.tile.c{background:var(--k-correct)} .tile.p{background:var(--k-present)} .tile.a{background:var(--k-absent)}
+@media (prefers-reduced-motion:no-preference){.tile.flip{animation:flip .5s ease both}.tile.pop{animation:pop .1s}}
+@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+@keyframes pop{50%{transform:scale(1.08)}}
+.kb{width:100%;margin-top:14px;display:flex;flex-direction:column;gap:6px;user-select:none}
+.kr{display:flex;gap:4px;justify-content:center}
+.key{flex:1 1 0;min-width:0;height:52px;border:0;border-radius:7px;background:var(--line);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;padding:0;touch-action:manipulation}
+.key.wide{flex:1.6 1 0;font-size:13px}
+.key.c{background:var(--k-correct);color:#fff} .key.p{background:var(--k-present);color:#fff} .key.a{background:var(--k-absent);color:#fff;opacity:.85}
+.wg-result{width:100%;background:var(--surface);border-radius:16px;padding:16px;margin-top:16px;box-shadow:0 1px 0 var(--line)}
+.wg-result h3{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:22px;margin:0 0 4px}
+.wg-result .ans{font-family:var(--head);font-weight:800;font-size:30px;letter-spacing:.08em;color:var(--k-correct)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin:14px 0}
+.stats b{display:block;font-family:var(--head);font-size:26px;font-weight:800}
+.stats span{font-size:11.5px;color:var(--ink-3);line-height:1.2;display:block}
+.dist{display:grid;gap:4px;margin:6px 0 14px}
+.dist div{display:flex;align-items:center;gap:8px;font-size:13px}
+.dist i{display:block;height:20px;border-radius:4px;background:var(--k-absent);color:#fff;font-style:normal;font-weight:700;font-size:12px;padding:0 7px;line-height:20px;text-align:right;min-width:22px}
+.dist i.me{background:var(--k-correct)}
+.wg-news{list-style:none;margin:6px 0 0;padding:0}
+.wg-news li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.wg-news a{text-decoration:none} .wg-news a:hover{color:var(--accent)}
+.wg-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.wg-foot .next{font-size:13px;color:var(--ink-2)}
+.wg-help p,.wg-help li{font-size:15px;color:var(--ink-2)}
+.wg-help .ex{display:flex;gap:4px;margin:8px 0 4px}
+.wg-help .ex .tile{width:38px;font-size:20px;border-radius:6px}
+.credit{font-size:11.5px;color:var(--ink-3);margin-top:16px;text-align:center}
+.credit a{color:inherit}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -391,6 +451,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
         </label>
         <button class="text-btn desk" type="button" data-go="yerel">Şehrim</button>
         <button class="text-btn desk" type="button" data-go="saved">Kaydettiklerim</button>
+        <button class="text-btn desk" type="button" data-go="oyunlar">Oyunlar</button>
         <button class="text-btn desk" type="button" data-sheet>Ayarlar</button>
         <button class="text-btn" id="install" type="button" hidden>Uygulamayı yükle</button>
         <button class="icon-btn mobile" id="searchBtn" type="button" aria-label="Ara" aria-expanded="false" aria-controls="searchRow">
@@ -425,6 +486,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
       <p>Kaynak dağılımı çubuğu, haberi hangi kesimden kaynakların verdiğini gösterir; etiketler Reuters Enstitüsü ve Medya Sahipliği İzleme (MOM) değerlendirmelerine dayanır ve Ayarlar’dan değiştirilebilir.</p>
       <p>“Özü” satırları haber metninden Google Gemini ile otomatik çıkarılır ve hata içerebilir; ayrıntı için habere dokun.</p>
+      <p>Kelime Harmanı’ndaki kelime listesi <a href="https://tr.wiktionary.org/wiki/Vikis%C3%B6zl%C3%BCk:S%C3%B6zc%C3%BCk_listesi" target="_blank" rel="noopener">Vikisözlük</a>’ten derlenmiştir (CC BY-SA 4.0).</p>
       <p>X gündemi trends24.in, piyasa verileri Truncgil Finans, hava durumu Open-Meteo, deprem verileri AFAD kaynaklıdır. Piyasa verileri anlık değildir ve yatırım tavsiyesi değildir.</p>
     </footer>
   </div>
@@ -435,6 +497,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
   <button type="button" data-go="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/></svg>Akış</button>
   <button type="button" data-go="yerel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Şehrim</button>
   <button type="button" data-go="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>Kaydettiklerim</button>
+  <button type="button" data-go="oyunlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><path d="M17 13v8M13 17h8"/></svg>Oyunlar</button>
   <button type="button" data-sheet><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Ayarlar</button>
 </nav>
 
@@ -681,6 +744,7 @@ function go(where){
 function route(){
   const h = location.hash.slice(1);
   if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); }
+  else if (h === "oyunlar" || h === "oyun-kelime") view = h;
   else if (h === "yerel" || h === "saved") view = h;
   else { view = "feed"; cat = CATS.some(c => c.id === h) ? h : "all"; }
   shown = PAGE; activeTopic = null;
@@ -694,7 +758,7 @@ function renderNav(){
     b.onclick = () => { location.hash = c.id === "all" ? "" : c.id; if (c.id === "all") route(); window.scrollTo({top:0}); };
     tabs.appendChild(b);
   });
-  $$("[data-go]").forEach(b => { const on = b.dataset.go === view; on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
+  $$("[data-go]").forEach(b => { const on = b.dataset.go === view || (b.dataset.go === "oyunlar" && view === "oyun-kelime"); on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
 }
 
 // ---- Liste ----
@@ -709,8 +773,10 @@ function storiesFor(){
 }
 
 function render(){
-  renderNav(); renderStatus(); renderTicker();
+  renderNav(); renderStatus(); renderTicker(); $("#ticker").hidden = false;
+  document.body.classList.toggle("in-game", view === "oyun-kelime");
   if (view === "topic"){ renderTopic(); return; }
+  if (view === "oyunlar" || view === "oyun-kelime"){ renderGames(); return; }
   const q = query();
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
@@ -1018,6 +1084,225 @@ function openReport(i){
 $("#actClose").onclick = () => $("#actSheet").close();
 $("#actSheet").addEventListener("click", e => { if (e.target === $("#actSheet")) $("#actSheet").close(); });
 
+
+// ---- Oyunlar: Kelime Harmanı ----
+const TRL = "abcçdefgğhıijklmnoöprsştuüvyz";
+const trLow = s => s.replace(/I/g, "ı").replace(/İ/g, "i").toLocaleLowerCase("tr");
+const trUp = s => s.toLocaleUpperCase("tr");
+const KH = { dict: null, cur: "", anim: -1, busy: false, timer: null };
+let khState = null;
+if (store.get("kh-hc", false)) document.documentElement.classList.add("hc");
+function khAnswer(){
+  const g = data.game?.kelime; if (!g) return null;
+  const bytes = Uint8Array.from(atob(g.w), c => c.charCodeAt(0));
+  return [...new TextDecoder().decode(bytes)].reverse().join("");
+}
+function khLoad(){
+  const g = data.game?.kelime; if (!g) return null;
+  const st = store.get("kh-state", null);
+  return st && st.date === g.date ? st : { date: g.date, guesses: [], done: false, won: false };
+}
+const khSave = () => store.set("kh-state", khState);
+const khStats = () => store.get("kh-stats", { played: 0, won: 0, streak: 0, best: 0, dist: [0,0,0,0,0,0], last: null });
+function khEval(guess, ans){
+  const g = [...guess], a = [...ans], res = Array(5).fill("a"), left = {};
+  a.forEach((ch, i) => { if (g[i] === ch) res[i] = "c"; else left[ch] = (left[ch] || 0) + 1; });
+  g.forEach((ch, i) => { if (res[i] !== "c" && left[ch] > 0){ res[i] = "p"; left[ch]--; } });
+  return res;
+}
+async function khDict(){
+  if (KH.dict) return KH.dict;
+  try { const r = await fetch("games/kelimeler.json"); KH.dict = new Set(await r.json()); }
+  catch(e){ KH.dict = new Set(); }
+  (data.game?.kelime?.extra || []).forEach(w => KH.dict.add(w));
+  return KH.dict;
+}
+const dateTR = d => new Date(d + "T12:00:00").toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
+
+function renderGames(){
+  const top = $("#top"), feed = $("#feed");
+  top.textContent = ""; feed.classList.remove("skel"); feed.textContent = "";
+  $("#feedHead").hidden = true; $("#ticker").hidden = view === "oyun-kelime";
+  clearInterval(KH.timer);
+  if (view === "oyunlar"){
+    const wrap = el("div","games");
+    const h = el("div","sec"); h.style.marginTop = "14px"; h.appendChild(el("h3", null, "Oyunlar")); top.appendChild(h);
+    const st = khLoad(), stats = khStats();
+    const c = el("button","game-card"); c.type = "button";
+    const gi = el("span","gi"); ["c","p","","c","c","p","","c","c"].forEach(x => gi.appendChild(el("i", x)));
+    const t = el("div"); t.append(el("h3", null, "Kelime Harmanı"), el("p", null, "Günün haberlerinden seçilen 5 harfli kelimeyi 6 denemede bul."));
+    const s = el("span","st", !st ? "" : st.done ? (st.won ? "Bugün çözdün" : "Yarın yeni kelime") : st.guesses.length ? "Devam et" : "Oyna");
+    if (stats.streak > 1) s.appendChild(el("small", null, "\n" + stats.streak + " günlük seri"));
+    s.style.whiteSpace = "pre-line";
+    c.append(gi, t, s); c.onclick = () => { location.hash = "oyun-kelime"; };
+    wrap.append(c, el("p","soon","Yeni oyunlar yolda."));
+    top.appendChild(wrap);
+    renderAside(); return;
+  }
+  // Oyun ekranı
+  if (!data.game?.kelime){ top.appendChild(el("p","hint","Günün kelimesi yükleniyor…")); return; }
+  if (!khState || khState.date !== data.game.kelime.date) khState = khLoad();
+  khDict();
+  const wg = el("section","wg"); wg.id = "wg";
+  const head = el("div","wg-head"), ht = el("div");
+  ht.append(el("h2", null, "Kelime Harmanı"), el("small", null, dateTR(khState.date) + " kelimesi"));
+  const icons = el("div","icons");
+  const help = el("button","icon-btn"); help.type = "button"; help.setAttribute("aria-label","Nasıl oynanır?"); help.appendChild(svgIcon("M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", 22));
+  help.onclick = khHelp;
+  const stb = el("button","icon-btn"); stb.type = "button"; stb.setAttribute("aria-label","İstatistikler"); stb.appendChild(svgIcon("M5 20V10M12 20V4M19 20v-7", 22));
+  stb.onclick = () => document.getElementById("wgResult")?.scrollIntoView({behavior:"smooth"}) || khStatsSheet();
+  icons.append(help, stb); head.append(ht, icons); wg.appendChild(head);
+  const board = el("div","board"); board.id = "board"; board.setAttribute("role","grid"); board.setAttribute("aria-label","Tahmin tablosu");
+  wg.appendChild(board);
+  const kb = el("div","kb"); kb.id = "kb"; kb.setAttribute("aria-label","Klavye");
+  [["e","r","t","y","u","ı","o","p","ğ","ü"],["a","s","d","f","g","h","j","k","l","ş","i"],["⏎","z","c","v","b","n","m","ö","ç","⌫"]].forEach(row => {
+    const r = el("div","kr");
+    row.forEach(k => {
+      const b = el("button","key" + (k === "⏎" || k === "⌫" ? " wide" : ""), k === "⏎" ? "GİR" : k === "⌫" ? "⌫" : trUp(k));
+      b.type = "button"; b.dataset.k = k; b.setAttribute("aria-label", k === "⏎" ? "Tahmini gönder" : k === "⌫" ? "Sil" : trUp(k));
+      b.onclick = () => khKey(k); r.appendChild(b);
+    });
+    kb.appendChild(r);
+  });
+  wg.appendChild(kb);
+  top.appendChild(wg);
+  top.appendChild(el("p","credit","")).innerHTML = 'Kelime listesi: <a href="https://tr.wiktionary.org/" target="_blank" rel="noopener">Vikisözlük</a>, CC BY-SA 4.0';
+  khDraw();
+  if (khState.done) khResult(false);
+  if (!store.get("kh-seen-help", false)){ store.set("kh-seen-help", true); setTimeout(khHelp, 300); }
+  renderAside();
+}
+
+function khDraw(){
+  const ans = khAnswer(), board = $("#board"), kb = $("#kb"); if (!board) return;
+  board.textContent = "";
+  const keyState = {};
+  for (let r = 0; r < 6; r++){
+    const row = el("div","brow"); row.setAttribute("role","row");
+    const g = khState.guesses[r];
+    const res = g ? khEval(g, ans) : null;
+    const letters = g ? [...g] : (r === khState.guesses.length && !khState.done ? [...KH.cur] : []);
+    for (let i = 0; i < 5; i++){
+      const t = el("div","tile", letters[i] ? trUp(letters[i]) : "");
+      t.setAttribute("role","gridcell");
+      if (letters[i]) t.classList.add("filled");
+      if (res){
+        t.classList.add(res[i]);
+        if (r === KH.anim){ t.classList.add("flip"); t.style.animationDelay = (i * 0.12) + "s"; }
+        t.setAttribute("aria-label", trUp(letters[i]) + ": " + (res[i] === "c" ? "doğru yerde" : res[i] === "p" ? "kelimede var, yeri yanlış" : "kelimede yok"));
+        const rank = {a:1, p:2, c:3}, prev = keyState[letters[i]];
+        if (!prev || rank[res[i]] > rank[prev]) keyState[letters[i]] = res[i];
+      }
+      row.appendChild(t);
+    }
+    board.appendChild(row);
+  }
+  KH.anim = -1;
+  kb.querySelectorAll(".key").forEach(b => { b.classList.remove("c","p","a"); const s = keyState[b.dataset.k]; if (s) b.classList.add(s); });
+}
+
+async function khKey(k){
+  if (view !== "oyun-kelime" || !khState || khState.done || KH.busy) return;
+  if (k === "⌫"){ KH.cur = [...KH.cur].slice(0, -1).join(""); khDraw(); return; }
+  if (k === "⏎") return khSubmit();
+  if (!TRL.includes(k) || [...KH.cur].length >= 5) return;
+  KH.cur += k; khDraw();
+  const row = $("#board").children[khState.guesses.length]; const t = row?.children[[...KH.cur].length - 1]; t?.classList.add("pop");
+}
+function khShake(msg){ toast(msg); const row = $("#board").children[khState.guesses.length]; row.classList.remove("shake"); void row.offsetWidth; row.classList.add("shake"); }
+async function khSubmit(){
+  const cur = KH.cur, ans = khAnswer();
+  if ([...cur].length < 5) return khShake("Yetersiz harf");
+  const dict = await khDict();
+  if (cur !== ans && !dict.has(cur)) return khShake("Kelime listesinde yok");
+  KH.busy = true;
+  khState.guesses.push(cur); KH.cur = ""; KH.anim = khState.guesses.length - 1;
+  const won = cur === ans, n = khState.guesses.length;
+  if (won || n === 6){
+    khState.done = true; khState.won = won;
+    const st = khStats(), y = new Date(khState.date + "T12:00:00"); y.setDate(y.getDate() - 1);
+    const yest = y.toISOString().slice(0, 10);
+    if (st.last !== khState.date){
+      st.played++;
+      if (won){ st.won++; st.dist[n - 1]++; st.streak = st.last === yest && st.lastWon ? st.streak + 1 : 1; st.best = Math.max(st.best, st.streak); }
+      else st.streak = 0;
+      st.last = khState.date; st.lastWon = won;
+      store.set("kh-stats", st);
+    }
+  }
+  khSave(); khDraw();
+  setTimeout(() => {
+    KH.busy = false;
+    if (khState.done){
+      toast(khState.won ? ["Dahiyane!","Harika!","Çok iyi!","Güzel!","Fena değil!","Kıl payı!"][n - 1] : "Kelime: " + trUp(ans));
+      setTimeout(() => khResult(true), 900);
+    }
+  }, 5 * 120 + 500);
+}
+function khShareText(){
+  const ans = khAnswer(), hc = document.documentElement.classList.contains("hc");
+  const sq = {c: hc ? "🟧" : "🟩", p: hc ? "🟦" : "🟨", a: "⬜"};
+  const rows = khState.guesses.map(g => khEval(g, ans).map(x => sq[x]).join("")).join("\n");
+  return `Kelime Harmanı, ${dateTR(khState.date)}: ${khState.won ? khState.guesses.length : "X"}/6\n${rows}`;
+}
+function khResult(scroll){
+  document.getElementById("wgResult")?.remove();
+  const ans = khAnswer(), st = khStats(), box = el("section","wg-result"); box.id = "wgResult";
+  box.appendChild(el("h3", null, khState.won ? "Tebrikler!" : "Bu sefer olmadı"));
+  const a = el("div","ans", trUp(ans)); box.appendChild(a);
+  const stats = el("div","stats");
+  [[st.played,"Oynanan"],[st.played ? Math.round(st.won / st.played * 100) : 0,"Kazanma %"],[st.streak,"Seri"],[st.best,"En uzun seri"]].forEach(([v,l]) => { const d = el("div"); d.append(el("b", null, String(v)), el("span", null, l)); stats.appendChild(d); });
+  box.appendChild(stats);
+  const dist = el("div","dist"), max = Math.max(1, ...st.dist);
+  st.dist.forEach((v, i) => { const d = el("div"); const bar = el("i", khState.won && khState.guesses.length === i + 1 ? "me" : null, String(v)); bar.style.width = Math.max(8, v / max * 100) + "%"; d.append(el("span", null, String(i + 1)), bar); dist.appendChild(d); });
+  box.appendChild(dist);
+  const news = data.game?.kelime?.news || [];
+  if (news.length){
+    box.appendChild(el("h3", null, "“" + trUp(ans) + "” bugün bu haberlerde geçti"));
+    const ul = el("ul","wg-news");
+    news.forEach(n => { const li = el("li"); li.appendChild(mono(n.source)); li.appendChild(link(n.title, n.url)); ul.appendChild(li); });
+    box.appendChild(ul);
+  }
+  const f = el("div","wg-foot"), nx = el("span","next");
+  const tick = () => {
+    const now = Date.now(), ist = new Date(now + 3 * 3600e3);
+    const next = Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate() + 1) - 3 * 3600e3;
+    const s = Math.max(0, Math.floor((next - now) / 1000));
+    nx.textContent = "Yeni kelimeye " + String(Math.floor(s / 3600)).padStart(2,"0") + ":" + String(Math.floor(s % 3600 / 60)).padStart(2,"0") + ":" + String(s % 60).padStart(2,"0");
+    if (s === 0){ clearInterval(KH.timer); load(true); }
+  };
+  tick(); clearInterval(KH.timer); KH.timer = setInterval(tick, 1000);
+  const sh = el("button","btn","Sonucu paylaş"); sh.type = "button";
+  sh.onclick = () => shareOrCopy({ title: "Kelime Harmanı", text: khShareText(), url: SITE + "#oyun-kelime" });
+  f.append(nx, sh); box.appendChild(f);
+  $("#wg").appendChild(box);
+  if (scroll) box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function khStatsSheet(){ khResult(true); }
+function khHelp(){
+  const body = $("#actBody"); body.textContent = ""; $("#actTitle").textContent = "Nasıl oynanır?";
+  const h = el("div","wg-help");
+  h.appendChild(el("p", null, "Günün 5 harfli kelimesini 6 denemede bul. Kelime, o günün haberlerinde geçen kelimeler arasından seçilir; çözünce hangi haberlerde geçtiğini görürsün."));
+  const ex = (word, idx, cls, txt) => { const d = el("div","ex"); [...word].forEach((ch, i) => { const t = el("div","tile" + (i === idx ? " " + cls : ""), trUp(ch)); d.appendChild(t); }); h.append(d, el("p", null, txt)); };
+  ex("kalem", 0, "c", "K kelimede var ve doğru yerde.");
+  ex("deniz", 2, "p", "N kelimede var ama başka bir yerde.");
+  ex("bahar", 3, "a", "A’nın bu yerdeki hali kelimede yok.");
+  h.appendChild(el("p", null, "Her gün Türkiye saatiyle gece yarısı yeni kelime gelir. Tahminlerin sözlükteki ya da günün haberlerinde geçen gerçek kelimeler olmalı."));
+  const lab = el("label"); lab.style.cssText = "display:flex;gap:10px;align-items:center;margin-top:10px;font-size:15px";
+  const cb = el("input"); cb.type = "checkbox"; cb.checked = document.documentElement.classList.contains("hc");
+  cb.onchange = () => { document.documentElement.classList.toggle("hc", cb.checked); store.set("kh-hc", cb.checked); khDraw(); };
+  lab.append(cb, "Yüksek kontrastlı renkler (renk körlüğü için)"); h.appendChild(lab);
+  body.appendChild(h);
+  if (!$("#actSheet").open) $("#actSheet").showModal();
+}
+document.addEventListener("keydown", e => {
+  if (view !== "oyun-kelime" || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (document.querySelector("dialog[open]") || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)) return;
+  if (e.key === "Enter"){ e.preventDefault(); khKey("⏎"); }
+  else if (e.key === "Backspace"){ e.preventDefault(); khKey("⌫"); }
+  else { const k = trLow(e.key); if (k.length === 1 && TRL.includes(k)) khKey(k); }
+});
+
 // ---- Konu sayfaları ----
 let topicSlug = null;
 function topicOfStory(id){ return (data.topics || []).find(t => (t.storyIds || []).includes(id)); }
@@ -1306,7 +1591,7 @@ $("#install").onclick = async () => { if (!installEvt) return; installEvt.prompt
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
 // ---- Başlat ----
-{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
+{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h === "oyun-kelime") view = h; else if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
 renderNav(); renderTicker();
 load(true);
 loadWeather().then(() => { if (loaded) render(); else renderTicker(); });

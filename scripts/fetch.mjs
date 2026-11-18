@@ -8,6 +8,7 @@ import { getXTrends } from "./xtrends.mjs";
 import { getQuakes } from "./quakes.mjs";
 import { notify, previousJson } from "./notify.mjs";
 import { addGists, addTopicSummaries } from "./summarize.mjs";
+import { dailyWord } from "./wordgame.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -169,6 +170,7 @@ for (let i = topics.length - 1; i > 0; i--) {
   const dup = topics.slice(0, i).some(t => t.storyIds.filter(id => mine.has(id)).length / mine.size >= 0.6);
   if (dup) topics.splice(i, 1);
 }
+const game = { kelime: await dailyWord({ stories, prevGame: prevJson?.game?.kelime }) };
 const topicSums = await addTopicSummaries({ topics, stories, sources: config.sources, prevTopicSums: prevJson?.topicSums, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const cfg = config.notify || {};
 const note = cfg.ntfyTopic
@@ -180,7 +182,7 @@ await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);

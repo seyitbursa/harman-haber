@@ -4,16 +4,21 @@ on:
   push:
     paths: [".github/workflows/models-test.yml"]
 permissions:
-
+  models: read
   contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Katalog
-        run: curl -s -w "\nHTTP %{http_code}\n" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://models.github.ai/catalog/models | head -c 1500
-      - name: Çıkarım
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -w "\nHTTP %{http_code}\n" -H "Authorization: Bearer $TOKEN" https://models.github.ai/catalog/models | head -c 1200
+      - name: Cikarim
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -s -w "\nHTTP %{http_code}\n" -X POST https://models.github.ai/inference/chat/completions \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Content-Type: application/json" \
-            -d '{"model":"openai/gpt-4.1-mini","messages":[{"role":"user","content":"Tek kelimeyle: Türkiye başkenti?"}],"max_tokens":10}' | head -c 1500
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+            -d '{"model":"openai/gpt-4.1-mini","messages":[{"role":"user","content":"Tek kelimeyle: Turkiye baskenti?"}],"max_tokens":10}' | head -c 1500

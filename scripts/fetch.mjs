@@ -1,6 +1,8 @@
 // RSS kaynaklarını çeker, birleştirir ve public/news.json dosyasını üretir.
 import Parser from "rss-parser";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { cluster } from "./cluster.mjs";
+import { getMarkets } from "./markets.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -90,13 +92,33 @@ results.forEach((r, i) => {
   }
 });
 items.sort((a, b) => b.date.localeCompare(a.date));
-items = items.slice(0, MAX_TOTAL).map((it, i) => ({ id: i.toString(36) + "-" + it.source, ...it }));
+items = items.slice(0, MAX_TOTAL);
+
+// Aynı olayı veren haberleri tek "hikâye" altında topla.
+// İlk sıradaki haber kartta gösterilir: görseli ve özeti olanlar öne alınır.
+const richness = it => (it.image ? 2 : 0) + (it.summary ? 1 : 0);
+const stories = cluster(items).map((group, i) => {
+  const members = [...group].sort((a, b) => richness(b) - richness(a) || b.date.localeCompare(a.date));
+  const cats = members.map(m => m.category).filter(c => c !== "gundem");
+  const category = cats.length ? cats.sort((a, b) => cats.filter(c => c === b).length - cats.filter(c => c === a).length)[0] : "gundem";
+  return {
+    id: i.toString(36),
+    category,
+    date: group.map(m => m.date).sort().at(-1),
+    items: members.map(({ category: _c, ...rest }) => rest)
+  };
+}).sort((a, b) => b.date.localeCompare(a.date));
+
+const markets = await getMarkets();
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
-  JSON.stringify({ updatedAt: new Date().toISOString(), sources: config.sources, items, errors }));
+  JSON.stringify({ version: 2, updatedAt: new Date().toISOString(), sources: config.sources, markets, stories, errors }));
 
-console.log(`${items.length} haber yazıldı, ${errors.length} akış hata verdi.`);
+const multi = stories.filter(s => s.items.length > 1).length;
+console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}; ${errors.length} akış hata verdi.`);
 errors.forEach(e => console.log("  ✗", e.url, "→", e.error));
+if (markets.error) console.log("  ✗ piyasa →", markets.error);
+
 // Açık kalan bağlantılar yüzünden işlem asılı kalmasın
 process.exit(0);

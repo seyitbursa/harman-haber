@@ -11,7 +11,7 @@
 <style>
 :root{
   --bg:#E9EDF3; --surface:#FFFFFF; --surface-2:#F4F6FA; --ink:#172033; --ink-2:#4A5568; --ink-3:#7A8599;
-  --line:#D5DBE5; --accent:#2350E6; --accent-ink:#FFFFFF; --saved:#C98A0B; --live:#16A34A;
+  --line:#D5DBE5; --accent:#2350E6; --accent-ink:#FFFFFF; --saved:#C98A0B; --live:#16A34A; --up:#15803D; --down:#B91C1C;
   --head:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
   --body:"Public Sans","Segoe UI",system-ui,-apple-system,sans-serif;
   box-sizing:border-box;
@@ -20,7 +20,7 @@
 }
 @media (prefers-color-scheme: dark){
   :root{ --bg:#0F1522; --surface:#18202F; --surface-2:#1F2839; --ink:#E8ECF4; --ink-2:#B3BCCC; --ink-3:#8590A3;
-    --line:#2C3649; --accent:#7D9BFF; --accent-ink:#0F1522; --saved:#F2B83B; --live:#4ADE80; color-scheme:dark; }
+    --line:#2C3649; --accent:#7D9BFF; --accent-ink:#0F1522; --saved:#F2B83B; --live:#4ADE80; --up:#4ADE80; --down:#F87171; color-scheme:dark; }
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
@@ -71,8 +71,8 @@ main .wrap{padding-top:20px;padding-bottom:48px}
 @media (min-width:760px){.feed{grid-template-columns:1fr 1fr}.feed .lead{grid-column:1 / -1}}
 @media (min-width:1020px){.feed{grid-template-columns:repeat(3,1fr)}}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr 88px;grid-template-areas:"who who" "title img" "sum sum" "foot foot";column-gap:12px;row-gap:8px;position:relative;align-content:start}
-.card.noimg{grid-template-columns:1fr;grid-template-areas:"who" "title" "sum" "foot"}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr 88px;grid-template-areas:"who who" "title img" "sum sum" "cl cl" "foot foot";column-gap:12px;row-gap:8px;position:relative;align-content:start}
+.card.noimg{grid-template-columns:1fr;grid-template-areas:"who" "title" "sum" "cl" "foot"}
 .card.read{opacity:.6}
 .who{grid-area:who;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3);min-width:0}
 .mini{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;font-family:var(--head);font-weight:800;font-size:9px;flex:0 0 auto}
@@ -88,11 +88,11 @@ main .wrap{padding-top:20px;padding-bottom:48px}
 .save[aria-pressed="true"]{color:var(--saved)}
 .save[aria-pressed="true"] path{fill:currentColor}
 
-.lead{grid-template-columns:1fr;grid-template-areas:"img" "who" "title" "sum" "foot";padding:0;overflow:hidden}
+.lead,.lead.noimg{grid-template-columns:1fr;grid-template-areas:"img" "who" "title" "sum" "cl" "foot";padding:0;overflow:hidden}
 .lead > *:not(.thumb){margin-left:20px;margin-right:20px}
 .lead .foot{margin-bottom:18px}
 .lead .who{margin-top:4px}
-.lead .thumb{width:100%;height:auto;aspect-ratio:16/8;border-radius:0}
+.lead .thumb{width:100%;height:auto;aspect-ratio:16/8;max-height:380px;border-radius:0}
 .lead.noimg .who{margin-top:20px}
 .lead h3{font-size:clamp(24px,4vw,32px);line-height:1.12}
 .lead p{font-size:16px;max-width:62ch}
@@ -101,9 +101,39 @@ main .wrap{padding-top:20px;padding-bottom:48px}
 .empty{grid-column:1 / -1;text-align:center;padding:48px 16px;color:var(--ink-2)}
 .empty h3{font-family:var(--head);margin:0 0 6px;font-size:20px;color:var(--ink)}
 .empty button{margin-top:12px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer}
+
+/* Piyasa şeridi */
+.ticker{background:var(--surface);border-bottom:1px solid var(--line)}
+.ticker .wrap{display:flex;gap:8px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none;align-items:center}
+.ticker .wrap::-webkit-scrollbar{display:none}
+.ticker[hidden]{display:none}
+.tick{flex:0 0 auto;display:flex;align-items:baseline;gap:6px;background:var(--surface-2);border-radius:10px;padding:7px 11px;font-size:14px;white-space:nowrap}
+.tick .l{color:var(--ink-3);font-size:12px;font-weight:600}
+.tick .v{font-weight:600;font-variant-numeric:tabular-nums}
+.tick .c{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.tick .c.up{color:var(--up)} .tick .c.down{color:var(--down)} .tick .c.flat{color:var(--ink-3)}
+.ticker .src-note{flex:0 0 auto;font-size:11px;color:var(--ink-3);padding-left:4px}
+
+/* Birden çok kaynaklı haber */
+.cluster{grid-area:cl;position:relative;z-index:2;border-top:1px dashed var(--line);padding-top:8px}
+.cluster-btn{display:flex;align-items:center;gap:10px;background:none;border:0;padding:4px 0;cursor:pointer;width:100%;text-align:left}
+.stack{display:flex;flex:0 0 auto}
+.stack .mini{border:2px solid var(--surface);width:26px;height:26px;margin-left:-8px}
+.stack .mini:first-child{margin-left:0}
+.stack .mini{font-size:8px;letter-spacing:-0.02em}
+.cluster-btn .txt{font-size:14px;font-weight:600;color:var(--ink);line-height:1.3}
+.cluster-btn .chev{margin-left:auto;color:var(--ink-3);transition:transform .2s;flex:0 0 auto}
+.cluster-btn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.others{list-style:none;margin:6px 0 0;padding:0;display:none;flex-direction:column}
+.others.open{display:flex}
+.others li a{display:flex;gap:10px;align-items:flex-start;text-decoration:none;padding:8px;border-radius:10px;margin:0 -8px}
+.others li a:hover{background:var(--surface-2)}
+.others .t{font-size:14px;line-height:1.35;color:var(--ink-2)}
+.others .t b{display:block;color:var(--ink-3);font-size:12px;font-weight:600;margin-bottom:1px}
+.badge-hot{display:inline-flex;align-items:center;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;margin-left:auto;flex:0 0 auto}
 footer{color:var(--ink-3);font-size:13px;border-top:1px solid var(--line);padding:20px 0 32px}
 footer p{margin:0 0 6px;max-width:70ch}
-@media (max-width:560px){.top .wrap{flex-direction:column;align-items:stretch}.search{flex:1 1 auto}}
+@media (max-width:560px){.top .wrap{flex-direction:column;align-items:stretch}.search{flex:1 1 auto}.meta-line span:last-child{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -120,6 +150,8 @@ footer p{margin:0 0 6px;max-width:70ch}
     </label>
   </div>
 </header>
+
+<div class="ticker" id="ticker" hidden><div class="wrap" id="tickerRow" aria-label="Piyasalar"></div></div>
 
 <section class="shelf" aria-labelledby="shelf-title">
   <div class="wrap">
@@ -141,7 +173,7 @@ footer p{margin:0 0 6px;max-width:70ch}
 
 <footer><div class="wrap">
   <p>Başlık ve özetler yayıncıların RSS akışlarından otomatik alınır; haberin tamamı için karta dokun, orijinal sitede açılır.</p>
-  <p>Akışlar yaklaşık 15 dakikada bir güncellenir.</p>
+  <p>Haberler ve piyasa verileri yaklaşık 15 dakikada bir güncellenir; piyasa verileri anlık değildir ve yatırım tavsiyesi değildir.</p>
 </div></footer>
 
 <script>
@@ -155,16 +187,19 @@ const store = {
   get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
-let data = {sources:{}, items:[]}, pending = null;
+let data = {sources:{}, stories:[], markets:{items:[]}}, pending = null;
 let off = new Set(store.get("gk-off", []));
-let savedMap = store.get("gk-saved-items", {});   // id yerine url ile: veri yenilense de kaybolmaz
+let savedMap = store.get("gk-saved-items", {});
 let read = new Set(store.get("gk-read", []));
 let cat = CATS.some(c => c.id === location.hash.slice(1)) ? location.hash.slice(1) : "all";
 let shown = PAGE;
+const openClusters = new Set();
 
 const $ = s => document.querySelector(s);
 const el = (t,c,x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
 const norm = s => (s || "").toLocaleLowerCase("tr");
+const src = id => data.sources[id] || {name:id, mono:"?", color:"#64748B"};
+const allUrls = d => new Set((d.stories || []).flatMap(s => s.items.map(i => i.url)));
 
 function ago(iso){
   const m = Math.round((Date.now() - new Date(iso)) / 60000);
@@ -174,37 +209,60 @@ function ago(iso){
   if (h < 24) return h + " sa önce";
   return new Date(iso).toLocaleDateString("tr-TR", {day:"numeric", month:"short"});
 }
+function fmt(v){
+  const digits = v >= 1000 ? 0 : v >= 100 ? 1 : 2;
+  return v.toLocaleString("tr-TR", {minimumFractionDigits:digits, maximumFractionDigits:digits});
+}
 
 async function load(manual){
   try{
     const r = await fetch("news.json?t=" + Date.now(), {cache:"no-store"});
     if (!r.ok) throw new Error(r.status);
     const fresh = await r.json();
-    if (!data.items.length || manual){ data = fresh; pending = null; renderAll(); }
+    if (!fresh.stories) throw new Error("eski veri biçimi");
+    if (!data.stories.length || manual){ data = fresh; pending = null; $("#newbar").classList.remove("show"); renderAll(); }
     else if (fresh.updatedAt !== data.updatedAt){
-      const known = new Set(data.items.map(i => i.url));
-      const n = fresh.items.filter(i => !known.has(i.url)).length;
+      const known = allUrls(data);
+      const n = fresh.stories.filter(s => s.items.some(i => !known.has(i.url) && !off.has(i.source))).length;
+      data.markets = fresh.markets; renderTicker();
       pending = fresh;
       if (n){ const b = $("#newbar"); b.textContent = n + " yeni haber var, göster"; b.classList.add("show"); }
-      else { data = fresh; renderStatus(); }
+      else { data = fresh; pending = null; renderStatus(); }
     }
   }catch(e){
-    $("#updated").textContent = data.items.length ? "Güncellenemedi, son veri gösteriliyor" : "Haberler yüklenemedi. Bağlantını kontrol edip Yenile’ye dokun.";
+    $("#updated").textContent = data.stories.length ? "Güncellenemedi, son veri gösteriliyor" : "Haberler yüklenemedi. Bağlantını kontrol edip Yenile’ye dokun.";
     $("#dot").classList.add("stale");
   }
 }
 function renderStatus(){
   if (!data.updatedAt) return;
-  const mins = (Date.now() - new Date(data.updatedAt)) / 60000;
   $("#updated").textContent = "Güncellendi: " + ago(data.updatedAt);
-  $("#dot").classList.toggle("stale", mins > 60);
+  $("#dot").classList.toggle("stale", (Date.now() - new Date(data.updatedAt)) / 60000 > 60);
 }
-function renderAll(){ renderStatus(); renderSources(); renderCats(); renderFeed(); }
+function renderAll(){ renderStatus(); renderTicker(); renderSources(); renderCats(); renderFeed(); }
+
+function renderTicker(){
+  const m = data.markets || {items:[]}, row = $("#tickerRow");
+  row.textContent = "";
+  $("#ticker").hidden = !m.items.length;
+  m.items.forEach(x => {
+    const t = el("div","tick");
+    const dir = x.change > 0 ? "up" : x.change < 0 ? "down" : "flat";
+    const arrow = dir === "up" ? "▲" : dir === "down" ? "▼" : "•";
+    t.append(el("span","l",x.label), el("span","v", fmt(x.value) + (x.unit ? " " + x.unit : "")),
+      el("span","c " + dir, arrow + " %" + Math.abs(x.change).toLocaleString("tr-TR",{minimumFractionDigits:2, maximumFractionDigits:2})));
+    t.setAttribute("aria-label", `${x.label} ${fmt(x.value)}, yüzde ${x.change.toLocaleString("tr-TR")} ${dir === "up" ? "artış" : dir === "down" ? "düşüş" : "değişim"}`);
+    row.appendChild(t);
+  });
+  if (m.source) row.appendChild(el("span","src-note","Kaynak: " + m.source));
+}
 
 function renderSources(){
   const box = $("#sources"); box.textContent = "";
+  const counts = {};
+  data.stories.forEach(s => s.items.forEach(i => { counts[i.source] = (counts[i.source] || 0) + 1; }));
   Object.entries(data.sources).forEach(([id, s]) => {
-    const n = data.items.filter(i => i.source === id).length;
+    const n = counts[id] || 0;
     if (!n) return;
     const b = el("button","src"); b.type = "button";
     b.setAttribute("aria-pressed", off.has(id) ? "false" : "true");
@@ -225,56 +283,116 @@ function renderCats(){
     box.appendChild(b);
   });
 }
-function icon(){
+function bookmark(){
   const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns,"svg"), p = document.createElementNS(ns,"path");
   svg.setAttribute("width","16"); svg.setAttribute("height","16"); svg.setAttribute("viewBox","0 0 24 24"); svg.setAttribute("aria-hidden","true");
   p.setAttribute("d","M6 3h12v18l-6-4.5L6 21z"); p.setAttribute("fill","none"); p.setAttribute("stroke","currentColor"); p.setAttribute("stroke-width","2"); p.setAttribute("stroke-linejoin","round");
   svg.appendChild(p); return svg;
 }
+function chevron(){
+  const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns,"svg"), p = document.createElementNS(ns,"path");
+  svg.setAttribute("width","18"); svg.setAttribute("height","18"); svg.setAttribute("viewBox","0 0 24 24"); svg.setAttribute("class","chev"); svg.setAttribute("aria-hidden","true");
+  p.setAttribute("d","m6 9 6 6 6-6"); p.setAttribute("fill","none"); p.setAttribute("stroke","currentColor"); p.setAttribute("stroke-width","2.2"); p.setAttribute("stroke-linecap","round");
+  svg.appendChild(p); return svg;
+}
+function miniTile(id){
+  const s = src(id), m = el("span","mini", s.mono);
+  m.style.background = s.color; m.setAttribute("aria-hidden","true"); return m;
+}
+
+// Görünür hikâyeler: kapalı kaynaklar çıkarılır, kalan ilk haber kartta gösterilir
+function visibleStories(){
+  if (cat === "saved"){
+    return Object.values(savedMap).sort((a,b) => b.date.localeCompare(a.date))
+      .map(i => ({id:"s-" + i.url, category:i.category || "gundem", date:i.date, items:[i]}));
+  }
+  return data.stories.map(s => ({...s, items: s.items.filter(i => !off.has(i.source))}))
+    .filter(s => s.items.length && (cat === "all" || s.category === cat));
+}
+
 function renderFeed(){
   const q = norm($("#q").value.trim());
-  let list = cat === "saved" ? Object.values(savedMap).sort((a,b) => b.date.localeCompare(a.date)) : data.items.filter(i => !off.has(i.source));
-  if (cat !== "all" && cat !== "saved") list = list.filter(i => i.category === cat);
-  if (q) list = list.filter(i => norm(i.title + " " + i.summary + " " + (data.sources[i.source]?.name || "")).includes(q));
+  let list = visibleStories();
+  if (q) list = list.filter(s => s.items.some(i => norm(i.title + " " + i.summary + " " + src(i.source).name).includes(q)));
   const feed = $("#feed"); feed.textContent = "";
-  $("#count").textContent = list.length + " haber";
+  const multi = list.filter(s => s.items.length > 1).length;
+  $("#count").textContent = list.length + " haber" + (multi ? " · " + multi + " olayı birden çok kaynak verdi" : "");
   if (!list.length){
     const e = el("div","empty");
-    if (!data.items.length) e.append(el("h3",null,"Haberler yükleniyor"));
+    if (!data.stories.length) e.append(el("h3",null,"Haberler yükleniyor"));
     else if (cat === "saved" && !q) e.append(el("h3",null,"Henüz kaydettiğin haber yok"), el("p",null,"Bir haberin altındaki Kaydet’e dokun, burada toplansın."));
     else if (q) e.append(el("h3",null,"“" + $("#q").value.trim() + "” için sonuç yok"), el("p",null,"Farklı bir kelime dene ya da kapalı kaynakları aç."));
     else { e.append(el("h3",null,"Bu kategoride açık kaynak kalmadı"), el("p",null,"Yukarıdaki raftan kaynak aç.")); const b = el("button",null,"Tüm kaynakları aç"); b.type = "button"; b.onclick = openAll; e.appendChild(b); }
     feed.appendChild(e); $("#more").hidden = true; return;
   }
-  list.slice(0, shown).forEach((i, idx) => feed.appendChild(card(i, idx === 0 && !q && cat !== "saved")));
+  // Manşet: son 12 saatte en çok kaynağın verdiği olay (en az 3 kaynak); yoksa en yeni haber
+  let leadIdx = 0;
+  if (!q && cat !== "saved"){
+    const since = Date.now() - 12 * 3600e3;
+    let best = -1;
+    list.forEach((s, i) => { if (s.items.length >= 3 && new Date(s.date) > since && s.items.length > best){ best = s.items.length; leadIdx = i; } });
+    if (leadIdx) list = [list[leadIdx], ...list.slice(0, leadIdx), ...list.slice(leadIdx + 1)];
+  }
+  list.slice(0, shown).forEach((s, idx) => feed.appendChild(card(s, idx === 0 && !q && cat !== "saved")));
   $("#more").hidden = list.length <= shown;
 }
-function card(i, lead){
-  const s = data.sources[i.source] || {name:i.source, mono:"?", color:"#64748B"};
+
+function card(story, lead){
+  const i = story.items[0], s = src(i.source), others = story.items.slice(1);
   const c = el("article","card" + (lead ? " lead" : "") + (i.image ? "" : " noimg") + (read.has(i.url) ? " read" : ""));
-  const who = el("div","who"), mini = el("span","mini", s.mono);
-  mini.style.background = s.color; mini.setAttribute("aria-hidden","true");
-  who.append(mini, el("b",null,s.name), el("span",null, ago(i.date)));
+  const who = el("div","who");
+  who.append(miniTile(i.source), el("b",null,s.name), el("span",null, ago(i.date)));
+  if (others.length >= 2) who.appendChild(el("span","badge-hot", (others.length + 1) + " kaynak"));
   const h = el("h3"), a = el("a",null,i.title);
   a.href = i.url; a.target = "_blank"; a.rel = "noopener";
-  a.onclick = () => { read.add(i.url); store.set("gk-read",[...read].slice(-600)); c.classList.add("read"); };
+  a.onclick = () => markRead(i.url, c);
   h.appendChild(a);
   c.append(who, h);
   if (i.image){
-    const img = el("img","thumb"); img.src = i.image; img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
+    const img = el("img","thumb"); img.src = i.image; img.alt = ""; img.loading = lead ? "eager" : "lazy"; img.referrerPolicy = "no-referrer";
     img.onerror = () => { img.remove(); c.classList.add("noimg"); };
     c.appendChild(img);
   }
   if (i.summary) c.appendChild(el("p",null,i.summary));
+  if (others.length) c.appendChild(clusterBlock(story, others));
   const foot = el("div","foot"), sv = el("button","save");
-  foot.appendChild(el("span","tag", CAT_LABEL[i.category] || "Gündem"));
+  foot.appendChild(el("span","tag", CAT_LABEL[story.category] || "Gündem"));
   const isS = !!savedMap[i.url];
   sv.type = "button"; sv.setAttribute("aria-pressed", isS ? "true" : "false");
-  sv.append(icon(), document.createTextNode(isS ? "Kaydedildi" : "Kaydet"));
-  sv.onclick = () => { savedMap[i.url] ? delete savedMap[i.url] : (savedMap[i.url] = i); store.set("gk-saved-items", savedMap); renderFeed(); };
+  sv.append(bookmark(), document.createTextNode(isS ? "Kaydedildi" : "Kaydet"));
+  sv.onclick = () => { savedMap[i.url] ? delete savedMap[i.url] : (savedMap[i.url] = {...i, category: story.category}); store.set("gk-saved-items", savedMap); renderFeed(); };
   foot.appendChild(sv); c.appendChild(foot);
   return c;
 }
+
+function clusterBlock(story, others){
+  const wrap = el("div","cluster"), btn = el("button","cluster-btn"), stack = el("span","stack");
+  const listId = "cl-" + story.id;
+  others.slice(0, 4).forEach(o => stack.appendChild(miniTile(o.source)));
+  const names = others.map(o => src(o.source).name);
+  const label = others.length === 1 ? "Bu haberi veren bir kaynak daha: " + names[0] : others.length + " kaynak daha bu haberi verdi";
+  btn.type = "button"; btn.setAttribute("aria-controls", listId);
+  const open = openClusters.has(story.id);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  btn.append(stack, el("span","txt", label), chevron());
+  const ul = el("ul","others" + (open ? " open" : "")); ul.id = listId;
+  others.forEach(o => {
+    const li = el("li"), a = el("a"), t = el("span","t");
+    a.href = o.url; a.target = "_blank"; a.rel = "noopener";
+    a.onclick = () => markRead(o.url);
+    t.append(el("b",null, src(o.source).name + " · " + ago(o.date)), document.createTextNode(o.title));
+    a.append(miniTile(o.source), t); li.appendChild(a); ul.appendChild(li);
+  });
+  btn.onclick = () => {
+    const now = !ul.classList.contains("open");
+    ul.classList.toggle("open", now); btn.setAttribute("aria-expanded", now ? "true" : "false");
+    now ? openClusters.add(story.id) : openClusters.delete(story.id);
+  };
+  wrap.append(btn, ul);
+  return wrap;
+}
+
+function markRead(url, cardEl){ read.add(url); store.set("gk-read",[...read].slice(-800)); if (cardEl) cardEl.classList.add("read"); }
 function openAll(){ off.clear(); store.set("gk-off",[]); renderSources(); renderFeed(); }
 
 $("#allSources").onclick = openAll;

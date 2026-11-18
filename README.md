@@ -8,6 +8,13 @@ GitHub Actions her ~15 dakikada bir `scripts/fetch.mjs` dosyasını çalıştır
 
 Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece GitHub Actions dakikaları sınırsızdır.
 
+## Özellikler
+
+- **Aynı haber, farklı kaynaklar:** Aynı olayı veren haberler tek kartta toplanır; "3 kaynak daha bu haberi verdi" satırına dokununca diğer kaynakların başlıkları açılır. Gruplama `scripts/cluster.mjs` içinde, başlıklardaki ayırt edici kelimelere bakılarak yapılır. Fazla ya da az birleştiriyorsa `threshold` değerini (varsayılan 0.5) değiştir.
+- **Manşet:** Son 12 saatte en çok kaynağın verdiği olay en üstte büyük kartta gösterilir.
+- **Piyasa şeridi:** Dolar, euro, gram ve çeyrek altın, BIST 100. Veri Truncgil Finans’tan, o çalışmazsa Yahoo Finance’ten alınır (`scripts/markets.mjs`).
+- Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.
+
 ## Kurulum (5 dakika)
 
 1. GitHub’da yeni bir **public** repo aç ve bu klasördeki her şeyi yükle (`.github` klasörü dahil).

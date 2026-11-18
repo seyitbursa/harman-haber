@@ -163,6 +163,13 @@ for (const t of topics) {
   t.slug = slugify(t.label);
   t.storyIds = stories.filter(s => s.items.some(i => { const tw = twords(i.title + " " + (i.gist || "")); return ws.every(p => tw.some(x => x.startsWith(p))); })).map(s => s.id);
 }
+// Aynı haberleri kapsayan konuları birleştir ("Cem Küçük" ve "Tahir Sarıkaya" gibi): öndeki kalır
+for (let i = topics.length - 1; i > 0; i--) {
+  const mine = new Set(topics[i].storyIds);
+  if (!mine.size) { topics.splice(i, 1); continue; }
+  const dup = topics.slice(0, i).some(t => t.storyIds.filter(id => mine.has(id)).length / mine.size >= 0.6);
+  if (dup) topics.splice(i, 1);
+}
 const topicSums = await addTopicSummaries({ topics, stories, sources: config.sources, prevTopicSums: prevJson?.topicSums, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const cfg = config.notify || {};
 const note = cfg.ntfyTopic

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gündem Kutusu</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗞️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDF3; --surface:#FFFFFF; --surface-2:#F4F6FA; --ink:#172033; --ink-2:#4A5568; --ink-3:#7A8599;
+  --line:#D5DBE5; --accent:#2350E6; --accent-ink:#FFFFFF; --saved:#C98A0B; --live:#16A34A;
+  --head:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Public Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0F1522; --surface:#18202F; --surface-2:#1F2839; --ink:#E8ECF4; --ink-2:#B3BCCC; --ink-3:#8590A3;
+    --line:#2C3649; --accent:#7D9BFF; --accent-ink:#0F1522; --saved:#F2B83B; --live:#4ADE80; color-scheme:dark; }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:inherit} button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-top:20px;padding-bottom:14px}
+.brand h1{font-family:var(--head);font-weight:800;font-size:clamp(28px,6vw,40px);line-height:1;margin:0;letter-spacing:-0.02em}
+.status{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--ink-3);font-size:14px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 0 0 var(--live);animation:pulse 2.4s infinite}
+.dot.stale{background:var(--ink-3);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--live) 60%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.status button{background:none;border:0;color:var(--accent);font-weight:600;cursor:pointer;padding:2px 4px;font-size:14px}
+.search{position:relative;flex:0 1 280px}
+.search input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:15px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+
+.shelf{background:var(--surface);border-bottom:1px solid var(--line)}
+.shelf .wrap{padding-top:14px;padding-bottom:16px}
+.shelf-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.shelf-head h2{font-family:var(--head);font-weight:700;font-size:17px;margin:0}
+.shelf-head button{background:none;border:0;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:4px}
+.sources{display:flex;gap:14px;overflow-x:auto;padding:6px 6px 4px 0;scrollbar-width:none}
+.sources::-webkit-scrollbar{display:none}
+.src{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;width:68px;background:none;border:0;cursor:pointer;padding:0}
+.src .tile{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:15px;color:#fff;transition:transform .15s,opacity .15s,filter .15s;position:relative}
+.src .name{font-size:12px;line-height:1.2;color:var(--ink-2);text-align:center}
+.src .count{position:absolute;right:-5px;top:-5px;min-width:20px;height:20px;border-radius:10px;background:var(--surface);color:var(--ink);border:1px solid var(--line);font-family:var(--body);font-size:11px;font-weight:600;display:grid;place-items:center;padding:0 5px}
+.src[aria-pressed="false"] .tile{opacity:.28;filter:grayscale(1);transform:scale(.92)}
+.src[aria-pressed="false"] .name{color:var(--ink-3);text-decoration:line-through}
+
+nav.cats{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.cats .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+.cats .wrap::-webkit-scrollbar{display:none}
+.cat{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+.cat[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+main .wrap{padding-top:20px;padding-bottom:48px}
+.meta-line{display:flex;justify-content:space-between;align-items:center;color:var(--ink-3);font-size:13px;margin-bottom:14px;gap:12px}
+.newbar{display:none;width:100%;margin-bottom:12px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:10px;font-weight:600;cursor:pointer}
+.newbar.show{display:block}
+
+.feed{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:760px){.feed{grid-template-columns:1fr 1fr}.feed .lead{grid-column:1 / -1}}
+@media (min-width:1020px){.feed{grid-template-columns:repeat(3,1fr)}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr 88px;grid-template-areas:"who who" "title img" "sum sum" "foot foot";column-gap:12px;row-gap:8px;position:relative;align-content:start}
+.card.noimg{grid-template-columns:1fr;grid-template-areas:"who" "title" "sum" "foot"}
+.card.read{opacity:.6}
+.who{grid-area:who;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3);min-width:0}
+.mini{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;font-family:var(--head);font-weight:800;font-size:9px;flex:0 0 auto}
+.who b{color:var(--ink-2);font-weight:600}
+.card h3{grid-area:title;font-family:var(--head);font-weight:700;font-size:18px;line-height:1.22;margin:0;letter-spacing:-0.01em}
+.card h3 a{text-decoration:none}
+.card h3 a::after{content:"";position:absolute;inset:0;border-radius:14px}
+.thumb{grid-area:img;width:88px;height:88px;object-fit:cover;border-radius:10px;background:var(--surface-2)}
+.card p{grid-area:sum;margin:0;color:var(--ink-2);font-size:15px}
+.foot{grid-area:foot;display:flex;justify-content:space-between;align-items:center;padding-top:2px}
+.tag{font-size:12px;font-weight:600;color:var(--ink-3)}
+.save{position:relative;z-index:2;background:none;border:0;cursor:pointer;padding:6px;margin:-6px;color:var(--ink-3);display:flex;align-items:center;gap:5px;font-size:13px}
+.save[aria-pressed="true"]{color:var(--saved)}
+.save[aria-pressed="true"] path{fill:currentColor}
+
+.lead{grid-template-columns:1fr;grid-template-areas:"img" "who" "title" "sum" "foot";padding:0;overflow:hidden}
+.lead > *:not(.thumb){margin-left:20px;margin-right:20px}
+.lead .foot{margin-bottom:18px}
+.lead .who{margin-top:4px}
+.lead .thumb{width:100%;height:auto;aspect-ratio:16/8;border-radius:0}
+.lead.noimg .who{margin-top:20px}
+.lead h3{font-size:clamp(24px,4vw,32px);line-height:1.12}
+.lead p{font-size:16px;max-width:62ch}
+
+.more{display:block;margin:20px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer}
+.empty{grid-column:1 / -1;text-align:center;padding:48px 16px;color:var(--ink-2)}
+.empty h3{font-family:var(--head);margin:0 0 6px;font-size:20px;color:var(--ink)}
+.empty button{margin-top:12px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer}
+footer{color:var(--ink-3);font-size:13px;border-top:1px solid var(--line);padding:20px 0 32px}
+footer p{margin:0 0 6px;max-width:70ch}
+@media (max-width:560px){.top .wrap{flex-direction:column;align-items:stretch}.search{flex:1 1 auto}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Gündem Kutusu</h1>
+      <div class="status"><span class="dot" id="dot"></span><span id="updated">Yükleniyor…</span><button id="refresh" type="button">Yenile</button></div>
+    </div>
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Haberlerde ara" aria-label="Haberlerde ara">
+    </label>
+  </div>
+</header>
+
+<section class="shelf" aria-labelledby="shelf-title">
+  <div class="wrap">
+    <div class="shelf-head"><h2 id="shelf-title">Kaynakların</h2><button id="allSources" type="button" hidden>Tümünü aç</button></div>
+    <div class="sources" id="sources" role="group" aria-label="Kaynakları aç ya da kapat"></div>
+  </div>
+</section>
+
+<nav class="cats" aria-label="Kategoriler"><div class="wrap" id="cats" role="tablist"></div></nav>
+
+<main>
+  <div class="wrap">
+    <button class="newbar" id="newbar" type="button"></button>
+    <div class="meta-line"><span id="count"></span><span>Kaynak seçimin bu cihazda hatırlanır</span></div>
+    <div class="feed" id="feed" aria-live="polite"></div>
+    <button class="more" id="more" type="button" hidden>Daha fazla göster</button>
+  </div>
+</main>
+
+<footer><div class="wrap">
+  <p>Başlık ve özetler yayıncıların RSS akışlarından otomatik alınır; haberin tamamı için karta dokun, orijinal sitede açılır.</p>
+  <p>Akışlar yaklaşık 15 dakikada bir güncellenir.</p>
+</div></footer>
+
+<script>
+const CATS = [
+  {id:"all",label:"Tümü"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
+  {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"teknoloji",label:"Teknoloji"},{id:"saved",label:"Kaydedilenler"}
+];
+const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
+const PAGE = 30;
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+let data = {sources:{}, items:[]}, pending = null;
+let off = new Set(store.get("gk-off", []));
+let savedMap = store.get("gk-saved-items", {});   // id yerine url ile: veri yenilense de kaybolmaz
+let read = new Set(store.get("gk-read", []));
+let cat = CATS.some(c => c.id === location.hash.slice(1)) ? location.hash.slice(1) : "all";
+let shown = PAGE;
+
+const $ = s => document.querySelector(s);
+const el = (t,c,x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const norm = s => (s || "").toLocaleLowerCase("tr");
+
+function ago(iso){
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return "az önce";
+  if (m < 60) return m + " dk önce";
+  const h = Math.round(m / 60);
+  if (h < 24) return h + " sa önce";
+  return new Date(iso).toLocaleDateString("tr-TR", {day:"numeric", month:"short"});
+}
+
+async function load(manual){
+  try{
+    const r = await fetch("news.json?t=" + Date.now(), {cache:"no-store"});
+    if (!r.ok) throw new Error(r.status);
+    const fresh = await r.json();
+    if (!data.items.length || manual){ data = fresh; pending = null; renderAll(); }
+    else if (fresh.updatedAt !== data.updatedAt){
+      const known = new Set(data.items.map(i => i.url));
+      const n = fresh.items.filter(i => !known.has(i.url)).length;
+      pending = fresh;
+      if (n){ const b = $("#newbar"); b.textContent = n + " yeni haber var, göster"; b.classList.add("show"); }
+      else { data = fresh; renderStatus(); }
+    }
+  }catch(e){
+    $("#updated").textContent = data.items.length ? "Güncellenemedi, son veri gösteriliyor" : "Haberler yüklenemedi. Bağlantını kontrol edip Yenile’ye dokun.";
+    $("#dot").classList.add("stale");
+  }
+}
+function renderStatus(){
+  if (!data.updatedAt) return;
+  const mins = (Date.now() - new Date(data.updatedAt)) / 60000;
+  $("#updated").textContent = "Güncellendi: " + ago(data.updatedAt);
+  $("#dot").classList.toggle("stale", mins > 60);
+}
+function renderAll(){ renderStatus(); renderSources(); renderCats(); renderFeed(); }
+
+function renderSources(){
+  const box = $("#sources"); box.textContent = "";
+  Object.entries(data.sources).forEach(([id, s]) => {
+    const n = data.items.filter(i => i.source === id).length;
+    if (!n) return;
+    const b = el("button","src"); b.type = "button";
+    b.setAttribute("aria-pressed", off.has(id) ? "false" : "true");
+    b.setAttribute("aria-label", s.name + (off.has(id) ? " kapalı" : " açık") + ", " + n + " haber");
+    const t = el("span","tile", s.mono); t.style.background = s.color; t.appendChild(el("span","count", String(n)));
+    b.append(t, el("span","name", s.name));
+    b.onclick = () => { off.has(id) ? off.delete(id) : off.add(id); store.set("gk-off",[...off]); shown = PAGE; renderSources(); renderFeed(); };
+    box.appendChild(b);
+  });
+  $("#allSources").hidden = off.size === 0;
+}
+function renderCats(){
+  const box = $("#cats"); box.textContent = "";
+  CATS.forEach(c => {
+    const b = el("button","cat", c.label); b.type = "button"; b.setAttribute("role","tab");
+    b.setAttribute("aria-selected", c.id === cat ? "true" : "false");
+    b.onclick = () => { cat = c.id; shown = PAGE; history.replaceState(null,"", c.id === "all" ? location.pathname : "#" + c.id); renderCats(); renderFeed(); };
+    box.appendChild(b);
+  });
+}
+function icon(){
+  const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns,"svg"), p = document.createElementNS(ns,"path");
+  svg.setAttribute("width","16"); svg.setAttribute("height","16"); svg.setAttribute("viewBox","0 0 24 24"); svg.setAttribute("aria-hidden","true");
+  p.setAttribute("d","M6 3h12v18l-6-4.5L6 21z"); p.setAttribute("fill","none"); p.setAttribute("stroke","currentColor"); p.setAttribute("stroke-width","2"); p.setAttribute("stroke-linejoin","round");
+  svg.appendChild(p); return svg;
+}
+function renderFeed(){
+  const q = norm($("#q").value.trim());
+  let list = cat === "saved" ? Object.values(savedMap).sort((a,b) => b.date.localeCompare(a.date)) : data.items.filter(i => !off.has(i.source));
+  if (cat !== "all" && cat !== "saved") list = list.filter(i => i.category === cat);
+  if (q) list = list.filter(i => norm(i.title + " " + i.summary + " " + (data.sources[i.source]?.name || "")).includes(q));
+  const feed = $("#feed"); feed.textContent = "";
+  $("#count").textContent = list.length + " haber";
+  if (!list.length){
+    const e = el("div","empty");
+    if (!data.items.length) e.append(el("h3",null,"Haberler yükleniyor"));
+    else if (cat === "saved" && !q) e.append(el("h3",null,"Henüz kaydettiğin haber yok"), el("p",null,"Bir haberin altındaki Kaydet’e dokun, burada toplansın."));
+    else if (q) e.append(el("h3",null,"“" + $("#q").value.trim() + "” için sonuç yok"), el("p",null,"Farklı bir kelime dene ya da kapalı kaynakları aç."));
+    else { e.append(el("h3",null,"Bu kategoride açık kaynak kalmadı"), el("p",null,"Yukarıdaki raftan kaynak aç.")); const b = el("button",null,"Tüm kaynakları aç"); b.type = "button"; b.onclick = openAll; e.appendChild(b); }
+    feed.appendChild(e); $("#more").hidden = true; return;
+  }
+  list.slice(0, shown).forEach((i, idx) => feed.appendChild(card(i, idx === 0 && !q && cat !== "saved")));
+  $("#more").hidden = list.length <= shown;
+}
+function card(i, lead){
+  const s = data.sources[i.source] || {name:i.source, mono:"?", color:"#64748B"};
+  const c = el("article","card" + (lead ? " lead" : "") + (i.image ? "" : " noimg") + (read.has(i.url) ? " read" : ""));
+  const who = el("div","who"), mini = el("span","mini", s.mono);
+  mini.style.background = s.color; mini.setAttribute("aria-hidden","true");
+  who.append(mini, el("b",null,s.name), el("span",null, ago(i.date)));
+  const h = el("h3"), a = el("a",null,i.title);
+  a.href = i.url; a.target = "_blank"; a.rel = "noopener";
+  a.onclick = () => { read.add(i.url); store.set("gk-read",[...read].slice(-600)); c.classList.add("read"); };
+  h.appendChild(a);
+  c.append(who, h);
+  if (i.image){
+    const img = el("img","thumb"); img.src = i.image; img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
+    img.onerror = () => { img.remove(); c.classList.add("noimg"); };
+    c.appendChild(img);
+  }
+  if (i.summary) c.appendChild(el("p",null,i.summary));
+  const foot = el("div","foot"), sv = el("button","save");
+  foot.appendChild(el("span","tag", CAT_LABEL[i.category] || "Gündem"));
+  const isS = !!savedMap[i.url];
+  sv.type = "button"; sv.setAttribute("aria-pressed", isS ? "true" : "false");
+  sv.append(icon(), document.createTextNode(isS ? "Kaydedildi" : "Kaydet"));
+  sv.onclick = () => { savedMap[i.url] ? delete savedMap[i.url] : (savedMap[i.url] = i); store.set("gk-saved-items", savedMap); renderFeed(); };
+  foot.appendChild(sv); c.appendChild(foot);
+  return c;
+}
+function openAll(){ off.clear(); store.set("gk-off",[]); renderSources(); renderFeed(); }
+
+$("#allSources").onclick = openAll;
+$("#q").addEventListener("input", () => { shown = PAGE; renderFeed(); });
+$("#more").onclick = () => { shown += PAGE; renderFeed(); };
+$("#refresh").onclick = () => load(true);
+$("#newbar").onclick = () => { if (pending){ data = pending; pending = null; } $("#newbar").classList.remove("show"); renderAll(); window.scrollTo({top:0}); };
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); cat = CATS.some(c => c.id === h) ? h : "all"; renderCats(); renderFeed(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(false); });
+
+renderCats(); renderFeed(); load(true);
+setInterval(() => load(false), 5 * 60 * 1000);
+setInterval(renderStatus, 60 * 1000);
+</script>
+</body>
+</html>

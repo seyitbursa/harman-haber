@@ -1,0 +1,13 @@
+{
+  "name": "gundem-kutusu",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch": "node scripts/fetch.mjs",
+    "dev": "node scripts/fetch.mjs && npx --yes serve public"
+  },
+  "dependencies": {
+    "rss-parser": "3.13.0"
+  }
+}

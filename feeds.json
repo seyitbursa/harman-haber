@@ -139,6 +139,14 @@
       "lean": "bagimsiz",
       "leanNote": "Index on Censorship: geriye kalan özgür ifade alanlarından",
       "leanUrl": "https://www.indexoncensorship.org/?p=131423"
+    },
+    "turkiye": {
+      "name": "Türkiye",
+      "mono": "TR",
+      "color": "#C2410C",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: AKP’ye yakın İhlas Grubu (İHA’nın da sahibi)",
+      "leanUrl": "https://bianet.org/haber/turkiye-de-medyayi-kimler-kontrol-ediyor-208089"
     }
   },
   "feeds": [
@@ -276,6 +284,11 @@
       "source": "medyascope",
       "category": "gundem",
       "url": "https://medyascope.tv/feed/"
+    },
+    {
+      "source": "turkiye",
+      "category": "gundem",
+      "url": "https://www.turkiyegazetesi.com.tr/feed"
     }
   ],
   "leanInfo": {

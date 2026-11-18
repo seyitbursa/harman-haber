@@ -301,6 +301,29 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 .blind-intro{background:var(--surface);border-radius:14px;padding:14px 16px;margin-top:12px;box-shadow:0 1px 0 var(--line);font-size:14.5px;color:var(--ink-2)}
 .blind-intro h2{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:24px;margin:0 0 6px;color:var(--ink)}
 .blind-intro p{margin:6px 0 0}
+
+/* Konu sayfası */
+.topic-head{background:var(--surface);border-radius:18px;padding:18px;margin-top:12px;box-shadow:0 1px 0 var(--line)}
+.topic-head .back{border:0;background:none;padding:0 0 8px;color:var(--accent);font-weight:600;cursor:pointer;font-size:14px}
+.topic-head h2{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:clamp(30px,8vw,44px);line-height:1.02;margin:0;letter-spacing:-0.02em}
+.topic-head .stats{color:var(--ink-3);font-size:14px;margin:8px 0 0}
+.topic-head .sum{margin:14px 0 0;font-size:16px;line-height:1.55}
+.topic-head .sum b{color:var(--accent);margin-right:4px}
+.topic-head .bias{margin-top:14px}
+.persp{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+@media (min-width:900px){.persp{grid-template-columns:repeat(3,1fr)}}
+.pcol{background:var(--surface);border-radius:14px;padding:12px 14px;box-shadow:0 1px 0 var(--line);border-top:4px solid var(--line)}
+.pcol.hukumet{border-top-color:var(--g-hukumet)} .pcol.bagimsiz{border-top-color:var(--g-bagimsiz)} .pcol.muhalefet{border-top-color:var(--g-muhalefet)}
+.pcol h4{margin:0 0 6px;font-size:14.5px}
+.pcol ul{list-style:none;margin:0;padding:0}
+.pcol li{display:flex;gap:9px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.35}
+.pcol li:first-child{border-top:0}
+.pcol li a{text-decoration:none}
+.pcol li a:hover{color:var(--accent)}
+.pcol .none{color:var(--ink-3);font-size:13.5px}
+.tlink{position:relative;z-index:2;grid-area:tl;justify-self:start;border:0;background:none;padding:6px 0 0;color:var(--accent);font-weight:600;font-size:13px;cursor:pointer}
+.row{grid-template-areas:"meta meta" "title img" "sum img" "bias bias" "cl cl" "tl tl"}
+.row.noimg{grid-template-areas:"meta" "title" "sum" "bias" "cl" "tl"}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -623,7 +646,8 @@ function go(where){
 }
 function route(){
   const h = location.hash.slice(1);
-  if (h === "yerel" || h === "saved") view = h;
+  if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); }
+  else if (h === "yerel" || h === "saved") view = h;
   else { view = "feed"; cat = CATS.some(c => c.id === h) ? h : "all"; }
   shown = PAGE; activeTopic = null;
   render();
@@ -652,6 +676,7 @@ function storiesFor(){
 
 function render(){
   renderNav(); renderStatus(); renderTicker();
+  if (view === "topic"){ renderTopic(); return; }
   const q = query();
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
@@ -786,7 +811,7 @@ function talkCard(story){
   c.appendChild(el("div","meta", ago(story.date)));
   return c;
 }
-function row(story){
+function row(story, inTopic){
   const i = story.items[0];
   const r = el("article","row" + (i.image ? "" : " noimg") + (read.has(i.url) ? " read" : ""));
   const m = meta(i); m.appendChild(saveBtn(i, story.category)); r.appendChild(m);
@@ -795,6 +820,8 @@ function row(story){
   const bb = biasBar(story); if (bb) r.appendChild(bb);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
+  const tp = !inTopic && topicOfStory(story.id);
+  if (tp){ const b = el("button","tlink", (tp.title || tp.label) + " konusundaki " + tp.storyIds.length + " haber"); b.type = "button"; b.onclick = () => goTopic(tp); r.appendChild(b); }
   return r;
 }
 function clusterBlock(story, others){
@@ -820,10 +847,10 @@ function topicsRow(){
   const box = el("div","topics"); box.setAttribute("role","group"); box.setAttribute("aria-label","Gündemdeki konular");
   box.appendChild(el("span","lbl","Gündemde"));
   list.forEach(t => {
-    const b = el("button","topic", t.label); b.type = "button";
+    const b = el("button","topic", t.title || t.label); b.type = "button";
     b.setAttribute("aria-pressed", activeTopic === t.label ? "true" : "false");
-    b.setAttribute("aria-label", `${t.label}, ${t.sources} kaynakta ${t.stories} haber`);
-    b.onclick = () => { activeTopic = t.label; shown = PAGE; render(); $("#feedHead").scrollIntoView({block:"start"}); };
+    b.setAttribute("aria-label", `${t.title || t.label}, ${t.sources} kaynakta ${t.stories} haber. Konu sayfasını aç`);
+    b.onclick = () => t.slug ? goTopic(t) : (activeTopic = t.label, shown = PAGE, render());
     box.appendChild(b);
   });
   return box;
@@ -862,6 +889,55 @@ function renderAside(){
 }
 
 
+
+
+// ---- Konu sayfaları ----
+let topicSlug = null;
+function topicOfStory(id){ return (data.topics || []).find(t => (t.storyIds || []).includes(id)); }
+function goTopic(t){ location.hash = "konu-" + t.slug; window.scrollTo({top:0}); }
+function renderTopic(){
+  const t = (data.topics || []).find(x => x.slug === topicSlug);
+  const top = $("#top"), feed = $("#feed");
+  top.textContent = ""; feed.classList.remove("skel"); feed.textContent = "";
+  if (!t){
+    const e = el("div","empty"); e.append(el("h4", null, "Bu konu artık gündemde değil"), el("p", null, "Konular her 15 dakikada yeniden belirleniyor."));
+    const b = el("button", null, "Ana akışa dön"); b.type = "button"; b.onclick = () => go("feed"); e.appendChild(b);
+    feed.appendChild(e); $("#feedHead").hidden = true; renderAside(); return;
+  }
+  const byId = Object.fromEntries(data.stories.map(s => [s.id, s]));
+  const list = t.storyIds.map(id => byId[id]).filter(Boolean)
+    .map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length)
+    .sort((a,b) => b.date.localeCompare(a.date));
+  const all = {id:"topic-" + t.slug, items: list.flatMap(s => s.items)};
+  const head = el("section","topic-head");
+  const back = el("button","back","← Ana akış"); back.type = "button"; back.onclick = () => go("feed");
+  const srcN = new Set(all.items.map(i => i.source)).size;
+  head.append(back, el("h2", null, t.title || t.label), el("p","stats", list.length + " haber, " + srcN + " kaynak"));
+  if (t.summary){
+    const p = el("p","sum"); p.title = "Başlıklardan yapay zekâyla çıkarılan özet; hata içerebilir.";
+    p.append(el("b", null, "Özet:"), document.createTextNode(t.summary)); head.appendChild(p);
+  }
+  const bb = biasBar(all); if (bb) head.appendChild(bb);
+  top.appendChild(head);
+  // Kesimlere göre başlıklar
+  const sec = el("div","sec"); sec.appendChild(el("h3", null, "Kim nasıl verdi?")); top.appendChild(sec);
+  const grid = el("div","persp");
+  GROUPS.forEach(g => {
+    const col = el("div","pcol " + g); col.appendChild(el("h4", null, GL[g]));
+    const its = all.items.filter(i => leanOf(i.source) === g).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 4);
+    if (!its.length) col.appendChild(el("div","none","Bu gruptan kaynakların akışında bu konuda haber yok."));
+    const ul = el("ul");
+    its.forEach(i => { const li = el("li"); li.appendChild(mono(i.source)); li.appendChild(link(i.title, i.url)); ul.appendChild(li); });
+    col.appendChild(ul); grid.appendChild(col);
+  });
+  top.appendChild(grid);
+  $("#feedHead").hidden = false;
+  $("#feedTitle").textContent = "Tüm haberler";
+  $("#count").textContent = list.length + " haber";
+  let lastGroup = null;
+  list.forEach(s => { const g = groupOf(s.date); if (g !== lastGroup){ feed.appendChild(el("div","group", g)); lastGroup = g; } feed.appendChild(row(s, true)); });
+  renderAside();
+}
 
 // ---- Kaynak dağılımı (Ground News’teki “bias bar” benzeri) ----
 const GROUPS = ["hukumet","bagimsiz","muhalefet"];
@@ -1102,7 +1178,7 @@ $("#install").onclick = async () => { if (!installEvt) return; installEvt.prompt
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
 // ---- Başlat ----
-{ const h = location.hash.slice(1); if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
+{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
 renderNav(); renderTicker();
 load(true);
 loadWeather().then(() => { if (loaded) render(); else renderTicker(); });

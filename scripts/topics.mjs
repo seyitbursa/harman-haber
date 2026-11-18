@@ -3,6 +3,8 @@ const GENERIC = new Set(("Son Dakika Flaş Bakan Bakanı Bakanlığı Başkanı 
   "Milli Ulusal Devlet Dünya Avrupa ABD Bugün Yarın Ocak Şubat Mart Nisan Mayıs Haziran Temmuz Ağustos Eylül Ekim Kasım Aralık " +
   "Pazartesi Salı Çarşamba Perşembe Cuma Cumartesi Pazar Video Foto Galeri Canlı Resmi Merkez Büyükşehir Belediye Belediyesi Valilik Valiliği " +
   "Kurulu Komisyonu Meclis Meclisi Üniversitesi Kupası Ligi Lig Parti Partisi Grubu Hakkında Nedir Kimdir Nerede Neden Nasıl Ne Kaç Hangi Bu Bir Ve İle").split(" "));
+// İl adları tek başına konu sayılmaz (şehir haberleri "Şehrim" sekmesinde)
+for (const n of ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"]) GENERIC.add(n);
 const clean = w => w.replace(/['’‘`].*$/u, "").replace(/[^\p{L}\p{N}.\-]/gu, "");
 const isCap = w => /^[\p{Lu}]/u.test(w) && !(w.length > 5 && w === w.toLocaleUpperCase("tr") && /\p{L}{6,}/u.test(w));
 

@@ -48,6 +48,9 @@ Yalnızca şu biçimde JSON dizi döndür, başka hiçbir şey yazma: [{"i":1,"o
 
 async function callGemini(key, items) {
   const body = items.map((it, n) => `#${n + 1}\nBaşlık: ${it.title}\nMetin: ${it.text || it.summary || "(metin yok)"}`).join("\n\n");
+  return callGeminiRaw(key, PROMPT + "\n\n" + body);
+}
+async function callGeminiRaw(key, text) {
   let lastErr;
   for (const model of MODELS) {
     try {
@@ -55,7 +58,7 @@ async function callGemini(key, items) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: PROMPT + "\n\n" + body }] }],
+          contents: [{ role: "user", parts: [{ text }] }],
           generationConfig: { temperature: 0.2, maxOutputTokens: 1500, responseMimeType: "application/json" }
         })
       });
@@ -108,4 +111,47 @@ export async function addGists({ stories, prevGists, prevUsage, key, log = conso
   // Özetleri haberlere işle
   for (const s of stories) for (const i of s.items) if (gists[i.url]?.oz) i.gist = gists[i.url].oz;
   return { gists, usage, made, pending: todo.length };
+}
+
+// ---- Konu özetleri: "Gündemde" konularının her biri için 2–3 cümlelik tarafsız özet ----
+const TOPIC_PROMPT = `Sen bir Türk haber editörüsün. Aşağıda gündemdeki konular ve her konudaki haber başlıkları (kaynak adıyla) var.
+Her konu için okuyucuya ne olduğunu anlatan 2–3 cümlelik özet yaz:
+- En fazla 60 kelime. Düz, tarafsız Türkçe; yorum, değerlendirme ya da sıfat yükleme yok.
+- Yalnızca verilen başlık ve özetlerdeki bilgiyi kullan. Tarafların iddialarını kendi ağızlarından aktar ("X'e göre...").
+- Kaynaklar birbiriyle çelişiyorsa bunu belirt.
+- Ayrıca konuya 2–4 kelimelik, eksiz ve yalın bir başlık ver (ör. "Fon soruşturması", "CHP kurultay davası"). Konu adı birden çok kişiyi ya da olayı karıştırıyorsa başlığı en çok haberin ilgili olduğuna göre seç.
+Yalnızca şu biçimde JSON dizi döndür: [{"k":1,"baslik":"...","oz":"..."}, ...]`;
+
+export async function addTopicSummaries({ topics, stories, sources, prevTopicSums, usage, key, log = console.log }) {
+  const now = Date.now();
+  const cache = {};
+  for (const [slug, v] of Object.entries(prevTopicSums || {})) if (now - new Date(v.at) < 24 * 3600e3) cache[slug] = v;
+  const byId = Object.fromEntries(stories.map(s => [s.id, s]));
+  const need = topics.filter(t => {
+    const c = cache[t.slug]; if (!c) return true;
+    const urls = new Set(c.urls || []);
+    const fresh = t.storyIds.map(id => byId[id]?.items[0]?.url).filter(u => u && !urls.has(u)).length;
+    return fresh >= 2 || now - new Date(c.at) > 3 * 3600e3;
+  }).slice(0, 6);
+  if (key && need.length && usage.requests < MAX_REQ_PER_DAY) {
+    const body = need.map((t, n) => {
+      const lines = t.storyIds.slice(0, 12).map(id => byId[id]).filter(Boolean).map(s => {
+        const i = s.items[0];
+        return `- ${sources[i.source]?.name || i.source}: ${i.title}${i.gist ? " (" + i.gist + ")" : ""}`;
+      });
+      return `#${n + 1} Konu: ${t.label}\n${lines.join("\n")}`;
+    }).join("\n\n");
+    try {
+      usage.requests++;
+      const { out } = await callGeminiRaw(key, TOPIC_PROMPT + "\n\n" + body);
+      need.forEach((t, n) => {
+        const o = out.find(x => x.k === n + 1);
+        const oz = (o?.oz || "").replace(/\s+/g, " ").trim();
+        if (oz && !/[\u0400-\u04FF\u0600-\u06FF\u4E00-\u9FFF]/.test(oz))
+          cache[t.slug] = { oz, title: (o?.baslik || "").replace(/\s+/g, " ").trim().slice(0, 40) || null, at: new Date().toISOString(), urls: t.storyIds.map(id => byId[id]?.items[0]?.url).filter(Boolean) };
+      });
+    } catch (e) { log("  ✗ konu özeti → " + e.message); }
+  }
+  topics.forEach(t => { if (cache[t.slug]){ t.summary = cache[t.slug].oz; if (cache[t.slug].title) t.title = cache[t.slug].title; } });
+  return cache;
 }

@@ -7,7 +7,7 @@ import { trendingTopics } from "./topics.mjs";
 import { getXTrends } from "./xtrends.mjs";
 import { getQuakes } from "./quakes.mjs";
 import { notify, previousJson } from "./notify.mjs";
-import { addGists } from "./summarize.mjs";
+import { addGists, addTopicSummaries } from "./summarize.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -153,17 +153,28 @@ const stories = cluster(items).map((group, i) => {
 const [markets, xtrends, quakes, prevJson] = await Promise.all([getMarkets(), getXTrends(), getQuakes(), previousJson()]);
 const prev = prevJson?.notified || null;     // eski sürümde durum yoksa ilk çalıştırma sayılır
 const sum = await addGists({ stories, prevGists: prevJson?.gists, prevUsage: prevJson?.gistUsage, key: process.env.GEMINI_API_KEY });
+
+// Gündemdeki konular ve her konunun haberleri (konu sayfaları için)
+const topics = trendingTopics(stories, { max: 10 });
+const twords = t => t.toLocaleLowerCase("tr").replace(/['’‘`]/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const slugify = t => t.toLocaleLowerCase("tr").replace(/ç/g,"c").replace(/ğ/g,"g").replace(/ı/g,"i").replace(/ö/g,"o").replace(/ş/g,"s").replace(/ü/g,"u").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+for (const t of topics) {
+  const ws = twords(t.label).map(w => w.slice(0, Math.min(w.length, 6)));
+  t.slug = slugify(t.label);
+  t.storyIds = stories.filter(s => s.items.some(i => { const tw = twords(i.title + " " + (i.gist || "")); return ws.every(p => tw.some(x => x.startsWith(p))); })).map(s => s.id);
+}
+const topicSums = await addTopicSummaries({ topics, stories, sources: config.sources, prevTopicSums: prevJson?.topicSums, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const cfg = config.notify || {};
 const note = cfg.ntfyTopic
   ? await notify({ cfg, stories, quakes, sources: config.sources, prev, dryRun: !process.env.GITHUB_ACTIONS })
   : { state: null, sent: [], first: false };
-const topics = trendingTopics(stories);
+
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);

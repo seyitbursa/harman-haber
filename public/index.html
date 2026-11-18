@@ -367,27 +367,27 @@ dialog.sheet::backdrop{background:rgba(14,20,36,.45)}
 @media (prefers-color-scheme: dark){:root{--k-correct:#22C55E;--k-present:#F59E0B;--k-absent:#475569}}
 :root.hc{--k-correct:#E8590C;--k-present:#1C7ED6}
 .wg{max-width:420px;margin:8px auto 0;display:flex;flex-direction:column;align-items:center}
-.wg-head{width:100%;display:flex;align-items:center;justify-content:space-between;margin:6px 0 12px}
+.wg-head{width:100%;display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px}
 .wg-head h2{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:26px;margin:0}
 .wg-head small{display:block;color:var(--ink-3);font-size:13px;font-weight:500;font-family:var(--body)}
 .wg-head .icons{display:flex;gap:2px}
-.board{display:grid;grid-template-rows:repeat(6,1fr);gap:6px;width:min(100%,330px,calc((100dvh - 470px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * .83))}
+.board{display:grid;grid-template-rows:repeat(6,1fr);gap:6px;width:min(100%,330px);container-type:inline-size}
 body.in-game .tabs{display:none}
 @media (min-width:900px){body.in-game .tabs{display:flex}}
-.brow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.brow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .brow.shake{animation:shake .45s}
 .brow.bad .tile{border-color:var(--down)}
 @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.tile{aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--line);border-radius:8px;font-family:var(--head);font-weight:800;font-size:30px;text-transform:none;background:var(--surface);color:var(--ink);user-select:none}
+.tile{aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--line);border-radius:8px;font-family:var(--head);font-weight:800;font-size:min(30px,11cqi);min-width:0;text-transform:none;background:var(--surface);color:var(--ink);user-select:none}
 .tile.filled{border-color:var(--ink-3)}
 .tile.c,.tile.p,.tile.a{color:#fff;border-color:transparent}
 .tile.c{background:var(--k-correct)} .tile.p{background:var(--k-present)} .tile.a{background:var(--k-absent)}
 @media (prefers-reduced-motion:no-preference){.tile.flip{animation:flip .5s ease both}.tile.pop{animation:pop .1s}}
 @keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
 @keyframes pop{50%{transform:scale(1.08)}}
-.kb{width:100%;margin-top:14px;display:flex;flex-direction:column;gap:6px;user-select:none}
+.kb{width:100%;margin-top:8px;display:flex;flex-direction:column;gap:6px;user-select:none}
 .kr{display:flex;gap:4px;justify-content:center}
-.key{flex:1 1 0;min-width:0;height:52px;border:0;border-radius:7px;background:var(--line);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;padding:0;touch-action:manipulation}
+.key{flex:1 1 0;min-width:0;height:var(--keyh,52px);border:0;border-radius:7px;background:var(--line);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;padding:0;touch-action:manipulation}
 .key.wide{flex:1.6 1 0;font-size:13px}
 .key.c{background:var(--k-correct);color:#fff} .key.p{background:var(--k-present);color:#fff} .key.a{background:var(--k-absent);color:#fff;opacity:.85}
 .wg-result{width:100%;background:var(--surface);border-radius:16px;padding:16px;margin-top:16px;box-shadow:0 1px 0 var(--line)}
@@ -410,6 +410,13 @@ body.in-game .tabs{display:none}
 .wg-help .ex .tile{width:38px;font-size:20px;border-radius:6px}
 .credit{font-size:11.5px;color:var(--ink-3);margin-top:16px;text-align:center}
 .credit a{color:inherit}
+
+.key.enter{background:var(--accent);color:var(--accent-ink);font-size:11px;letter-spacing:0;flex:2.3 1 0}
+.key.enter.ready{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+@media (prefers-reduced-motion:no-preference){.key.enter.ready{animation:nudge 1.4s ease-in-out infinite}}
+@keyframes nudge{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.wg-hint{min-height:20px;margin:6px 0 0;font-size:13.5px;color:var(--ink-2);text-align:center}
+.wg-hint b{color:var(--accent)}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -1163,11 +1170,12 @@ function renderGames(){
   icons.append(help, stb); head.append(ht, icons); wg.appendChild(head);
   const board = el("div","board"); board.id = "board"; board.setAttribute("role","grid"); board.setAttribute("aria-label","Tahmin tablosu");
   wg.appendChild(board);
+  const hint = el("p","wg-hint"); hint.id = "wgHint"; hint.setAttribute("aria-live","polite"); wg.appendChild(hint);
   const kb = el("div","kb"); kb.id = "kb"; kb.setAttribute("aria-label","Klavye");
   [["e","r","t","y","u","ı","o","p","ğ","ü"],["a","s","d","f","g","h","j","k","l","ş","i"],["⏎","z","c","v","b","n","m","ö","ç","⌫"]].forEach(row => {
     const r = el("div","kr");
     row.forEach(k => {
-      const b = el("button","key" + (k === "⏎" || k === "⌫" ? " wide" : ""), k === "⏎" ? "GİR" : k === "⌫" ? "⌫" : trUp(k));
+      const b = el("button","key" + (k === "⏎" ? " enter" : k === "⌫" ? " wide" : ""), k === "⏎" ? "GÖNDER" : k === "⌫" ? "⌫" : trUp(k));
       b.type = "button"; b.dataset.k = k; b.setAttribute("aria-label", k === "⏎" ? "Tahmini gönder" : k === "⌫" ? "Sil" : trUp(k));
       b.onclick = () => { b.blur(); khKey(k); }; r.appendChild(b);
     });
@@ -1177,10 +1185,28 @@ function renderGames(){
   top.appendChild(wg);
   top.appendChild(el("p","credit","")).innerHTML = 'Kelime listesi: <a href="https://tr.wiktionary.org/" target="_blank" rel="noopener">Vikisözlük</a>, CC BY-SA 4.0';
   khDraw();
+  window.scrollTo({top:0}); khFit(); requestAnimationFrame(khFit);
   if (khState.done) khResult(false);
   if (!store.get("kh-seen-help", false)){ store.set("kh-seen-help", true); setTimeout(khHelp, 300); }
   renderAside();
 }
+
+
+// Tahtayı ekrana sığdır: klavye ve alt menü kaydırmadan görünsün
+function khFit(){
+  const board = $("#board"), kb = $("#kb"); if (!board || !kb || view !== "oyun-kelime") return;
+  const H = window.innerHeight, nav = $("#bottom"), navH = nav && getComputedStyle(nav).display !== "none" ? nav.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty("--keyh", H < 600 ? "40px" : H < 700 ? "44px" : H < 780 ? "48px" : "52px");
+  board.style.width = "";
+  const top = board.getBoundingClientRect().top + window.scrollY;
+  const hint = $("#wgHint").getBoundingClientRect().height + 6;
+  const kbH = kb.getBoundingClientRect().height + 8;
+  const avail = H - navH - top - hint - kbH - 10;
+  const maxW = Math.min(330, board.parentElement.getBoundingClientRect().width);
+  const w = Math.max(140, Math.min(maxW, (avail - 25) * 5 / 6 + 5));
+  board.style.width = Math.round(w) + "px";
+}
+window.addEventListener("resize", () => khFit());
 
 function khDraw(){
   const ans = khAnswer(), board = $("#board"), kb = $("#kb"); if (!board) return;
@@ -1208,6 +1234,15 @@ function khDraw(){
   }
   KH.anim = -1;
   kb.querySelectorAll(".key").forEach(b => { b.classList.remove("c","p","a"); const s = keyState[b.dataset.k]; if (s) b.classList.add(s); });
+  // 5 harf tamamlanınca Gönder tuşunu öne çıkar ve ilk tahminde ipucu göster
+  const ready = !khState.done && [...KH.cur].length === 5;
+  kb.querySelector(".key.enter")?.classList.toggle("ready", ready);
+  const hint = $("#wgHint");
+  if (hint){
+    hint.textContent = "";
+    if (ready && khState.guesses.length < 2){ hint.append("5 harf tamam, "); hint.appendChild(el("b", null, "GÖNDER")); hint.append("’e dokun"); }
+    else if (!khState.done && !khState.guesses.length && !KH.cur) hint.textContent = "Aşağıdaki harflere dokunarak yaz";
+  }
 }
 
 async function khKey(k){
@@ -1299,6 +1334,7 @@ function khHelp(){
   ex("kalem", 0, "c", "K kelimede var ve doğru yerde.");
   ex("deniz", 2, "p", "N kelimede var ama başka bir yerde.");
   ex("bahar", 3, "a", "A’nın bu yerdeki hali kelimede yok.");
+  h.appendChild(el("p", null, "5 harfi yazdıktan sonra klavyedeki mavi GÖNDER tuşuna dokun."));
   h.appendChild(el("p", null, "Her gün Türkiye saatiyle gece yarısı yeni kelime gelir. Tahminlerin sözlükteki ya da günün haberlerinde geçen gerçek kelimeler olmalı."));
   const lab = el("label"); lab.style.cssText = "display:flex;gap:10px;align-items:center;margin-top:10px;font-size:15px";
   const cb = el("input"); cb.type = "checkbox"; cb.checked = document.documentElement.classList.contains("hc");

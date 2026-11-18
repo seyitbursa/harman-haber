@@ -13,7 +13,7 @@ export async function getQuakes({ hours = 48, minMag = 2.5, max = 60 } = {}) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 20000);
     try {
-      const r = await fetch(base + qs, { signal: ctrl.signal, redirect: "follow", headers: { "User-Agent": "GundemKutusu/1.0", "Accept": "application/json" } });
+      const r = await fetch(base + qs, { signal: ctrl.signal, redirect: "follow", headers: { "User-Agent": "HarmanHaber/1.0 (+https://github.com/seyitbursa/harman-haber)", "Accept": "application/json" } });
       if (!r.ok) throw new Error("HTTP " + r.status);
       const list = await r.json();
       if (!Array.isArray(list)) throw new Error("beklenmeyen yanıt");

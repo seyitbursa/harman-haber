@@ -1,6 +1,8 @@
-# Gündem Kutusu
+# Harman Haber
 
-Türk haber sitelerinin RSS akışlarını toplayıp tek sayfada gösteren, sunucusuz ve ücretsiz çalışan bir gündem sitesi.
+*Haberin özü, her kaynaktan.*
+
+Türk haber sitelerinin RSS akışlarını toplayıp bir olayı kimin nasıl verdiğini yan yana gösteren, sunucusuz ve ücretsiz çalışan bir gündem sitesi.
 
 ## Nasıl çalışır?
 

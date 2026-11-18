@@ -13,7 +13,7 @@ export async function getXTrends({ max = 20 } = {}) {
   try {
     const r = await fetch(URL_TR, {
       signal: ctrl.signal,
-      headers: { "User-Agent": "GundemKutusu/1.0 (+https://github.com/seyitbursa/gundem-kutusu)", "Accept-Language": "tr-TR,tr;q=0.9" }
+      headers: { "User-Agent": "HarmanHaber/1.0 (+https://github.com/seyitbursa/harman-haber)", "Accept-Language": "tr-TR,tr;q=0.9" }
     });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const html = await r.text();

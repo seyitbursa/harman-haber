@@ -3,15 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gündem Kutusu</title>
-<meta name="description" content="Türk haber kaynaklarını tek sayfada toplayan canlı gündem.">
+<title>Harman Haber: haberin özü, her kaynaktan</title>
+<meta name="description" content="Harman Haber: Türk haber kaynaklarını tek yerde toplar, bir olayı kimin nasıl verdiğini yan yana gösterir. Haberin özü, her kaynaktan.">
+<meta property="og:title" content="Harman Haber">
+<meta property="og:description" content="Haberin özü, her kaynaktan.">
+<meta property="og:image" content="icons/icon-512.png">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#161E31" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Gündem">
+<meta name="apple-mobile-web-app-title" content="Harman">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,500;12..96,75..100,700;12..96,75..100,800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,7 +48,8 @@ a{color:inherit} button,select,input{font:inherit;color:inherit}
 .masthead{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:12px;height:var(--bar)}
 .brand{display:flex;flex-direction:column;line-height:1;text-decoration:none;min-width:0}
-.brand b{font-family:var(--head);font-weight:800;font-stretch:80%;font-size:26px;letter-spacing:-0.015em;white-space:nowrap}
+.brand b{font-family:var(--head);font-weight:800;font-stretch:80%;font-size:28px;letter-spacing:-0.02em;white-space:nowrap}
+.brand b span{font-weight:500;font-stretch:90%;font-size:18px;letter-spacing:0;color:var(--accent);margin-left:5px}
 .brand small{font-size:12px;color:var(--ink-3);margin-top:4px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--up);flex:0 0 auto}
 .dot.stale{background:var(--ink-3)}
@@ -375,8 +379,8 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
 <header class="masthead">
   <div class="wrap">
     <div class="bar">
-      <a class="brand" href="#" id="home" aria-label="Gündem Kutusu, ana sayfa">
-        <b>Gündem Kutusu</b>
+      <a class="brand" href="#" id="home" aria-label="Harman Haber, ana sayfa">
+        <b>Harman<span>haber</span></b>
         <small><span class="dot" id="dot"></span><span id="updated">Yükleniyor</span></small>
       </a>
       <div class="bar-actions">
@@ -416,6 +420,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
       <div class="row noimg"><div><div class="sk" style="width:35%"></div><div class="sk" style="width:80%;height:16px"></div><div class="sk" style="width:65%;height:16px"></div></div></div>
     </div>
     <footer>
+      <p><b>Harman Haber</b>: haberin özü, her kaynaktan.</p>
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
       <p>Kaynak dağılımı çubuğu, haberi hangi kesimden kaynakların verdiğini gösterir; etiketler Reuters Enstitüsü ve Medya Sahipliği İzleme (MOM) değerlendirmelerine dayanır ve Ayarlar’dan değiştirilebilir.</p>
       <p>“Özü” satırları haber metninden Google Gemini ile otomatik çıkarılır ve hata içerebilir; ayrıntı için habere dokun.</p>
@@ -937,7 +942,7 @@ function shareStory(i){
   shareOrCopy({title: i.title, text, url: i.url});
 }
 function shareTopic(t){
-  shareOrCopy({title: t.title || t.label, text: (t.title || t.label) + (t.summary ? "\n" + t.summary : "") + "\nGündem Kutusu’nda tüm kaynaklarıyla:", url: SITE + "#konu-" + t.slug});
+  shareOrCopy({title: t.title || t.label, text: (t.title || t.label) + (t.summary ? "\n" + t.summary : "") + "\nHarman Haber’de tüm kaynaklarıyla:", url: SITE + "#konu-" + t.slug});
 }
 const ICON = {
   share: "M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5",

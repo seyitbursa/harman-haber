@@ -4,6 +4,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { cluster } from "./cluster.mjs";
 import { getMarkets } from "./markets.mjs";
 import { trendingTopics } from "./topics.mjs";
+import { getXTrends } from "./xtrends.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -146,17 +147,18 @@ const stories = cluster(items).map((group, i) => {
   };
 }).sort((a, b) => b.date.localeCompare(a.date));
 
-const markets = await getMarkets();
+const [markets, xtrends] = await Promise.all([getMarkets(), getXTrends()]);
 const topics = trendingTopics(stories);
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
-  JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, stories, errors }));
+  JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
-console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu; ${errors.length} akış hata verdi.`);
+console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);
 errors.forEach(e => console.log("  ✗", e.url, "→", e.error));
 if (markets.error) console.log("  ✗ piyasa →", markets.error);
+if (xtrends.error) console.log("  ✗ X gündemi →", xtrends.error);
 
 // Açık kalan bağlantılar yüzünden işlem asılı kalmasın
 process.exit(0);

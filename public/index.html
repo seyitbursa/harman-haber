@@ -171,6 +171,25 @@ main .wrap{padding-top:20px;padding-bottom:48px}
 .local-title{font-family:var(--head);font-size:20px;margin:18px 0 0}
 .install{background:var(--accent);color:var(--accent-ink)!important;border-radius:8px;padding:3px 10px!important}
 .install[hidden]{display:none}
+
+/* X gündemi */
+.xbox[hidden]{display:none}
+.xbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.xhead{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.xhead h2{font-family:var(--head);font-weight:700;font-size:17px;margin:0}
+.xhead span{color:var(--ink-3);font-size:13px}
+.xlist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;column-gap:24px}
+@media (min-width:760px){.xlist{grid-template-columns:1fr 1fr}}
+.xlist li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);min-width:0}
+.xlist .n{width:22px;flex:0 0 auto;color:var(--ink-3);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.xlist a{flex:1 1 auto;min-width:0;text-decoration:none;font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xlist a:hover{color:var(--accent)}
+.xlist .c{flex:0 0 auto;color:var(--ink-3);font-size:12px}
+.xnews{flex:0 0 auto;border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--accent)}
+.xfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:12px}
+.xfoot button{background:none;border:0;color:var(--accent);font-weight:600;cursor:pointer;padding:4px 0;font-size:14px}
+.xfoot small{color:var(--ink-3);font-size:11px}
+.xfoot small a{color:inherit}
 footer{color:var(--ink-3);font-size:13px;border-top:1px solid var(--line);padding:20px 0 32px}
 footer p{margin:0 0 6px;max-width:70ch}
 @media (max-width:560px){.top .wrap{flex-direction:column;align-items:stretch}.search{flex:1 1 auto}.meta-line span:last-child{display:none}}
@@ -206,6 +225,7 @@ footer p{margin:0 0 6px;max-width:70ch}
   <div class="wrap">
     <section class="local" id="local" hidden aria-label="Şehrim"></section>
     <div class="topics" id="topics" role="group" aria-label="Gündemdeki konular" hidden></div>
+    <section class="xbox" id="xbox" aria-labelledby="xtitle" hidden></section>
     <button class="newbar" id="newbar" type="button"></button>
     <div class="meta-line"><span id="count"></span><span>Kaynak seçimin bu cihazda hatırlanır</span></div>
     <div class="feed" id="feed" aria-live="polite"></div>
@@ -215,7 +235,7 @@ footer p{margin:0 0 6px;max-width:70ch}
 
 <footer><div class="wrap">
   <p>Başlık ve özetler yayıncıların RSS akışlarından otomatik alınır; haberin tamamı için karta dokun, orijinal sitede açılır.</p>
-  <p>Haberler ve piyasa verileri yaklaşık 15 dakikada bir güncellenir; piyasa verileri anlık değildir ve yatırım tavsiyesi değildir. Hava durumu Open-Meteo’dan alınır.</p>
+  <p>Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir güncellenir; X gündemi trends24.in üzerinden alınır. piyasa verileri anlık değildir ve yatırım tavsiyesi değildir. Hava durumu Open-Meteo’dan alınır.</p>
 </div></footer>
 
 <script>
@@ -371,7 +391,7 @@ function visibleStories(){
 
 function renderFeed(){
   const q = $("#q").value.trim();
-  renderTopics(); renderLocalPanel();
+  renderTopics(); renderX(); renderLocalPanel();
   if (cat === "yerel" && !city){ $("#feed").textContent = ""; $("#count").textContent = ""; $("#more").hidden = true; return; }
   let list = visibleStories();
   const query = activeTopic || q;
@@ -460,10 +480,16 @@ function clusterBlock(story, others){
 function renderTopics(){
   const box = $("#topics"), list = data.topics || [];
   box.textContent = "";
-  const show = list.length && (cat === "all" || cat === "gundem") && !$("#q").value.trim();
+  const show = (list.length || activeTopic) && (cat === "all" || cat === "gundem") && !$("#q").value.trim();
   box.hidden = !show;
   if (!show) return;
   box.appendChild(el("span","topics-label","Gündemde"));
+  if (activeTopic && !list.some(t => t.label === activeTopic)){
+    const b = el("button","topic", activeTopic + "  ✕"); b.type = "button"; b.setAttribute("aria-pressed","true");
+    b.setAttribute("aria-label", activeTopic + " süzgecini kaldır");
+    b.onclick = () => { activeTopic = null; renderFeed(); };
+    box.appendChild(b);
+  }
   list.forEach(t => {
     const b = el("button","topic", t.label); b.type = "button";
     b.setAttribute("aria-pressed", activeTopic === t.label ? "true" : "false");
@@ -471,6 +497,50 @@ function renderTopics(){
     b.onclick = () => { activeTopic = activeTopic === t.label ? null : t.label; shown = PAGE; renderFeed(); };
     box.appendChild(b);
   });
+}
+
+
+// ---- X gündemi ----
+let xOpen = false;
+function renderX(){
+  const box = $("#xbox"), x = data.xtrends;
+  const show = x && x.items && x.items.length && (cat === "all" || cat === "gundem") && !$("#q").value.trim() && !activeTopic;
+  box.hidden = !show;
+  if (!show) return;
+  box.textContent = "";
+  const head = el("div","xhead"), h = el("h2",null,"X’te gündem"); h.id = "xtitle";
+  head.append(h, el("span",null, new Date(x.at).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}) + " itibarıyla"));
+  const ol = el("ol","xlist"), limit = xOpen ? x.items.length : 6;
+  const pool = data.stories || [];
+  x.items.slice(0, limit).forEach((t, i) => {
+    const li = el("li");
+    li.appendChild(el("span","n", String(i + 1)));
+    const a = el("a",null,t.name);
+    a.href = "https://x.com/search?q=" + encodeURIComponent(t.name); a.target = "_blank"; a.rel = "noopener";
+    li.appendChild(a);
+    if (t.count) li.appendChild(el("span","c", t.count.toLocaleString("tr-TR") + " gönderi"));
+    // Etiket olmayan başlıklar için sitedeki ilgili haber sayısı
+    if (!t.name.startsWith("#")){
+      const n = pool.filter(s => s.items.some(it => !off.has(it.source) && matches(it.title + " " + it.summary, t.name))).length;
+      if (n){
+        const b = el("button","xnews", n + " haber"); b.type = "button";
+        b.setAttribute("aria-label", t.name + " ile ilgili " + n + " haberi göster");
+        b.onclick = () => { activeTopic = t.name; shown = PAGE; renderFeed(); $("#feed").scrollIntoView({block:"start"}); };
+        li.appendChild(b);
+      }
+    }
+    ol.appendChild(li);
+  });
+  const foot = el("div","xfoot");
+  if (x.items.length > 6){
+    const more = el("button",null, xOpen ? "Daha az göster" : "İlk " + x.items.length + "’yi göster"); more.type = "button";
+    more.onclick = () => { xOpen = !xOpen; renderX(); };
+    foot.appendChild(more);
+  } else foot.appendChild(el("span"));
+  const note = el("small"); note.append(document.createTextNode("Kaynak: "));
+  const l = el("a",null,x.source); l.href = x.sourceUrl; l.target = "_blank"; l.rel = "noopener"; note.appendChild(l);
+  foot.appendChild(note);
+  box.append(head, ol, foot);
 }
 
 // ---- Hava durumu (Open-Meteo) ----

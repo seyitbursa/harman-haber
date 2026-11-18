@@ -33,11 +33,10 @@ const RULES = [
   ["teknoloji", /\b(teknoloji|tekno|bilim|bilim-teknoloji|yapay-zeka|yapay zeka|otomobil)\b/i],
   ["siyaset",   /\b(siyaset|politika|meclis|tbmm|secim|seçim)\b/i],
 ];
-// Oyun haberleri teknoloji ve genel akışlardan da ayıklanır
-const GAME = /\b(oyun|oyunu|oyunları|oyuncu|playstation|ps5|ps4|xbox|nintendo|switch 2|steam|epic games|gta|game pass|the game awards|e-?spor|valorant|fortnite|minecraft|roblox|unity|unreal engine|ubisoft|electronic arts|activision|blizzard|riot games|mobil oyun)\b/i;
+// Yapay zekâ haberleri tüm akışlardan ayıklanır (başlıkta ya da özetin ilk cümlesinde geçiyorsa)
+const AI = /(yapay\s*zek[aâ]|\bAI\b|\bA\.I\.|chatgpt|openai|\bgemini\b|\bclaude\b|anthropic|copilot|\bllm\b|dil modeli|makine öğren|derin öğren|deepfake|deepseek|\bgrok\b|mistral ai|\bsora\b|nöral ağ|üretken zek|t3ai|yapay genel zek)/i;
 function guessCategory(item, fallback) {
-  if (fallback === "oyun") return fallback;
-  if ((fallback === "gundem" || fallback === "teknoloji") && GAME.test(item.title || "")) return "oyun";
+  if (AI.test(item.title || "") || /yapay\s*zek[aâ]/i.test((item.contentSnippet || "").split(/[.!?…]\s/)[0])) return "yapayzeka";
   if (fallback !== "gundem") return fallback;
   let path = "";
   try { path = new URL(item.link).pathname.split("/").slice(0, 3).join(" "); } catch {}

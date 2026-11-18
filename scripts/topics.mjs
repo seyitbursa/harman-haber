@@ -60,7 +60,7 @@ export function trendingTopics(stories, { hours = 12, minSources = 3, max = 8 } 
   const since = Date.now() - hours * 3600e3;
   const bySources = new Map();
   for (const s of stories) {
-    if (new Date(s.date).getTime() < since || s.category === "oyun") continue;   // oyun haberleri genel gündemi bastırmasın
+    if (new Date(s.date).getTime() < since) continue;
     for (const it of s.items) for (const p of phrases(it.title)) {
       const k = p.toLocaleLowerCase("tr").split(" ").map(w => w.slice(0, 6)).join(" ");
       if (!bySources.has(k)) bySources.set(k, { label: p, forms: new Map(), sources: new Set(), stories: new Set() });

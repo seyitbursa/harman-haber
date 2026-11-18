@@ -1,9 +1,9 @@
 {
   "notify": {
-    "ntfyTopic": "gundem-kutusu-35aed6a3",
+    "ntfyTopic": "harman-haber-d346c949",
     "minSources": 5,
     "minQuake": 5.0,
-    "reportTopic": "gundem-kutusu-bildirim-0e60bd5b"
+    "reportTopic": "harman-haber-bildirim-42f8fc10"
   },
   "sources": {
     "aa": {
@@ -90,16 +90,6 @@
       "name": "DonanımHaber",
       "mono": "DH",
       "color": "#4D7C0F"
-    },
-    "oyungezer": {
-      "name": "Oyungezer",
-      "mono": "OG",
-      "color": "#DB2777"
-    },
-    "merlin": {
-      "name": "Merlin’in Kazanı",
-      "mono": "MK",
-      "color": "#7C3AED"
     },
     "sabah": {
       "name": "Sabah",
@@ -245,16 +235,6 @@
       "source": "donanimhaber",
       "category": "teknoloji",
       "url": "https://www.donanimhaber.com/rss/tum/"
-    },
-    {
-      "source": "oyungezer",
-      "category": "oyun",
-      "url": "https://www.oyungezer.com.tr/rss"
-    },
-    {
-      "source": "merlin",
-      "category": "oyun",
-      "url": "https://www.merlininkazani.com/rss"
     },
     {
       "source": "sabah",

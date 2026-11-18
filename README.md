@@ -23,7 +23,7 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - **Kaynak dağılımı ve Kör nokta:** Birden çok etiketli kaynağın verdiği haberlerde, haberi hangi kesimden kaynakların verdiğini gösteren çubuk (Ground News’teki “bias bar” benzeri). Etiketler (`hukumet`, `bagimsiz`, `muhalefet`) ve dayanakları `feeds.json` içinde her kaynağın `lean`, `leanNote`, `leanUrl` alanlarında; okuyucu Ayarlar’dan kendi cihazında değiştirebilir. Çubuk genişlikleri grup büyüklüğüne göre dengelenir. “Kör nokta” sekmesi, son 24 saatte yalnızca bir kesimin akışlarında görünen haberleri listeler.
 - **Konu sayfaları:** “Gündemde” konularının her biri için ayrı sayfa (`#konu-…`): Gemini ile 2–3 cümlelik tarafsız özet, konunun tüm haberlerinin kaynak dağılımı, “Kim nasıl verdi?” bölümünde hükümete yakın, bağımsız ve muhalefete yakın kaynakların başlıkları yan yana ve zaman sırasına göre tüm haberler. Özetler önbellekte tutulur; konuya en az 2 yeni haber eklendiğinde ya da 3 saatte bir yenilenir.
 - **Paylaş ve haber menüsü:** Her haberin yanında Kaydet, Paylaş (telefonda paylaşım menüsü, bilgisayarda bağlantıyı kopyalar; başlık ve “Özü” cümlesiyle) ve “…” menüsü: kaynağında aç, konuya git, okundu/okunmadı, bu kaynağı gizle, özette hata bildir. Hata bildirimleri `feeds.json` içindeki `notify.reportTopic` ntfy konusuna gider.
-- **Oyun sekmesi:** Oyungezer ve Merlin’in Kazanı akışları, ayrıca teknoloji ve genel akışlardaki oyun haberleri.
+- **Yapay zekâ sekmesi:** Tüm kaynaklardan başlığında ya da özetinde yapay zekâ geçen haberler (yapay zekâ, ChatGPT, OpenAI, Gemini, Claude, Anthropic, Copilot, deepfake vb.).
 - **Şehrim:** 81 il arasından seçilen şehir için Open-Meteo’dan hava durumu (anlık ve 5 günlük) ve ulusal kaynaklarda şehrin adı geçen haberler. Seçim cihazda saklanır.
 - **Uygulama olarak kurulum (PWA):** Telefonda “Ana ekrana ekle” ile uygulama gibi açılır; internet yokken son indirilen haberler gösterilir.
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
@@ -45,7 +45,7 @@ npm run dev
 
 ## Kaynak eklemek / çıkarmak
 
-`feeds.json` içinde `sources` kısmına kaynağı (ad, kısaltma, renk), `feeds` kısmına akış adresini ve varsayılan kategorisini ekle. Kategoriler: `gundem`, `siyaset`, `ekonomi`, `dunya`, `spor`, `teknoloji`. Genel akışlarda kategori, haberin adresine ve RSS etiketlerine bakılarak tahmin edilir.
+`feeds.json` içinde `sources` kısmına kaynağı (ad, kısaltma, renk), `feeds` kısmına akış adresini ve varsayılan kategorisini ekle. Kategoriler: `gundem`, `siyaset`, `ekonomi`, `dunya`, `spor`, `yapayzeka`, `teknoloji`. Genel akışlarda kategori, haberin adresine ve RSS etiketlerine bakılarak tahmin edilir.
 
 ## Bilmen gerekenler
 

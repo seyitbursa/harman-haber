@@ -9,6 +9,7 @@ import { getQuakes } from "./quakes.mjs";
 import { notify, previousJson } from "./notify.mjs";
 import { addGists, addTopicSummaries } from "./summarize.mjs";
 import { dailyWord } from "./wordgame.mjs";
+import { dailyGames } from "./games.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -170,7 +171,7 @@ for (let i = topics.length - 1; i > 0; i--) {
   const dup = topics.slice(0, i).some(t => t.storyIds.filter(id => mine.has(id)).length / mine.size >= 0.6);
   if (dup) topics.splice(i, 1);
 }
-const game = { kelime: await dailyWord({ stories, prevGame: prevJson?.game?.kelime }) };
+const game = { kelime: await dailyWord({ stories, prevGame: prevJson?.game?.kelime }), gunluk: await dailyGames({ stories, sources: config.sources, prev: prevJson?.game?.gunluk }) };
 const topicSums = await addTopicSummaries({ topics, stories, sources: config.sources, prevTopicSums: prevJson?.topicSums, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const cfg = config.notify || {};
 const note = cfg.ntfyTopic

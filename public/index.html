@@ -423,6 +423,65 @@ body.in-game .tabs{display:none}
 @keyframes nudge{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 .wg-hint{min-height:20px;margin:6px 0 0;font-size:13.5px;color:var(--ink-2);text-align:center}
 .wg-hint b{color:var(--accent)}
+/* ---------- Günlük oyunlar ---------- */
+.gm{max-width:520px;margin:8px auto 0}
+.gm-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px}
+.gm-head h2{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:26px;margin:0}
+.gm-head small{display:block;color:var(--ink-3);font-size:13px;font-family:var(--body)}
+.prog{display:flex;gap:6px;margin:0 0 12px}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.prog i.ok{background:var(--k-correct)} .prog i.no{background:var(--down)} .prog i.cur{background:var(--accent)}
+.prog i.s3{background:var(--k-correct)} .prog i.s2{background:#65A30D} .prog i.s1{background:var(--k-present)} .prog i.s0{background:var(--k-absent)}
+.qcard{background:var(--surface);border-radius:16px;padding:18px;box-shadow:0 1px 0 var(--line)}
+.qcard .lbl{font-size:13px;color:var(--ink-3);font-weight:600;margin:0 0 8px}
+.qcard .q{font-family:var(--head);font-weight:700;font-size:22px;line-height:1.25;margin:0}
+.qcard .q .blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--accent);color:var(--accent);text-align:center}
+.qcard .q .num{display:inline-block;min-width:1.6em;padding:0 .2em;border-radius:6px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);text-align:center}
+.opts{display:grid;gap:8px;margin-top:14px}
+.opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:16px;font-weight:600;cursor:pointer;color:var(--ink)}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt.ok{border-color:var(--k-correct);background:color-mix(in srgb,var(--k-correct) 12%,var(--surface))}
+.opt.no{border-color:var(--down);background:color-mix(in srgb,var(--down) 10%,var(--surface))}
+.opt[disabled]{cursor:default}
+.opt .mono{width:28px;height:28px;font-size:10px}
+.verdict{margin-top:14px;font-size:15px;color:var(--ink-2)}
+.verdict b{color:var(--ink)}
+.verdict a{color:var(--accent);font-weight:600;text-decoration:none}
+.gm-next{display:flex;justify-content:flex-end;margin-top:14px}
+.num-in{display:flex;gap:8px;align-items:center;margin-top:14px}
+.num-in input{flex:1 1 auto;min-width:0;height:50px;border:2px solid var(--line);border-radius:12px;background:var(--surface);padding:0 14px;font-size:20px;font-weight:700;color:var(--ink)}
+.num-in input:focus{border-color:var(--accent);outline:none}
+.num-in span{font-weight:700;color:var(--ink-2)}
+.gm-end{background:var(--surface);border-radius:16px;padding:18px;box-shadow:0 1px 0 var(--line);margin-top:12px}
+.gm-end h3{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:24px;margin:0}
+.gm-end .big{font-family:var(--head);font-weight:800;font-size:44px;line-height:1;margin:8px 0}
+.gm-end ol{margin:10px 0 0;padding-left:20px}
+.gm-end li{margin:8px 0;font-size:14.5px;line-height:1.4}
+.gm-end li a{text-decoration:none} .gm-end li a:hover{color:var(--accent)}
+.gm-end li small{display:block;color:var(--ink-3)}
+/* Petek */
+.pk-word{min-height:44px;text-align:center;font-family:var(--head);font-weight:800;font-size:30px;letter-spacing:.06em;margin:6px 0 4px;color:var(--ink)}
+.pk-word .c{color:var(--accent)}
+.pk-word .caret{display:inline-block;width:2px;height:28px;background:var(--accent);vertical-align:-3px;margin-left:2px}
+@media (prefers-reduced-motion:no-preference){.pk-word .caret{animation:blink 1s steps(1) infinite}}
+@keyframes blink{50%{opacity:0}}
+.hive{position:relative;width:min(300px,80vw);aspect-ratio:1/.98;margin:6px auto 0}
+.hex{position:absolute;width:30%;aspect-ratio:1/1.1547;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--line);border:0;display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:clamp(22px,7vw,30px);color:var(--ink);cursor:pointer;touch-action:manipulation}
+.hex.center{background:var(--accent);color:var(--accent-ink)}
+.hex:active{filter:brightness(.92)}
+.pk-acts{display:flex;justify-content:center;gap:10px;margin:14px 0 6px}
+.pk-acts .btn{min-width:88px}
+.pk-acts .btn.ghost,.wg-foot .btn.ghost{background:var(--surface);box-shadow:0 1px 0 var(--line),inset 0 0 0 1px var(--line)}
+.pk-score{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+.pk-score b{font-family:var(--head);font-weight:800;font-size:18px;white-space:nowrap}
+.pk-bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.pk-bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+.pk-found{background:var(--surface);border-radius:14px;padding:12px 14px;box-shadow:0 1px 0 var(--line);margin-top:10px}
+.pk-found summary{cursor:pointer;font-weight:700;font-size:14.5px}
+.pk-found .ws{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pk-found .ws span{background:var(--paper);border-radius:7px;padding:3px 8px;font-size:14px;font-weight:600}
+.pk-found .ws span.pg{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -758,7 +817,7 @@ function go(where){
 function route(){
   const h = location.hash.slice(1);
   if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); }
-  else if (h === "oyunlar" || h === "oyun-kelime") view = h;
+  else if (h === "oyunlar" || h.startsWith("oyun-")) view = h;
   else if (h === "yerel" || h === "saved") view = h;
   else { view = "feed"; cat = CATS.some(c => c.id === h) ? h : "all"; }
   shown = PAGE; activeTopic = null;
@@ -772,7 +831,7 @@ function renderNav(){
     b.onclick = () => { location.hash = c.id === "all" ? "" : c.id; if (c.id === "all") route(); window.scrollTo({top:0}); };
     tabs.appendChild(b);
   });
-  $$("[data-go]").forEach(b => { const on = b.dataset.go === view || (b.dataset.go === "oyunlar" && view === "oyun-kelime"); on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
+  $$("[data-go]").forEach(b => { const on = b.dataset.go === view || (b.dataset.go === "oyunlar" && view.startsWith("oyun-")); on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
 }
 
 // ---- Liste ----
@@ -788,9 +847,9 @@ function storiesFor(){
 
 function render(){
   renderNav(); renderStatus(); renderTicker(); $("#ticker").hidden = false;
-  document.body.classList.toggle("in-game", view === "oyun-kelime");
+  document.body.classList.toggle("in-game", view.startsWith("oyun-"));
   if (view === "topic"){ renderTopic(); return; }
-  if (view === "oyunlar" || view === "oyun-kelime"){ renderGames(); return; }
+  if (view === "oyunlar" || view.startsWith("oyun-")){ renderGames(); return; }
   const q = query();
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
@@ -1144,23 +1203,28 @@ const dateTR = d => new Date(d + "T12:00:00").toLocaleDateString("tr-TR", { day:
 function renderGames(){
   const top = $("#top"), feed = $("#feed");
   top.textContent = ""; feed.classList.remove("skel"); feed.textContent = "";
-  $("#feedHead").hidden = true; $("#ticker").hidden = view === "oyun-kelime";
+  $("#feedHead").hidden = true; $("#ticker").hidden = view !== "oyunlar";
   clearInterval(KH.timer);
   if (view === "oyunlar"){
     const wrap = el("div","games");
-    const h = el("div","sec"); h.style.marginTop = "14px"; h.appendChild(el("h3", null, "Oyunlar")); top.appendChild(h);
-    const st = khLoad(), stats = khStats();
-    const c = el("button","game-card"); c.type = "button";
-    const gi = el("span","gi"); ["c","p","","c","c","p","","c","c"].forEach(x => gi.appendChild(el("i", x)));
-    const t = el("div"); t.append(el("h3", null, "Kelime Harmanı"), el("p", null, "Günün haberlerinden seçilen 5 harfli kelimeyi 6 denemede bul."));
-    const s = el("span","st", !st ? "" : st.done ? (st.won ? "Bugün çözdün" : "Yarın yeni kelime") : st.guesses.length ? "Devam et" : "Oyna");
-    if (stats.streak > 1) s.appendChild(el("small", null, "\n" + stats.streak + " günlük seri"));
-    s.style.whiteSpace = "pre-line";
-    c.append(gi, t, s); c.onclick = () => { location.hash = "oyun-kelime"; };
-    wrap.append(c, el("p","soon","Yeni oyunlar yolda."));
+    const h = el("div","sec"); h.style.marginTop = "14px"; h.appendChild(el("h3", null, "Günün oyunları")); top.appendChild(h);
+    const pics = {kelime:["c","p","","c","c","p","","c","c"], manset:["","","","c","c","c","","",""], rakam:["p","","p","","c","","p","","p"], kaynak:["c","","","","p","","","","c"], petek:["","p","","p","c","p","","p",""]};
+    GAMES.forEach(gm => {
+      const c = el("button","game-card"); c.type = "button";
+      const gi = el("span","gi"); pics[gm.id].forEach(x => gi.appendChild(el("i", x)));
+      const t = el("div"); t.append(el("h3", null, gm.name), el("p", null, gm.desc));
+      const s = el("span","st", gStatus(gm.id));
+      if (gm.id === "kelime"){ const stats = khStats(); if (stats.streak > 1){ s.style.whiteSpace = "pre-line"; s.append("\n" + stats.streak + " günlük seri"); } }
+      c.append(gi, t, s); c.onclick = () => { location.hash = "oyun-" + gm.id; };
+      wrap.appendChild(c);
+    });
+    wrap.appendChild(el("p","soon","Bütün oyunlar her gün Türkiye saatiyle gece yarısı yenilenir."));
     top.appendChild(wrap);
     renderAside(); return;
   }
+  if (view === "oyun-manset" || view === "oyun-kaynak"){ renderQuiz(view.slice(5)); renderAside(); return; }
+  if (view === "oyun-rakam"){ renderRakam(); renderAside(); return; }
+  if (view === "oyun-petek"){ renderPetek(); renderAside(); return; }
   // Oyun ekranı
   if (!data.game?.kelime){ top.appendChild(el("p","hint","Günün kelimesi yükleniyor…")); return; }
   if (!khState || khState.date !== data.game.kelime.date) khState = khLoad();
@@ -1356,6 +1420,209 @@ document.addEventListener("keydown", e => {
   else if (e.key === "Backspace"){ e.preventDefault(); khKey("⌫"); }
   else { const k = trLow(e.key); if (k.length === 1 && TRL.includes(k)) khKey(k); }
 });
+
+
+// ---- Günlük oyunlar: Manşet Tamamla, Rakam Avı, Hangi Kaynak?, Petek ----
+const GAMES = [
+  {id:"kelime", name:"Kelime Harmanı", desc:"Günün haberlerinden seçilen 5 harfli kelimeyi 6 denemede bul."},
+  {id:"manset", name:"Manşet Tamamla", desc:"Günün manşetlerinden gizlenen kelimeyi dört seçenek arasından bul."},
+  {id:"rakam", name:"Rakam Avı", desc:"Haberlerdeki sayıyı tahmin et; ne kadar yaklaşırsan o kadar puan."},
+  {id:"kaynak", name:"Hangi Kaynak?", desc:"Başlığı hangi haber sitesinin attığını bul."},
+  {id:"petek", name:"Petek", desc:"7 harfle, ortadaki harfi kullanarak olabildiğince çok kelime türet."}
+];
+const gDec = s => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.split("").reverse().join("")), c => c.charCodeAt(0))));
+const gData = id => { const g = data.game?.gunluk; if (!g || !g[id]) return null; try { return id === "petek" ? g.petek : gDec(g[id]); } catch(e){ return null; } };
+const gState = id => { const d = data.game?.gunluk?.date, st = store.get("g-" + id, null); return st && st.date === d ? st : { date: d, ans: [], done: false }; };
+const gSave = (id, st) => store.set("g-" + id, st);
+const gStatus = id => {
+  if (id === "kelime"){ const st = khLoad(); return !st ? "" : st.done ? (st.won ? "Bugün çözdün" : "Yarın yeni kelime") : st.guesses.length ? "Devam et" : "Oyna"; }
+  const st = gState(id);
+  if (id === "petek") return st.found?.length ? st.found.length + " kelime" : "Oyna";
+  return st.done ? "Bitti: " + gScore(id, st) : st.ans.length ? "Devam et" : "Oyna";
+};
+function gScore(id, st){
+  if (id === "rakam") return st.ans.reduce((a, x) => a + x.p, 0) + "/15";
+  return st.ans.filter(x => x.ok).length + "/5";
+}
+function gHead(title, sub){
+  const h = el("div","gm-head"), t = el("div");
+  t.append(el("h2", null, title), el("small", null, sub));
+  const back = el("button","text-btn","Oyunlar"); back.type = "button"; back.onclick = () => { location.hash = "oyunlar"; };
+  h.append(t, back); return h;
+}
+function gProg(st, total, kind){
+  const p = el("div","prog");
+  for (let i = 0; i < total; i++){
+    const a = st.ans[i];
+    const c = !a ? (i === st.ans.length ? "cur" : "") : kind === "rakam" ? "s" + a.p : (a.ok ? "ok" : "no");
+    p.appendChild(el("i", c));
+  }
+  return p;
+}
+function gNoData(top){ top.appendChild(el("p","hint","Bugünün soruları hazırlanıyor. Birkaç dakika sonra tekrar dene.")); }
+
+// Çoktan seçmeli oyunlar (Manşet Tamamla, Hangi Kaynak?)
+function renderQuiz(id){
+  const top = $("#top"), qs = gData(id), meta = GAMES.find(g => g.id === id);
+  const wrap = el("section","gm"); top.appendChild(wrap);
+  wrap.appendChild(gHead(meta.name, dateTR(data.game?.gunluk?.date || todayISO()) + " soruları"));
+  if (!qs || !qs.length) return gNoData(wrap);
+  const st = gState(id);
+  wrap.appendChild(gProg(st, qs.length));
+  if (st.ans.length >= qs.length) return gEnd(wrap, id, qs, st);
+  const i = st.ans.length, q = qs[i], card = el("div","qcard");
+  card.appendChild(el("p","lbl", "Soru " + (i + 1) + " / " + qs.length + (id === "kaynak" ? ": Bu başlığı hangi site attı?" : ": Boşluğa ne gelir?")));
+  const qp = el("p","q");
+  if (id === "manset"){ const [a, b] = q.q.split("_____"); qp.append(a, el("span","blank","?"), b); }
+  else qp.textContent = "“" + q.q + "”";
+  card.appendChild(qp);
+  const opts = el("div","opts");
+  q.o.forEach(o => {
+    const b = el("button","opt"); b.type = "button";
+    if (id === "kaynak"){ b.append(mono(o), src(o).name); } else b.textContent = o;
+    b.onclick = () => {
+      const ok = o === q.a;
+      opts.querySelectorAll(".opt").forEach((x, k) => { x.disabled = true; if (q.o[k] === q.a) x.classList.add("ok"); });
+      if (!ok) b.classList.add("no");
+      st.ans.push({ ok }); if (st.ans.length === qs.length) st.done = true; gSave(id, st);
+      const v = el("p","verdict");
+      v.append(el("b", null, ok ? "Doğru! " : "Olmadı. "), id === "kaynak" ? "Başlık " + src(q.a).name + "’ten. " : "Doğrusu: " + q.a + ". ");
+      const a = el("a", null, "Haberi oku"); a.href = q.url; a.target = "_blank"; a.rel = "noopener"; v.appendChild(a);
+      card.appendChild(v);
+      const nx = el("div","gm-next"), nb = el("button","btn", st.done ? "Sonucu gör" : "Sonraki soru"); nb.type = "button";
+      nb.onclick = () => render(); nx.appendChild(nb); card.appendChild(nx); nb.focus();
+    };
+    opts.appendChild(b);
+  });
+  card.appendChild(opts); wrap.appendChild(card);
+}
+
+// Rakam Avı
+function rakamPoints(g, a){ const e = Math.abs(g - a) / Math.max(1, Math.abs(a)); return e <= 0.05 ? 3 : e <= 0.2 ? 2 : e <= 0.5 ? 1 : 0; }
+const fmtN = n => n.toLocaleString("tr-TR", {maximumFractionDigits: 2});
+function renderRakam(){
+  const id = "rakam", top = $("#top"), qs = gData(id), meta = GAMES.find(g => g.id === id);
+  const wrap = el("section","gm"); top.appendChild(wrap);
+  wrap.appendChild(gHead(meta.name, dateTR(data.game?.gunluk?.date || todayISO()) + " soruları"));
+  if (!qs || !qs.length) return gNoData(wrap);
+  const st = gState(id);
+  wrap.appendChild(gProg(st, qs.length, "rakam"));
+  if (st.ans.length >= qs.length) return gEnd(wrap, id, qs, st);
+  const i = st.ans.length, q = qs[i], card = el("div","qcard");
+  card.appendChild(el("p","lbl", "Soru " + (i + 1) + " / " + qs.length + ": Soru işaretinin yerinde hangi sayı var?"));
+  const qp = el("p","q"); const [a, b] = q.q.split("?"); qp.append(a, el("span","num","?"), b); card.appendChild(qp);
+  const row = el("div","num-in"), inp = el("input"); inp.type = "text"; inp.inputMode = "decimal"; inp.placeholder = "Tahminin"; inp.setAttribute("aria-label","Tahminin");
+  row.appendChild(inp); if (q.unit) row.appendChild(el("span", null, q.unit));
+  const go = el("button","btn","Tahmin et"); go.type = "button"; row.appendChild(go);
+  card.appendChild(row);
+  card.appendChild(el("p","hint","Tam isabet ya da %5 içinde 3 puan, %20 içinde 2 puan, %50 içinde 1 puan."));
+  const submit = () => {
+    const g = parseFloat(inp.value.replace(/\./g, "").replace(",", "."));
+    if (!isFinite(g)){ toast("Bir sayı yaz"); inp.focus(); return; }
+    const p = rakamPoints(g, q.a);
+    st.ans.push({ g, p }); if (st.ans.length === qs.length) st.done = true; gSave(id, st);
+    inp.disabled = true; go.disabled = true;
+    const v = el("p","verdict");
+    v.append(el("b", null, ["Uzak kaldın. ","Yaklaştın, 1 puan. ","Çok yakın, 2 puan. ","Tam isabet, 3 puan! "][p]), "Doğrusu: " + fmtN(q.a) + (q.unit ? " " + q.unit : "") + ". ");
+    const l = el("a", null, "Haberi oku"); l.href = q.url; l.target = "_blank"; l.rel = "noopener"; v.appendChild(l);
+    card.appendChild(v);
+    const nx = el("div","gm-next"), nb = el("button","btn", st.done ? "Sonucu gör" : "Sonraki soru"); nb.type = "button"; nb.onclick = () => render();
+    nx.appendChild(nb); card.appendChild(nx); nb.focus();
+  };
+  go.onclick = submit; inp.onkeydown = e => { if (e.key === "Enter") submit(); };
+  wrap.appendChild(card); setTimeout(() => inp.focus({preventScroll:true}), 50);
+}
+
+function gEnd(wrap, id, qs, st){
+  const meta = GAMES.find(g => g.id === id), box = el("div","gm-end");
+  box.appendChild(el("h3", null, "Bugünlük bu kadar"));
+  box.appendChild(el("div","big", gScore(id, st)));
+  const emo = id === "rakam" ? st.ans.map(x => ["⬜","🟨","🟩","🎯"][x.p]).join("") : st.ans.map(x => x.ok ? "🟩" : "🟥").join("");
+  box.appendChild(el("p", null, emo));
+  const ol = el("ol");
+  qs.forEach((q, i) => {
+    const li = el("li"), a = el("a", null, id === "manset" ? q.q.replace("_____", q.a) : id === "rakam" ? q.q.replace("?", fmtN(q.a)) : q.q);
+    a.href = q.url; a.target = "_blank"; a.rel = "noopener"; li.appendChild(a);
+    const s = st.ans[i]; li.appendChild(el("small", null, id === "rakam" ? "Tahminin: " + fmtN(s.g) + ", " + s.p + " puan" : id === "kaynak" ? src(q.a).name + (s.ok ? ", bildin" : ", bilemedin") : (s.ok ? "Bildin" : "Bilemedin")));
+    ol.appendChild(li);
+  });
+  box.appendChild(ol);
+  const f = el("div","wg-foot"), sh = el("button","btn","Sonucu paylaş"); sh.type = "button";
+  sh.onclick = () => shareOrCopy({ title: meta.name, text: `${meta.name}, ${dateTR(st.date)}: ${gScore(id, st)}\n${emo}`, url: SITE + "#oyun-" + id });
+  f.append(el("span","next","Yarın yeni sorular"), sh); box.appendChild(f);
+  wrap.appendChild(box);
+}
+
+// Petek
+const PK = { cur: "" };
+function petekWords(){ const p = data.game?.gunluk?.petek; if (!p) return []; try { return gDec(p.w); } catch(e){ return []; } }
+const pkScore = w => (w.length === 4 ? 1 : w.length) + (new Set(w).size === 7 ? 7 : 0);
+function pkRank(score, max){
+  const r = [[0,"Başlangıç"],[.05,"Fena değil"],[.15,"İyi"],[.3,"Çok iyi"],[.5,"Harika"],[.7,"Usta"],[1,"Dahi"]];
+  return r.filter(([t]) => score >= Math.ceil(t * max)).pop()[1];
+}
+function renderPetek(){
+  const top = $("#top"), p = data.game?.gunluk?.petek, meta = GAMES.find(g => g.id === "petek");
+  const wrap = el("section","gm"); top.appendChild(wrap);
+  wrap.appendChild(gHead(meta.name, dateTR(data.game?.gunluk?.date || todayISO()) + " peteği"));
+  if (!p) return gNoData(wrap);
+  const st = gState("petek"); st.found = st.found || []; if (!st.outer) st.outer = p.outer;
+  const words = new Set(petekWords());
+  const score = st.found.reduce((a, w) => a + pkScore(w), 0);
+  const sc = el("div","pk-score"), bar = el("div","pk-bar"), fill = el("i");
+  fill.style.width = Math.min(100, score / p.max * 100) + "%"; bar.appendChild(fill);
+  sc.append(el("b", null, pkRank(score, p.max)), bar, el("span", null, score + " puan")); wrap.appendChild(sc);
+  const wd = el("div","pk-word"); wd.id = "pkWord"; wrap.appendChild(wd);
+  const drawWord = () => { wd.textContent = ""; [...PK.cur].forEach(c => wd.appendChild(el("span", c === p.center ? "c" : null, trUp(c)))); wd.appendChild(el("span","caret")); };
+  drawWord();
+  const hive = el("div","hive");
+  // Sivri tepeli altıgenlerden çiçek düzeni: sol üst, sağ üst, sol, orta, sağ, sol alt, sağ alt
+  const pos = [[19,4.06],[51,4.06],[3,32.3],[35,32.3],[67,32.3],[19,60.6],[51,60.6]];
+  const order = [st.outer[0], st.outer[1], st.outer[2], p.center, st.outer[3], st.outer[4], st.outer[5]];
+  order.forEach((c, k) => {
+    const b = el("button","hex" + (c === p.center ? " center" : ""), trUp(c)); b.type = "button";
+    b.style.left = pos[k][0] + "%"; b.style.top = pos[k][1] + "%";
+    b.setAttribute("aria-label", trUp(c) + (c === p.center ? ", zorunlu harf" : ""));
+    b.onclick = () => { PK.cur += c; drawWord(); }; hive.appendChild(b);
+  });
+  wrap.appendChild(hive);
+  const acts = el("div","pk-acts");
+  const del = el("button","btn ghost","Sil"); del.type = "button"; del.onclick = () => { PK.cur = [...PK.cur].slice(0, -1).join(""); drawWord(); };
+  const mix = el("button","btn ghost","Karıştır"); mix.type = "button"; mix.onclick = () => { st.outer = [...st.outer].sort(() => Math.random() - .5); gSave("petek", st); render(); };
+  const ok = el("button","btn","Gönder"); ok.type = "button";
+  const submit = () => {
+    const w = PK.cur; PK.cur = "";
+    if ([...w].length < 4) toast("En az 4 harf olmalı");
+    else if (!w.includes(p.center)) toast("Ortadaki " + trUp(p.center) + " harfi kullanılmalı");
+    else if (st.found.includes(w)) toast("Bunu zaten buldun");
+    else if (!words.has(w)) toast("Listede yok");
+    else {
+      st.found.push(w); gSave("petek", st);
+      const pg = new Set(w).size === 7;
+      toast(pg ? "Harman! Tüm harfler, +" + pkScore(w) : "+" + pkScore(w));
+      return render();
+    }
+    drawWord();
+  };
+  ok.onclick = submit; PK.submit = submit; PK.draw = drawWord;
+  acts.append(del, mix, ok); wrap.appendChild(acts);
+  const fd = el("details","pk-found"); fd.open = st.found.length > 0 && st.found.length < 12;
+  fd.appendChild(el("summary", null, st.found.length + " / " + p.n + " kelime buldun"));
+  const ws = el("div","ws"); [...st.found].sort((a, b) => a.localeCompare(b, "tr")).forEach(w => ws.appendChild(el("span", new Set(w).size === 7 ? "pg" : null, w))); fd.appendChild(ws);
+  wrap.appendChild(fd);
+  const f = el("div","wg-foot"); const sh = el("button","btn ghost","Sonucu paylaş"); sh.type = "button";
+  sh.onclick = () => shareOrCopy({ title: "Petek", text: `Petek, ${dateTR(st.date)}: ${st.found.length} kelime, ${score} puan (${pkRank(score, p.max)})`, url: SITE + "#oyun-petek" });
+  f.append(el("span","next","Kurallar: en az 4 harf, ortadaki harf şart, harfler tekrar kullanılabilir. 7 harfin hepsini kullanan kelime +7 puan."), sh); wrap.appendChild(f);
+  wrap.appendChild(el("p","credit","")).innerHTML = 'Kelime listesi: <a href="https://tr.wiktionary.org/" target="_blank" rel="noopener">Vikisözlük</a>, CC BY-SA 4.0';
+}
+document.addEventListener("keydown", e => {
+  if (view !== "oyun-petek" || e.ctrlKey || e.metaKey || e.altKey || document.querySelector("dialog[open]")) return;
+  const p = data.game?.gunluk?.petek; if (!p) return;
+  if (e.key === "Enter"){ e.preventDefault(); PK.submit?.(); }
+  else if (e.key === "Backspace"){ e.preventDefault(); PK.cur = [...PK.cur].slice(0, -1).join(""); PK.draw?.(); }
+  else { const k = trLow(e.key); if (k.length === 1 && (k === p.center || p.outer.includes(k))){ PK.cur += k; PK.draw?.(); } }
+});
+const todayISO = () => new Intl.DateTimeFormat("en-CA", {timeZone: "Europe/Istanbul"}).format(new Date());
 
 // ---- Konu sayfaları ----
 let topicSlug = null;
@@ -1645,7 +1912,7 @@ $("#install").onclick = async () => { if (!installEvt) return; installEvt.prompt
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
 // ---- Başlat ----
-{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h === "oyun-kelime") view = h; else if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
+{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
 renderNav(); renderTicker();
 load(true);
 loadWeather().then(() => { if (loaded) render(); else renderTicker(); });

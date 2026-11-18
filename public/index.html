@@ -376,6 +376,7 @@ body.in-game .tabs{display:none}
 @media (min-width:900px){body.in-game .tabs{display:flex}}
 .brow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .brow.shake{animation:shake .45s}
+.brow.bad .tile{border-color:var(--down)}
 @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 .tile{aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--line);border-radius:8px;font-family:var(--head);font-weight:800;font-size:30px;text-transform:none;background:var(--surface);color:var(--ink);user-select:none}
 .tile.filled{border-color:var(--ink-3)}
@@ -995,7 +996,7 @@ function renderAside(){
 // ---- Paylaş ve haber menüsü ----
 const SITE = location.origin + location.pathname;
 let toastTimer;
-function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200); }
+function toast(msg, ms = 2200){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), ms); }
 async function shareOrCopy({title, text, url}){
   if (navigator.share){
     try { await navigator.share({title, text, url}); return; }
@@ -1110,10 +1111,18 @@ function khEval(guess, ans){
   g.forEach((ch, i) => { if (res[i] !== "c" && left[ch] > 0){ res[i] = "p"; left[ch]--; } });
   return res;
 }
+// Sözlük yüklenemezse (bağlantı hatası) oyunu kilitlemek yerine her 5 harfli kelimeyi kabul et; sonraki tahminde yeniden dene
 async function khDict(){
   if (KH.dict) return KH.dict;
-  try { const r = await fetch("games/kelimeler.json"); KH.dict = new Set(await r.json()); }
-  catch(e){ KH.dict = new Set(); }
+  for (let i = 0; i < 2 && !KH.dict; i++){
+    try {
+      const r = await fetch("games/kelimeler.json", {cache: i ? "reload" : "default"});
+      if (!r.ok) throw new Error(r.status);
+      const list = await r.json();
+      if (Array.isArray(list) && list.length > 1000) KH.dict = new Set(list);
+    } catch(e){}
+  }
+  if (!KH.dict) return null;
   (data.game?.kelime?.extra || []).forEach(w => KH.dict.add(w));
   return KH.dict;
 }
@@ -1160,7 +1169,7 @@ function renderGames(){
     row.forEach(k => {
       const b = el("button","key" + (k === "⏎" || k === "⌫" ? " wide" : ""), k === "⏎" ? "GİR" : k === "⌫" ? "⌫" : trUp(k));
       b.type = "button"; b.dataset.k = k; b.setAttribute("aria-label", k === "⏎" ? "Tahmini gönder" : k === "⌫" ? "Sil" : trUp(k));
-      b.onclick = () => khKey(k); r.appendChild(b);
+      b.onclick = () => { b.blur(); khKey(k); }; r.appendChild(b);
     });
     kb.appendChild(r);
   });
@@ -1202,19 +1211,20 @@ function khDraw(){
 }
 
 async function khKey(k){
-  if (view !== "oyun-kelime" || !khState || khState.done || KH.busy) return;
+  if (view !== "oyun-kelime" || !khState || khState.done) return;
+  if (KH.busy){ if (k !== "⏎") (KH.queue = KH.queue || []).push(k); return; }   // açılış animasyonu sırasında basılan harfleri kaybetme
   if (k === "⌫"){ KH.cur = [...KH.cur].slice(0, -1).join(""); khDraw(); return; }
   if (k === "⏎") return khSubmit();
   if (!TRL.includes(k) || [...KH.cur].length >= 5) return;
   KH.cur += k; khDraw();
   const row = $("#board").children[khState.guesses.length]; const t = row?.children[[...KH.cur].length - 1]; t?.classList.add("pop");
 }
-function khShake(msg){ toast(msg); const row = $("#board").children[khState.guesses.length]; row.classList.remove("shake"); void row.offsetWidth; row.classList.add("shake"); }
+function khShake(msg){ toast(msg, 3200); const row = $("#board").children[khState.guesses.length]; row.classList.remove("shake"); void row.offsetWidth; row.classList.add("shake", "bad"); }
 async function khSubmit(){
   const cur = KH.cur, ans = khAnswer();
   if ([...cur].length < 5) return khShake("Yetersiz harf");
   const dict = await khDict();
-  if (cur !== ans && !dict.has(cur)) return khShake("Kelime listesinde yok");
+  if (dict && cur !== ans && !dict.has(cur)) return khShake("“" + trUp(cur) + "” listede yok. Silip başka kelime dene.");
   KH.busy = true;
   khState.guesses.push(cur); KH.cur = ""; KH.anim = khState.guesses.length - 1;
   const won = cur === ans, n = khState.guesses.length;
@@ -1233,11 +1243,13 @@ async function khSubmit(){
   khSave(); khDraw();
   setTimeout(() => {
     KH.busy = false;
+    const q = KH.queue || []; KH.queue = [];
+    if (!khState.done) q.forEach(k => khKey(k));
     if (khState.done){
       toast(khState.won ? ["Dahiyane!","Harika!","Çok iyi!","Güzel!","Fena değil!","Kıl payı!"][n - 1] : "Kelime: " + trUp(ans));
       setTimeout(() => khResult(true), 900);
     }
-  }, 5 * 120 + 500);
+  }, 5 * 120 + 300);
 }
 function khShareText(){
   const ans = khAnswer(), hc = document.documentElement.classList.contains("hc");

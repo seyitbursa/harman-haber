@@ -660,6 +660,43 @@ body.in-game .tabs{display:none}
 body.in-game footer{display:none}
 .gm-next{display:flex;justify-content:flex-end;margin-top:12px}
 .wg-result .gm-next .btn,.gm-end .gm-next .btn{width:100%}
+
+/* Bağlantılar */
+.g-baglanti{background:#BA81C5} .g-harf{background:#E05A47} .g-sudoku{background:#334155}
+.bag{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.bag-done{border-radius:12px;padding:12px;text-align:center;color:#111}
+.bag-done b{display:block;font-family:var(--head);font-weight:800;font-size:16px}
+.bag-done span{font-size:14px;font-weight:600}
+.bag-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.bag-w{aspect-ratio:1.25/1;border:0;border-radius:10px;background:#EFEFE6;color:#111;font-weight:800;font-size:clamp(11px,3.3vw,15px);cursor:pointer;padding:2px;letter-spacing:.01em;word-break:break-word}
+.bag-w.long{font-size:clamp(9px,2.6vw,13px)}
+.bag-w.on{background:#5A594E;color:#fff}
+@media (prefers-color-scheme:dark){.bag-w{background:#2C3449;color:var(--ink)}.bag-w.on{background:#E9EDF5;color:#0E1424}}
+.bag-mist{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 0;font-size:14px;color:var(--ink-2)}
+.bag-mist i{width:12px;height:12px;border-radius:50%;background:var(--line)} .bag-mist i.on{background:#5A594E}
+.emo{font-size:22px;line-height:1.2;margin:10px 0;font-family:inherit}
+/* Harf Kutusu */
+.hk{position:relative;width:min(320px,86vw);aspect-ratio:1;margin:6px auto 0}
+.hk svg{position:absolute;inset:0;width:100%;height:100%}
+.hk-sq{fill:var(--surface);stroke:var(--ink);stroke-width:3}
+.hk-ln{stroke-width:4;stroke-linecap:round} .hk-ln.old{stroke:#E05A47;opacity:.55} .hk-ln.cur{stroke:#E05A47;stroke-dasharray:6 5}
+.hk-l{position:absolute;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);background:var(--surface);color:var(--ink);font-family:var(--head);font-weight:800;font-size:20px;cursor:pointer;display:grid;place-items:center}
+.hk-l.used{background:#E05A47;border-color:#E05A47;color:#fff}
+.hk-l.last{box-shadow:0 0 0 4px color-mix(in srgb,#E05A47 35%,transparent)}
+.hk-chain{text-align:center;font-weight:700;color:var(--ink-2);min-height:22px;margin:0}
+/* Sudoku */
+.sd-clock{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);font-weight:700;margin:0 0 6px}
+.sd{display:grid;grid-template-columns:repeat(9,1fr);width:min(100%,440px);margin:0 auto;border:2px solid var(--ink);border-radius:6px;overflow:hidden;background:var(--surface)}
+.sd-c{aspect-ratio:1;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface);color:var(--accent);font-family:var(--head);font-weight:700;font-size:clamp(16px,5vw,24px);cursor:pointer;padding:0}
+.sd-c.gv{color:var(--ink);font-weight:800}
+.sd-c.br{border-right:2px solid var(--ink)} .sd-c.bb{border-bottom:2px solid var(--ink)}
+.sd-c.rel{background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.sd-c.same{background:color-mix(in srgb,var(--accent) 20%,var(--surface))}
+.sd-c.sel{background:color-mix(in srgb,var(--accent) 34%,var(--surface))}
+.sd-c.bad{color:#DC2626}
+.sd-pad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:min(100%,440px);margin:12px auto 0}
+.sd-pad .key{height:48px;font-size:20px}
+.sd-pad .key.a{opacity:.35}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -1523,6 +1560,9 @@ function renderGames(){
   if (view === "oyun-manset" || view === "oyun-kaynak"){ renderQuiz(view.slice(5)); renderAside(); return; }
   if (view === "oyun-rakam"){ renderRakam(); renderAside(); return; }
   if (view === "oyun-petek"){ renderPetek(); renderAside(); return; }
+  if (view === "oyun-baglanti"){ renderBag(); renderAside(); return; }
+  if (view === "oyun-harf"){ renderHarf(); renderAside(); return; }
+  if (view === "oyun-sudoku"){ renderSudoku(); renderAside(); return; }
   // Oyun ekranı
   if (!data.game?.kelime){ top.appendChild(el("p","hint","Günün kelimesi yükleniyor…")); return; }
   if (!khState || khState.date !== data.game.kelime.date) khState = khLoad();
@@ -1728,16 +1768,20 @@ const GAMES = [
   {id:"manset", name:"Manşet Tamamla", desc:"Günün manşetlerinden gizlenen kelimeyi dört seçenek arasından bul."},
   {id:"rakam", name:"Rakam Avı", desc:"Haberlerdeki sayıyı tahmin et; ne kadar yaklaşırsan o kadar puan."},
   {id:"kaynak", name:"Hangi Kaynak?", desc:"Başlığı hangi haber sitesinin attığını bul."},
-  {id:"petek", name:"Petek", desc:"7 harfle, ortadaki harfi kullanarak olabildiğince çok kelime türet."}
+  {id:"petek", name:"Petek", desc:"7 harfle, ortadaki harfi kullanarak olabildiğince çok kelime türet."},
+  {id:"baglanti", name:"Bağlantılar", desc:"16 kelimeyi ortak noktası olan 4’lü gruplara ayır."},
+  {id:"harf", name:"Harf Kutusu", desc:"Kenarlardaki 12 harfin hepsini birbirine bağlanan kelimelerle kullan."},
+  {id:"sudoku", name:"Sudoku", desc:"Her satır, sütun ve kutuda 1’den 9’a kadar rakamlar bir kez."}
 ];
 const gDec = s => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.split("").reverse().join("")), c => c.charCodeAt(0))));
 const gData = id => { const g = data.game?.gunluk; if (!g || !g[id]) return null; try { return id === "petek" ? g.petek : gDec(g[id]); } catch(e){ return null; } };
 const gState = id => { const d = data.game?.gunluk?.date, st = store.get("g-" + id, null); return st && st.date === d ? st : { date: d, ans: [], done: false }; };
 const gSave = (id, st) => store.set("g-" + id, st);
-const GAME_ICON = {kelime:"K", manset:"M", rakam:"#", kaynak:"?", petek:"⬢"};
+const GAME_ICON = {kelime:"K", manset:"M", rakam:"#", kaynak:"?", petek:"⬢", baglanti:"▦", harf:"◻", sudoku:"9"};
 // Bir oyun bugün bitti mi?
 function gDone(id){
   if (id === "kelime"){ const st = khLoad(); return !!st?.done; }
+  if (["baglanti","harf","sudoku"].includes(id)) return !!nyState(id).done;
   const st = gState(id);
   if (id === "petek"){ const p = data.game?.gunluk?.petek; if (!p) return false; const sc = (st.found || []).reduce((a, w) => a + pkScore(w), 0); return sc >= Math.ceil(0.3 * p.max); }
   return !!st.done;
@@ -1757,6 +1801,12 @@ function nextGameBtn(cur){
   return b;
 }
 const gStatus = id => {
+  if (["baglanti","harf","sudoku"].includes(id)){
+    const st = nyState(id), n = nytData();
+    if (!n || (id === "baglanti" && !n.bag) || (id === "harf" && !n.harf)) return "Hazırlanıyor";
+    if (st.done) return id === "baglanti" ? (st.won ? "Çözüldü" : "Bitti") : id === "harf" ? st.words.length + " kelime" : "Çözüldü";
+    return (id === "baglanti" && st.tries?.length) || (id === "harf" && st.words?.length) || (id === "sudoku" && st.start) ? "Devam et" : "Oyna";
+  }
   if (id === "kelime"){ const st = khLoad(); return !st ? "" : st.done ? (st.won ? "Bugün çözdün" : "Yarın yeni kelime") : st.guesses.length ? "Devam et" : "Oyna"; }
   const st = gState(id);
   if (id === "petek"){ const p = data.game?.gunluk?.petek; const sc = (st.found || []).reduce((a, w) => a + pkScore(w), 0); return st.found?.length ? (p ? pkRank(sc, p.max) + ", " : "") + st.found.length + " kelime" : "Oyna"; }
@@ -2357,6 +2407,189 @@ function openSources(story){
   story.items.forEach(i => { const li = el("li"), a = link("", i.url), t = el("span"); t.append(el("b", null, i.title), el("small", null, src(i.source).name + ", " + ago(i.date))); a.style.cssText = "display:flex;gap:10px;align-items:center;padding:8px 0;text-decoration:none;border-top:1px solid var(--line)"; a.append(mono(i.source), t); li.appendChild(a); ul.appendChild(li); });
   body.appendChild(ul); if (!$("#actSheet").open) $("#actSheet").showModal();
 }
+
+
+// ---- NYT Games tarzı oyunlar: Bağlantılar, Harf Kutusu, Sudoku ----
+const nytData = () => data.game?.nyt || null;
+const nyState = id => { const d = nytData()?.date, st = store.get("g-" + id, null); return st && st.date === d ? st : { date: d }; };
+const nySave = (id, st) => store.set("g-" + id, st);
+function gHeadN(title, sub){ const h = gHead(title, sub); return h; }
+
+// Bağlantılar
+const BAG_COL = {1:"#F9DF6D", 2:"#A0C35A", 3:"#B0C4EF", 4:"#BA81C5"};
+const BAG_EMO = {1:"🟨", 2:"🟩", 3:"🟦", 4:"🟪"};
+function renderBag(){
+  const top = $("#top"), wrap = el("section","gm"); top.appendChild(wrap);
+  const n = nytData(); wrap.appendChild(gHead("Bağlantılar", n ? dateTR(n.date) + " bulmacası" : ""));
+  if (!n?.bag) return gNoData(wrap);
+  const groups = gDec(n.bag.g), st = nyState("baglanti");
+  st.solved = st.solved || []; st.tries = st.tries || []; st.mist = st.mist || 0; st.sel = st.sel || [];
+  if (!st.order){ st.order = groups.flatMap(g => g.k).sort(() => Math.random() - .5); nySave("baglanti", st); }
+  wrap.appendChild(el("p","hint","Ortak noktası olan 4’lü grupları bul. 4 yanlışa kadar hakkın var."));
+  const board = el("div","bag");
+  st.solved.forEach(z => { const g = groups.find(x => x.z === z); const b = el("div","bag-done"); b.style.background = BAG_COL[z]; b.append(el("b", null, g.ad), el("span", null, g.k.join(", "))); board.appendChild(b); });
+  const solvedWords = new Set(st.solved.flatMap(z => groups.find(x => x.z === z).k));
+  const grid = el("div","bag-grid");
+  st.order.filter(w => !solvedWords.has(w)).forEach(w => {
+    const b = el("button","bag-w" + (st.sel.includes(w) ? " on" : ""), w); b.type = "button";
+    if (w.length > 8) b.classList.add("long");
+    b.setAttribute("aria-pressed", st.sel.includes(w) ? "true" : "false");
+    b.onclick = () => { if (st.done) return; if (st.sel.includes(w)) st.sel = st.sel.filter(x => x !== w); else if (st.sel.length < 4) st.sel.push(w); nySave("baglanti", st); render(); };
+    grid.appendChild(b);
+  });
+  board.appendChild(grid); wrap.appendChild(board);
+  if (!st.done){
+    const mm = el("p","bag-mist"); mm.append("Kalan hak: "); for (let i = 0; i < 4; i++) mm.appendChild(el("i", i < 4 - st.mist ? "on" : null)); wrap.appendChild(mm);
+    const acts = el("div","pk-acts");
+    const mix = el("button","btn ghost","Karıştır"); mix.type = "button"; mix.onclick = () => { st.order = st.order.sort(() => Math.random() - .5); nySave("baglanti", st); render(); };
+    const clr = el("button","btn ghost","Seçimi kaldır"); clr.type = "button"; clr.disabled = !st.sel.length; clr.onclick = () => { st.sel = []; nySave("baglanti", st); render(); };
+    const go = el("button","btn","Gönder"); go.type = "button"; go.disabled = st.sel.length !== 4;
+    go.onclick = () => {
+      const key = [...st.sel].sort().join("|");
+      if (st.tries.some(t => [...t.w].sort().join("|") === key)) return toast("Bunu zaten denedin");
+      const zs = st.sel.map(w => groups.find(g => g.k.includes(w)).z);
+      st.tries.push({ w: [...st.sel], z: zs });
+      const hit = groups.find(g => st.sel.every(w => g.k.includes(w)));
+      if (hit){ st.solved.push(hit.z); st.sel = []; toast(["","Harika!","Güzel!","Çok iyi!","Muhteşem!"][hit.z] || "Doğru!"); }
+      else { st.mist++; const best = Math.max(...[1,2,3,4].map(z => zs.filter(x => x === z).length)); toast(best === 3 ? "Bir eksik!" : "Olmadı"); }
+      if (st.solved.length === 4 || st.mist >= 4){ st.done = true; st.won = st.solved.length === 4; groups.forEach(g => { if (!st.solved.includes(g.z)) st.solved.push(g.z); }); st.sel = []; }
+      nySave("baglanti", st); render();
+    };
+    acts.append(mix, clr, go); wrap.appendChild(acts);
+  } else {
+    const box = el("div","gm-end"); box.appendChild(el("h3", null, st.won ? "Tebrikler!" : "Bu sefer olmadı"));
+    const emo = st.tries.map(t => t.z.map(z => BAG_EMO[z]).join("")).join("\n");
+    box.appendChild(el("p", null, st.won ? (st.mist ? st.mist + " yanlışla çözdün." : "Hiç yanlış yapmadan çözdün!") : "Doğru gruplar yukarıda."));
+    const pre = el("pre","emo", emo); box.appendChild(pre);
+    const f = el("div","wg-foot"), sh = el("button","btn","Sonucu paylaş"); sh.type = "button";
+    sh.onclick = () => shareOrCopy({ title: "Bağlantılar", text: `Bağlantılar, ${dateTR(st.date)}\n${emo}`, url: SITE + "#oyun-baglanti" });
+    f.append(el("span","next","Yarın yeni bulmaca"), sh); box.appendChild(f);
+    const nf = el("div","gm-next"); nf.appendChild(nextGameBtn("baglanti")); box.appendChild(nf);
+    wrap.appendChild(box);
+  }
+}
+
+// Harf Kutusu
+const HK = { cur: "" };
+function renderHarf(){
+  const top = $("#top"), wrap = el("section","gm"); top.appendChild(wrap);
+  const n = nytData(); wrap.appendChild(gHead("Harf Kutusu", n ? dateTR(n.date) + " kutusu" : ""));
+  if (!n?.harf) return gNoData(wrap);
+  const h = n.harf, valid = new Set(gDec(h.w)), st = nyState("harf"); st.words = st.words || [];
+  const sideOf = {}; h.sides.forEach((sd, i) => sd.forEach(l => sideOf[l] = i));
+  const used = new Set(st.words.join("") + HK.cur);
+  const allLetters = h.sides.flat(), done = allLetters.every(l => new Set(st.words.join("")).has(l));
+  wrap.appendChild(el("p","hint","Kenarlardaki harflerle kelimeler kur. Aynı kenardan arka arkaya harf seçemezsin; her yeni kelime öncekinin son harfiyle başlar. 12 harfin hepsini olabildiğince az kelimeyle kullan."));
+  const wd = el("div","pk-word"); [...HK.cur].forEach(c => wd.appendChild(el("span", null, trUp(c)))); wd.appendChild(el("span","caret")); wrap.appendChild(wd);
+  wrap.appendChild(el("p","hk-chain", st.words.length ? st.words.map(trUp).join(" → ") : " "));
+  // Kare ve harfler (SVG çizgilerle)
+  const box = el("div","hk"); const S = 300, pad = 46, inner = S - 2 * pad;
+  const pos = {}; h.sides.forEach((sd, i) => sd.forEach((l, k) => { const t = (k + 1) / 4; pos[l] = i === 0 ? [pad + inner * t, pad] : i === 1 ? [S - pad, pad + inner * t] : i === 2 ? [pad + inner * (1 - t), S - pad] : [pad, pad + inner * (1 - t)]; }));
+  const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg"); svg.setAttribute("viewBox", `0 0 ${S} ${S}`); svg.setAttribute("aria-hidden","true");
+  const rect = document.createElementNS(ns, "rect"); rect.setAttribute("x", pad); rect.setAttribute("y", pad); rect.setAttribute("width", inner); rect.setAttribute("height", inner); rect.setAttribute("class","hk-sq"); svg.appendChild(rect);
+  const path = (st.words.map(w => [...w]).flat().join("") || "").length;
+  const seq = []; st.words.forEach((w, i) => { const a = [...w]; (i === 0 ? a : a.slice(1)).forEach(c => seq.push([c, "old"])); }); [...HK.cur].forEach((c, i) => { if (!(i === 0 && st.words.length)) seq.push([c, "cur"]); });
+  for (let i = 1; i < seq.length; i++){ const l = document.createElementNS(ns, "line"); const [x1, y1] = pos[seq[i - 1][0]], [x2, y2] = pos[seq[i][0]]; l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2); l.setAttribute("class","hk-ln " + seq[i][1]); svg.appendChild(l); }
+  box.appendChild(svg);
+  allLetters.forEach(l => {
+    const b = el("button","hk-l" + (used.has(l) ? " used" : "") + (HK.cur.at(-1) === l ? " last" : ""), trUp(l)); b.type = "button";
+    const [x, y] = pos[l]; b.style.left = (x / S * 100) + "%"; b.style.top = (y / S * 100) + "%";
+    b.onclick = () => {
+      if (done) return;
+      const last = HK.cur.at(-1);
+      if (last && sideOf[last] === sideOf[l]) return toast("Aynı kenardan arka arkaya harf seçemezsin");
+      if (!HK.cur && st.words.length){ HK.cur = st.words.at(-1).at(-1); if (sideOf[HK.cur] === sideOf[l]) { HK.cur = ""; return toast("Aynı kenardan arka arkaya harf seçemezsin"); } }
+      HK.cur += l; render();
+    };
+    box.appendChild(b);
+  });
+  wrap.appendChild(box);
+  if (!done){
+    const acts = el("div","pk-acts");
+    const del = el("button","btn ghost","Sil"); del.type = "button"; del.onclick = () => { if (HK.cur.length <= 1 && st.words.length){ HK.cur = ""; } else HK.cur = [...HK.cur].slice(0, -1).join(""); render(); };
+    const undo = el("button","btn ghost","Geri al"); undo.type = "button"; undo.disabled = !st.words.length; undo.onclick = () => { st.words.pop(); HK.cur = ""; nySave("harf", st); render(); };
+    const go = el("button","btn","Gönder"); go.type = "button";
+    go.onclick = () => {
+      const w = HK.cur;
+      if ([...w].length < 3) return toast("En az 3 harf olmalı");
+      if (!valid.has(w)) return toast("Listede yok");
+      st.words.push(w); HK.cur = ""; nySave("harf", st);
+      const nowDone = allLetters.every(l => new Set(st.words.join("")).has(l));
+      if (nowDone){ st.done = true; nySave("harf", st); toast(st.words.length <= 2 ? "Mükemmel! " + st.words.length + " kelime" : "Tamamladın! " + st.words.length + " kelime"); }
+      render();
+    };
+    acts.append(del, undo, go); wrap.appendChild(acts);
+    wrap.appendChild(el("p","hint", "Hedef: 4 kelime ya da daha az. Bizim çözümümüz 2 kelime."));
+  } else {
+    const end = el("div","gm-end"); end.appendChild(el("h3", null, "Tamamladın!")); end.appendChild(el("div","big", st.words.length + " kelime"));
+    end.appendChild(el("p", null, st.words.map(trUp).join(" → ")));
+    end.appendChild(el("p","hint","Bizim çözümümüz: " + gDec(h.sol).map(trUp).join(" → ")));
+    const f = el("div","wg-foot"), sh = el("button","btn","Sonucu paylaş"); sh.type = "button";
+    sh.onclick = () => shareOrCopy({ title: "Harf Kutusu", text: `Harf Kutusu, ${dateTR(st.date)}: ${st.words.length} kelimede bitirdim 📦`, url: SITE + "#oyun-harf" });
+    f.append(el("span","next","Yarın yeni kutu"), sh); end.appendChild(f);
+    const nf = el("div","gm-next"); nf.appendChild(nextGameBtn("harf")); end.appendChild(nf);
+    wrap.appendChild(end);
+  }
+}
+
+// Sudoku
+const SD = { sel: -1, timer: null };
+function renderSudoku(){
+  const top = $("#top"), wrap = el("section","gm"); top.appendChild(wrap);
+  const n = nytData(); wrap.appendChild(gHead("Sudoku", n ? dateTR(n.date) + " bulmacası" : ""));
+  if (!n?.sudoku) return gNoData(wrap);
+  const puz = n.sudoku.p, st = nyState("sudoku");
+  st.v = st.v || puz.split("").map(Number); if (!st.start) st.start = Date.now(); nySave("sudoku", st);
+  const sol = gDec(n.sudoku.s).split("").map(Number);
+  const clk = el("p","sd-clock"); wrap.appendChild(clk);
+  const tick = () => { const sec = Math.floor(((st.end || Date.now()) - st.start) / 1000); clk.textContent = "⏱ " + String(Math.floor(sec / 60)).padStart(2,"0") + ":" + String(sec % 60).padStart(2,"0"); };
+  tick(); clearInterval(SD.timer); if (!st.done) SD.timer = setInterval(() => { if (view === "oyun-sudoku") tick(); else clearInterval(SD.timer); }, 1000);
+  const conflict = i => { const v = st.v[i]; if (!v) return false; const R = Math.floor(i / 9), C = i % 9, b = Math.floor(R / 3) * 27 + Math.floor(C / 3) * 3;
+    for (let k = 0; k < 9; k++){ const a = R * 9 + k, c = k * 9 + C, d = b + Math.floor(k / 3) * 9 + k % 3; if ((a !== i && st.v[a] === v) || (c !== i && st.v[c] === v) || (d !== i && st.v[d] === v)) return true; } return false; };
+  const g = el("div","sd"); g.setAttribute("role","grid"); g.setAttribute("aria-label","Sudoku tablosu");
+  const sel = SD.sel, sv = sel >= 0 ? st.v[sel] : 0;
+  for (let i = 0; i < 81; i++){
+    const R = Math.floor(i / 9), C = i % 9, given = puz[i] !== "0";
+    const c = el("button","sd-c" + (given ? " gv" : "") + (i === sel ? " sel" : "") + (sel >= 0 && (Math.floor(sel / 9) === R || sel % 9 === C || (Math.floor(sel / 27) === Math.floor(R / 3) && Math.floor(sel % 9 / 3) === Math.floor(C / 3))) ? " rel" : "") + (sv && st.v[i] === sv ? " same" : "") + (conflict(i) ? " bad" : "") + (C % 3 === 2 && C < 8 ? " br" : "") + (R % 3 === 2 && R < 8 ? " bb" : ""), st.v[i] ? String(st.v[i]) : "");
+    c.type = "button"; c.setAttribute("aria-label", `${R + 1}. satır ${C + 1}. sütun: ${st.v[i] || "boş"}${given ? ", verilen" : ""}`);
+    c.onclick = () => { SD.sel = i; render(); };
+    g.appendChild(c);
+  }
+  wrap.appendChild(g);
+  const put = v => { if (st.done || SD.sel < 0 || puz[SD.sel] !== "0") return; st.v[SD.sel] = v; 
+    if (st.v.every((x, k) => x === sol[k])){ st.done = true; st.end = Date.now(); clearInterval(SD.timer); toast("Tebrikler, çözdün!"); }
+    nySave("sudoku", st); render(); };
+  SD.put = put;
+  if (!st.done){
+    const pad = el("div","sd-pad");
+    for (let v = 1; v <= 9; v++){ const b = el("button","key", String(v)); b.type = "button"; const left = 9 - st.v.filter(x => x === v).length; if (left <= 0) b.classList.add("a"); b.onclick = () => put(v); pad.appendChild(b); }
+    const er = el("button","key wide","Sil"); er.type = "button"; er.onclick = () => put(0); pad.appendChild(er);
+    wrap.appendChild(pad);
+    wrap.appendChild(el("p","hint","Bir kutuya dokun, sonra rakamı seç. Çakışan rakamlar kırmızıyla gösterilir. Bilgisayarda klavyeyle de oynayabilirsin."));
+  } else {
+    const sec = Math.floor((st.end - st.start) / 1000), t = Math.floor(sec / 60) + " dk " + (sec % 60) + " sn";
+    const end = el("div","gm-end"); end.append(el("h3", null, "Tebrikler!"), el("div","big", t));
+    const f = el("div","wg-foot"), sh = el("button","btn","Sonucu paylaş"); sh.type = "button";
+    sh.onclick = () => shareOrCopy({ title: "Sudoku", text: `Harman Sudoku, ${dateTR(st.date)}: ${t} 🧩`, url: SITE + "#oyun-sudoku" });
+    f.append(el("span","next","Yarın yeni bulmaca"), sh); end.appendChild(f);
+    const nf = el("div","gm-next"); nf.appendChild(nextGameBtn("sudoku")); end.appendChild(nf);
+    wrap.appendChild(end);
+  }
+}
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector("dialog[open]")) return;
+  if (view === "oyun-sudoku"){
+    if (/^[1-9]$/.test(e.key)) { SD.put?.(+e.key); e.preventDefault(); }
+    else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") { SD.put?.(0); e.preventDefault(); }
+    else if (/^Arrow/.test(e.key) && SD.sel >= 0){ const d = {ArrowUp:-9, ArrowDown:9, ArrowLeft:-1, ArrowRight:1}[e.key]; SD.sel = Math.max(0, Math.min(80, SD.sel + d)); render(); e.preventDefault(); }
+  } else if (view === "oyun-harf"){
+    const h = nytData()?.harf; if (!h) return;
+    const k = trLow(e.key);
+    if (e.key === "Enter"){ document.querySelector(".pk-acts .btn:last-child")?.click(); e.preventDefault(); }
+    else if (e.key === "Backspace"){ document.querySelector(".pk-acts .btn")?.click(); e.preventDefault(); }
+    else if (k.length === 1 && h.sides.flat().includes(k)){ [...document.querySelectorAll(".hk-l")].find(b => trLow(b.textContent) === k)?.click(); }
+  }
+});
 
 // ---- Konu sayfaları ----
 let topicSlug = null;

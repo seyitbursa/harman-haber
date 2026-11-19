@@ -50,9 +50,9 @@ async function callGemini(key, items) {
   const body = items.map((it, n) => `#${n + 1}\nBaşlık: ${it.title}\nMetin: ${it.text || it.summary || "(metin yok)"}`).join("\n\n");
   return callGeminiRaw(key, PROMPT + "\n\n" + body);
 }
-export async function callGeminiRaw(key, text) {
+export async function callGeminiRaw(key, text, models = MODELS) {
   let lastErr;
-  for (const model of MODELS) {
+  for (const model of models) {
     try {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",

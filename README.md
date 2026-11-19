@@ -35,6 +35,10 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
   - **Hangi Kaynak?:** Tek kaynaklı bir başlığı hangi sitenin attığı, dört seçenekle.
   - **Petek:** 7 harf, ortadaki harf zorunlu; en az 4 harfli kelimeler, 7 harfin hepsini kullanan kelimeye +7 puan. Sözlük `data/sozluk.json` (Vikisözlük, CC BY-SA 4.0).
   Ölüm, kaza, şiddet gibi acı haberler oyun sorusu olarak seçilmez.
+- **NYT Games tarzı oyunlar** (`scripts/games2.mjs`):
+  - **Bağlantılar:** 16 kelime, 4 grup. Kolay üç grup Gemini ile (günün rastgele seçilen kategorileriyle) üretilir ve ikinci bir istekle denetlenir; zor grup kodla kesin doğru olarak üretilir (haberlerde geçen kelimelerin içine saklanmış hayvan, sayı ya da renk adları).
+  - **Harf Kutusu:** 4 kenar × 3 harf; iki kelimelik bir çözümü garanti edecek şekilde sözlükten algoritmayla kurulur, geçerli kelime listesi bulmacayla birlikte gönderilir.
+  - **Sudoku:** Tarihe göre tohumlanan, tek çözümlü, 30 ipuçlu günlük bulmaca.
 - **Yapay zekâ sekmesi:** Tüm kaynaklardan başlığında ya da özetinde yapay zekâ geçen haberler (yapay zekâ, ChatGPT, OpenAI, Gemini, Claude, Anthropic, Copilot, deepfake vb.).
 - **Şehrim:** Önce ülke seçilir (varsayılan Türkiye). Türkiye’de 81 il listesinden, diğer ülkelerde Open-Meteo şehir aramasıyla (Türkçe adlarla: Londra, Moskova) seçilen şehir için Open-Meteo’dan hava durumu (anlık ve 5 günlük) ve ulusal kaynaklarda şehrin adı geçen haberler. Seçim cihazda saklanır.
 - **Spor:** Spor sekmesinin üstünde Süper Lig maçları (son iki hafta ve önümüzdeki günler), puan durumu ve Türk takımlarının Avrupa kupası maçları (`scripts/sports.mjs`). Veri ESPN’in açık veri adreslerinden gelir (resmi bir API değildir; erişilemezse bölüm gizlenir). Maç günü Spor sekmesi açıkken canlı skorlar tarayıcıdan dakikada bir yenilenir. Okuyucu Ayarlar → Takımım bölümünden takımını seçerse şeritte takımının canlı skoru, sıradaki maçı ya da son sonucu görünür.

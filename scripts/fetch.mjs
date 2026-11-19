@@ -11,6 +11,7 @@ import { addGists, addTopicSummaries, addContrasts, callGeminiRaw } from "./summ
 import { resmiGazete } from "./resmigazete.mjs";
 import { dailyWord } from "./wordgame.mjs";
 import { dailyGames } from "./games.mjs";
+import { dailyGames2 } from "./games2.mjs";
 import { getYoutube } from "./youtube.mjs";
 import { getSports } from "./sports.mjs";
 import { buildStatic } from "./static.mjs";
@@ -187,6 +188,7 @@ for (let i = topics.length - 1; i > 0; i--) {
 const youtube = config.youtube ? await getYoutube({ channels: config.youtube, stories }) : null;
 const sports = await getSports({ stories }).catch(e => ({ errors: [String(e)] }));
 const game = { kelime: await dailyWord({ stories, prevGame: prevJson?.game?.kelime }), gunluk: await dailyGames({ stories, sources: config.sources, prev: prevJson?.game?.gunluk }) };
+game.nyt = await dailyGames2({ prev: prevJson?.game?.nyt, date: game.gunluk.date, key: process.env.GEMINI_API_KEY, usage: sum.usage, callGeminiRaw, stories }).catch(e => { console.log("  ✗ NYT tarzı oyunlar → " + e.message); return prevJson?.game?.nyt || null; });
 const topicSums = await addTopicSummaries({ topics, stories, sources: config.sources, prevTopicSums: prevJson?.topicSums, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const cfg = config.notify || {};
 const note = cfg.ntfyTopic

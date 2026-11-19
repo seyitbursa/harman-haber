@@ -482,6 +482,21 @@ body.in-game .tabs{display:none}
 .pk-found .ws span{background:var(--paper);border-radius:7px;padding:3px 8px;font-size:14px;font-weight:600}
 .pk-found .ws span.pg{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
 
+
+/* X gündemi sekmesi */
+.xt{background:var(--surface);border-radius:14px;box-shadow:0 1px 0 var(--line);margin-top:10px}
+.xt-row{border-top:1px solid var(--line);padding:12px 16px}
+.xt-row:first-child{border-top:0}
+.xt-h{display:flex;align-items:center;gap:12px}
+.xt-n{width:26px;flex:0 0 auto;text-align:right;font-family:var(--head);font-weight:800;font-size:18px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.xt-h a.tn{flex:1 1 auto;min-width:0;font-weight:700;font-size:17px;text-decoration:none;overflow-wrap:anywhere}
+.xt-h a.tn:hover{color:var(--accent)}
+.xt-h .cnt{flex:0 0 auto;font-size:12.5px;color:var(--ink-3)}
+.xt-news{list-style:none;margin:8px 0 0 38px;padding:0}
+.xt-news li{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:14px;line-height:1.35}
+.xt-news a{text-decoration:none} .xt-news a:hover{color:var(--accent)}
+.xt-none{margin:6px 0 0 38px;font-size:13px;color:var(--ink-3)}
+.xt-more{margin:6px 0 0 38px;border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -606,7 +621,7 @@ const CATS = [
   {id:"all",label:"Tümü"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
   {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"yapayzeka",label:"Yapay zekâ"},{id:"teknoloji",label:"Teknoloji"}
 ];
-CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"});
+CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"}, {id:"xgundem", label:"X gündemi"});
 const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
 CAT_LABEL.gundem = "Gündem";
 const CITY_ALIASES = {"Kocaeli":["İzmit","Gebze"],"Sakarya":["Adapazarı"],"Hatay":["Antakya","İskenderun"],"Afyonkarahisar":["Afyon"],"Mersin":["Tarsus"],"Antalya":["Alanya","Manavgat"],"Muğla":["Bodrum","Fethiye","Marmaris"],"Balıkesir":["Bandırma","Ayvalık"],"Kahramanmaraş":["Maraş"]};
@@ -841,7 +856,7 @@ function storiesFor(){
   if (view === "yerel" && !city) return [];
   let list = data.stories.map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length);
   if (re) list = list.filter(s => s.items.some(i => re.test(i.title + " " + i.summary)));
-  else if (cat !== "all" && cat !== "kornokta") list = list.filter(s => s.category === cat);
+  else if (cat !== "all" && cat !== "kornokta" && cat !== "xgundem") list = list.filter(s => s.category === cat);
   return list;
 }
 
@@ -850,6 +865,7 @@ function render(){
   document.body.classList.toggle("in-game", view.startsWith("oyun-"));
   if (view === "topic"){ renderTopic(); return; }
   if (view === "oyunlar" || view.startsWith("oyun-")){ renderGames(); return; }
+  if (view === "feed" && cat === "xgundem"){ $("#top").textContent = ""; renderXTab(); return; }
   const q = query();
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
@@ -1048,8 +1064,7 @@ function xModule(inFeed){
   });
   m.appendChild(ol);
   const f = el("div","mod-f");
-  if (x.items.length > lim || xOpen){ const b = el("button", null, xOpen ? "Daha az göster" : "İlk " + x.items.length + "’yi göster"); b.type = "button"; b.onclick = () => { xOpen = !xOpen; render(); }; f.appendChild(b); }
-  else f.appendChild(el("span"));
+  { const b = el("button", null, "Tümü ve ilgili haberler"); b.type = "button"; b.onclick = () => { location.hash = "xgundem"; window.scrollTo({top:0}); }; f.appendChild(b); }
   const note = el("small"); note.append("Kaynak: "); const l = el("a", null, x.source); l.href = x.sourceUrl; l.target = "_blank"; l.rel = "noopener"; note.appendChild(l); f.appendChild(note);
   m.appendChild(f);
   return m;
@@ -1623,6 +1638,67 @@ document.addEventListener("keydown", e => {
   else { const k = trLow(e.key); if (k.length === 1 && (k === p.center || p.outer.includes(k))){ PK.cur += k; PK.draw?.(); } }
 });
 const todayISO = () => new Intl.DateTimeFormat("en-CA", {timeZone: "Europe/Istanbul"}).format(new Date());
+
+
+// ---- X gündemi sekmesi ----
+// Etiketlerdeki birleşik kelimeleri ayır ve Türkçe karakterleri sadeleştirerek haberlerle eşleştir (#TümMagdurlar → tüm mağdurlar)
+const fold = s => norm(s).replace(/ç/g,"c").replace(/ğ/g,"g").replace(/ı/g,"i").replace(/ö/g,"o").replace(/ş/g,"s").replace(/ü/g,"u").replace(/â/g,"a").replace(/î/g,"i").replace(/û/g,"u");
+const STOP_X = new Set(["icin","olan","gibi","daha","ile","bir","cok","tum","her","yeni","son","diye","bize","sana","bana","degil","artik","hemen","simdi","bugun","pazartesi","sali","carsamba","persembe","cuma","cumartesi","pazar","gunaydin","gunaydinlar","iyi","aksamlar","geceler","hayirli","iyikidogdun","dogdun","kutlu","olsun"]);
+function trendWords(name){
+  const raw = name.replace(/^#/, "").replace(/['’][A-Za-zÇĞİÖŞÜçğıöşü]+/g, "")
+    .replace(/([a-zçğıöşü])([A-ZÇĞİÖŞÜ])/g, "$1 $2").replace(/([A-Za-zÇĞİÖŞÜçğıöşü])(\d)/g, "$1 $2").replace(/(\d)([A-Za-zÇĞİÖŞÜçğıöşü])/g, "$1 $2")
+    .split(/\s+/).filter(Boolean);
+  const words = raw.filter(w => (w.length >= 4 || /^[A-ZÇĞİÖŞÜ]{2,5}$/.test(w)) && !/^\d+$/.test(w)).map(fold).filter(w => !STOP_X.has(w));
+  // "GTA 6", "CHP'nin 38" gibi kısa başlıklarda sayı da eşleşmeli
+  if (words.length && words.length <= 2) raw.filter(w => /^\d+$/.test(w)).forEach(n => words.push(n));
+  return words;
+}
+function trendNews(name){
+  const ws = trendWords(name); if (!ws.length) return [];
+  const need = Math.min(ws.length, ws.length >= 3 ? 2 : ws.length);    // uzun etiketlerde en az iki kelime eşleşsin
+  // Sayılı kısa başlıklar ("GTA 5", "CHP'nin 38") birebir ifade olarak aranır
+  const phrase = /\d/.test(name) && ws.length <= 3 ? " " + fold(name.replace(/^#/, "").replace(/['’][A-Za-zÇĞİÖŞÜçğıöşü]+/g, "")).replace(/[^a-z0-9]+/g, " ").trim() + " " : null;
+  return data.stories.map(s => {
+    const vis = s.items.filter(i => !off.has(i.source)); if (!vis.length) return null;
+    const tw = fold(vis.map(i => i.title + " " + (i.gist || i.summary || "")).join(" ")).split(/[^a-z0-9]+/);
+    if (phrase) return fold(vis.map(i => i.title + " " + (i.summary || "")).join(" ")).replace(/[^a-z0-9]+/g, " ").replace(/^/, " ").replace(/$/, " ").includes(phrase) ? {s: {...s, items: vis}, hits: 9} : null;
+    const hits = ws.filter(w => { const p = w.slice(0, 6); return /^\d+$/.test(w) ? tw.includes(w) : tw.some(x => x.startsWith(p)); }).length;
+    return hits >= need ? {s: {...s, items: vis}, hits} : null;
+  }).filter(Boolean).sort((a, b) => b.hits - a.hits || b.s.date.localeCompare(a.s.date)).map(x => x.s);
+}
+const xOpenRows = new Set();
+function renderXTab(){
+  const x = data.xtrends, top = $("#top"), feed = $("#feed");
+  const intro = el("div","blind-intro");
+  intro.append(el("h2", null, "X gündemi"));
+  if (!x?.items?.length){ intro.append(el("p", null, "X gündemi şu an alınamıyor. Birkaç dakika sonra tekrar dene.")); top.appendChild(intro); feed.textContent = ""; $("#feedHead").hidden = true; renderAside(); return; }
+  const p = el("p"); p.append("X Türkiye gündeminde en çok konuşulan başlıklar ve sitedeki ilgili haberler. " + new Date(x.at).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}) + " itibarıyla; kaynak: ");
+  const l = el("a", null, x.source); l.href = x.sourceUrl; l.target = "_blank"; l.rel = "noopener"; p.appendChild(l);
+  intro.appendChild(p); top.appendChild(intro);
+  feed.classList.remove("skel"); feed.textContent = ""; $("#feedHead").hidden = true;
+  const box = el("div","xt");
+  let withNews = 0;
+  x.items.forEach((t, i) => {
+    const row = el("div","xt-row"), h = el("div","xt-h");
+    const a = el("a","tn", t.name); a.href = "https://x.com/search?q=" + encodeURIComponent(t.name); a.target = "_blank"; a.rel = "noopener";
+    a.setAttribute("aria-label", (i + 1) + ". sıra: " + t.name + ", X’te aç");
+    h.append(el("span","xt-n", String(i + 1)), a);
+    if (t.count) h.appendChild(el("span","cnt", t.count.toLocaleString("tr-TR") + " gönderi"));
+    row.appendChild(h);
+    const news = trendNews(t.name);
+    if (news.length){
+      withNews++;
+      const ul = el("ul","xt-news"), open = xOpenRows.has(t.name);
+      news.slice(0, open ? 8 : 2).forEach(s => { const it = s.items[0], li = el("li"); li.appendChild(mono(it.source)); li.appendChild(link(it.title, it.url)); ul.appendChild(li); });
+      row.appendChild(ul);
+      if (news.length > 2){ const mb = el("button","xt-more", open ? "Daha az göster" : "İlgili " + news.length + " haberin tümü"); mb.type = "button"; mb.onclick = () => { open ? xOpenRows.delete(t.name) : xOpenRows.add(t.name); render(); }; row.appendChild(mb); }
+    } else row.appendChild(el("p","xt-none","Sitede ilgili haber yok"));
+    box.appendChild(row);
+  });
+  intro.appendChild(el("p", null, x.items.length + " başlığın " + withNews + " tanesi sitedeki haberlerle eşleşti."));
+  top.appendChild(box);
+  renderAside();
+}
 
 // ---- Konu sayfaları ----
 let topicSlug = null;

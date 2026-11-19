@@ -624,6 +624,45 @@
       "name": "Barış Özcan",
       "channelId": "UCv6jcPwFujuTIwFQ11jt1Yw",
       "type": "gazeteci"
+    },
+    {
+      "key": "halktv",
+      "name": "Halk TV",
+      "channelId": "UCf_ResXZzE-o18zACUEmyvQ",
+      "type": "kurum"
+    },
+    {
+      "key": "now",
+      "name": "NOW Haber",
+      "channelId": "UCbq0bGdShXK5dMzEDU7nThA",
+      "type": "kurum"
+    },
+    {
+      "key": "cumhuriyet",
+      "name": "Cumhuriyet",
+      "channelId": "UCgnTQ4IeDnrnocBaiHHJsNg",
+      "source": "cumhuriyet",
+      "type": "kurum"
+    },
+    {
+      "key": "birgun",
+      "name": "BirGün TV",
+      "channelId": "UCExvTU_fo2_bIRo93rAwx7A",
+      "source": "birgun",
+      "type": "kurum"
+    },
+    {
+      "key": "krt",
+      "name": "KRT TV",
+      "channelId": "UCVKWwHoLwUMMa80cu_1uapA",
+      "type": "kurum"
+    },
+    {
+      "key": "medyascope",
+      "name": "Medyascope",
+      "channelId": "UCNCVuaQDvPrZ4oTKG90iqOA",
+      "source": "medyascope",
+      "type": "kurum"
     }
   ]
 }

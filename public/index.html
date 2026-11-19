@@ -659,6 +659,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     <div class="sheet-h"><h2 id="sheetTitle">Ayarlar</h2><button class="icon-btn" type="button" id="sheetClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div id="notifBox"></div>
     <div id="leanBox"></div>
+    <div id="ytBox"></div>
     <h3>Kaynaklar</h3>
     <p>Okumak istemediğin kaynakları kapat. Seçimin bu cihazda saklanır.</p>
     <div class="src-grid" id="srcGrid"></div>
@@ -1144,7 +1145,7 @@ function row(story, inTopic){
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
   if (story.yt?.length && data.youtube){
-    const vids = data.youtube.items.filter(v => story.yt.includes(v.id));
+    const vids = data.youtube.items.filter(v => story.yt.includes(v.id) && !ytOff.has(v.ch));
     if (vids.length){ const b = el("button","yt-chip"); b.type = "button"; b.append("▶ YouTube’da " + vids.length + " video"); b.setAttribute("aria-label", "Bu haberle ilgili " + vids.length + " YouTube videosu"); b.onclick = () => openVideo(vids[0], vids); r.appendChild(b); }
   }
   const tp = !inTopic && topicOfStory(story.id);
@@ -1841,6 +1842,7 @@ function renderXTab(){
 
 // ---- YouTube haber gündemi ----
 let ytSort = "views";
+let ytOff = new Set(store.get("gk-ytoff", []));
 const ytChan = k => data.youtube?.channels?.find(c => c.key === k) || {name: k};
 const ytViews = n => n >= 1e6 ? (n / 1e6).toLocaleString("tr-TR", {maximumFractionDigits: 1}) + " Mn" : n >= 1e3 ? Math.round(n / 1e3).toLocaleString("tr-TR") + " B" : String(n);
 const ytThumb = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
@@ -1889,11 +1891,14 @@ function renderYTTab(){
   feed.classList.remove("skel"); feed.textContent = ""; $("#feedHead").hidden = true;
   const intro = el("div","blind-intro"); intro.appendChild(el("h2", null, "YouTube"));
   if (!y?.items?.length){ intro.appendChild(el("p", null, "Videolar şu an alınamıyor.")); top.appendChild(intro); renderAside(); return; }
-  intro.appendChild(el("p", null, "Haber kanallarının son 36 saatteki videoları. " + y.channels.length + " kanal izleniyor: " + y.channels.map(c => c.name).join(", ") + "."));
+  const on = y.channels.filter(c => !ytOff.has(c.key));
+  const pi = el("p"); pi.append("Haber kanallarının son 36 saatteki, gazetecilerin son 7 gündeki videoları. " + on.length + " kanal açık. ");
+  const ed = el("button","xt-more","Kanalları düzenle"); ed.type = "button"; ed.style.margin = "0"; ed.onclick = () => { openSheet(); setTimeout(() => $("#ytBox").scrollIntoView({block:"start"}), 50); };
+  pi.appendChild(ed); intro.appendChild(pi);
   const tools = el("div","yt-tools");
   [["views","En çok izlenen"],["date","En yeni"],["news","Haberlerle eşleşen"]].forEach(([k, l]) => { const b = el("button","topic", l); b.type = "button"; b.setAttribute("aria-pressed", ytSort === k ? "true" : "false"); b.onclick = () => { ytSort = k; render(); }; tools.appendChild(b); });
   intro.appendChild(tools); top.appendChild(intro);
-  const all = y.items.filter(v => { const c = ytChan(v.ch); return !(c.source && off.has(c.source)); });
+  const all = y.items.filter(v => !ytOff.has(v.ch));
   const shorts = all.filter(v => v.s).sort((a, b) => b.date.localeCompare(a.date));
   if (shorts.length){
     const sec = el("div","sec"); sec.appendChild(el("h3", null, "Kısa videolar")); top.appendChild(sec);
@@ -1908,6 +1913,29 @@ function renderYTTab(){
   const grid = el("div","yt-grid"); list.slice(0, 40).forEach(v => grid.appendChild(ytCard(v)));
   top.appendChild(grid);
   renderAside();
+}
+
+
+function renderYTSettings(){
+  const box = $("#ytBox"); box.textContent = "";
+  const y = data.youtube; if (!y?.channels?.length) return;
+  box.appendChild(el("h3", null, "YouTube kanalları"));
+  box.appendChild(el("p", null, "YouTube sekmesinde ve haberlerin altındaki video bağlantılarında görmek istemediğin kanalları kapat. Gazeteci kanalları kaynak dağılımı çubuğuna katılmaz ve siyasi olarak etiketlenmez."));
+  [["kurum","Haber kanalları"],["gazeteci","Gazeteciler"]].forEach(([t, lab]) => {
+    const list = y.channels.filter(c => (c.type || "kurum") === t); if (!list.length) return;
+    box.appendChild(el("p","lbl", lab)).style.cssText = "font-weight:700;color:var(--ink);margin:12px 0 6px";
+    const g = el("div","src-grid");
+    list.forEach(c => {
+      const b = el("button","src"); b.type = "button"; b.setAttribute("aria-pressed", ytOff.has(c.key) ? "false" : "true");
+      const m = c.source && data.sources[c.source] ? mono(c.source) : (() => { const x = el("span","mono", c.name.split(" ").map(w => w[0]).join("").slice(0, 3).toLocaleUpperCase("tr")); x.style.background = "#DC2626"; return x; })();
+      const n = el("span","n", c.name); n.appendChild(el("small", null, ytOff.has(c.key) ? "Kapalı" : (data.youtube.items.filter(v => v.ch === c.key).length + " video")));
+      b.append(m, n);
+      b.onclick = () => { ytOff.has(c.key) ? ytOff.delete(c.key) : ytOff.add(c.key); store.set("gk-ytoff", [...ytOff]); renderYTSettings(); };
+      g.appendChild(b);
+    });
+    box.appendChild(g);
+  });
+  if (ytOff.size){ const r = el("button","btn ghost","Tüm kanalları aç"); r.type = "button"; r.style.marginTop = "10px"; r.onclick = () => { ytOff.clear(); store.set("gk-ytoff", []); renderYTSettings(); }; box.appendChild(r); }
 }
 
 // ---- Konu sayfaları ----
@@ -1951,7 +1979,7 @@ function renderTopic(){
     col.appendChild(ul); grid.appendChild(col);
   });
   top.appendChild(grid);
-  const tv = (data.youtube?.items || []).filter(v => v.story && t.storyIds.includes(v.story));
+  const tv = (data.youtube?.items || []).filter(v => v.story && t.storyIds.includes(v.story) && !ytOff.has(v.ch));
   if (tv.length){
     const sv = el("div","sec"); sv.appendChild(el("h3", null, "YouTube’da")); top.appendChild(sv);
     const g = el("div","yt-grid"); tv.slice(0, 4).forEach(v => g.appendChild(ytCard(v))); top.appendChild(g);
@@ -2174,7 +2202,7 @@ function renderSheet(){
     g.appendChild(b);
   });
 }
-function openSheet(){ renderSheet(); renderNotif(); renderLeanSettings(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
+function openSheet(){ renderSheet(); renderNotif(); renderLeanSettings(); renderYTSettings(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
 function closeSheet(){ const d = $("#sheet"); d.close ? d.close() : d.removeAttribute("open"); }
 $("#sheet").addEventListener("close", () => { shown = PAGE; render(); });
 $("#sheet").addEventListener("click", e => { if (e.target === $("#sheet")) closeSheet(); });

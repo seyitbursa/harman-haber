@@ -261,6 +261,14 @@
       "color": "#1E293B",
       "lean": null,
       "leanNote": "Değerlendirme bulunamadığı için etiketsiz"
+    },
+    "tgrt": {
+      "name": "TGRT Haber",
+      "mono": "TG",
+      "color": "#B45309",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: AKP’ye yakın İhlas Grubu",
+      "leanUrl": "https://bianet.org/haber/turkiye-de-medyayi-kimler-kontrol-ediyor-208089"
     }
   },
   "feeds": [
@@ -488,73 +496,134 @@
       "key": "trt",
       "name": "TRT Haber",
       "channelId": "UCBgTP2LOFVPmq15W-RH-WXA",
-      "source": "trt"
+      "source": "trt",
+      "type": "kurum"
     },
     {
       "key": "aa",
       "name": "Anadolu Ajansı",
       "channelId": "UCVbZYhcirOke2vipxs4lT2w",
-      "source": "aa"
+      "source": "aa",
+      "type": "kurum"
     },
     {
       "key": "ahaber",
       "name": "A Haber",
       "channelId": "UCKQhfw-lzz0uKnE1fY1PsAA",
-      "source": "ahaber"
+      "source": "ahaber",
+      "type": "kurum"
     },
     {
       "key": "cnnturk",
       "name": "CNN Türk",
       "channelId": "UCV6zcRug6Hqp1UX_FdyUeBg",
-      "source": "cnnturk"
+      "source": "cnnturk",
+      "type": "kurum"
     },
     {
       "key": "ntv",
       "name": "NTV",
       "channelId": "UC9TDTjbOjFB9jADmPhSAPsw",
-      "source": "ntv"
+      "source": "ntv",
+      "type": "kurum"
     },
     {
       "key": "haberturk",
       "name": "Habertürk TV",
       "channelId": "UCn6dNfiRE_Xunu7iMyvD7AA",
-      "source": "haberturk"
+      "source": "haberturk",
+      "type": "kurum"
     },
     {
       "key": "tv100",
       "name": "tv100",
       "channelId": "UCndsdUW_oPLqpQJY9J8oIRg",
-      "source": "tv100"
+      "source": "tv100",
+      "type": "kurum"
     },
     {
       "key": "sozcu",
       "name": "Sözcü TV",
       "channelId": "UCOulx_rep5O4i9y6AyDqVvw",
-      "source": "sozcu"
+      "source": "sozcu",
+      "type": "kurum"
     },
     {
       "key": "bbc",
       "name": "BBC News Türkçe",
       "channelId": "UCeMQiXmFNTtN3OHlNJxnnUw",
-      "source": "bbc"
+      "source": "bbc",
+      "type": "kurum"
     },
     {
       "key": "dw",
       "name": "DW Türkçe",
       "channelId": "UCpi_jv70749NkAmkdugyiPQ",
-      "source": "dw"
+      "source": "dw",
+      "type": "kurum"
     },
     {
       "key": "euronews",
       "name": "Euronews Türkçe",
       "channelId": "UC7nLr-rPOKYhRE4wRZoLxkg",
-      "source": "euronews"
+      "source": "euronews",
+      "type": "kurum"
     },
     {
       "key": "bianet",
       "name": "Bianet",
       "channelId": "UC7ZaeDI9kIYm2e2szwCnmRA",
-      "source": "bianet"
+      "source": "bianet",
+      "type": "kurum"
+    },
+    {
+      "key": "tgrt",
+      "name": "TGRT Haber",
+      "channelId": "UCzgrZ-CndOoylh2_e72nSBQ",
+      "source": "tgrt",
+      "type": "kurum"
+    },
+    {
+      "key": "ulketv",
+      "name": "Ülke TV",
+      "channelId": "UCi65FGbYYj-OzJm2luB_fNQ",
+      "type": "kurum"
+    },
+    {
+      "key": "haber7",
+      "name": "Haber 7",
+      "channelId": "UChgxj3N4jo-oH5CcVLXvXLg",
+      "type": "kurum"
+    },
+    {
+      "key": "cuneyt",
+      "name": "Cüneyt Özdemir",
+      "channelId": "UCkwHQ7DWv9aqEtvAOSO74dQ",
+      "type": "gazeteci"
+    },
+    {
+      "key": "nevsin",
+      "name": "Nevşin Mengü",
+      "channelId": "UCrG27KDq7eW4YoEOYsalU9g",
+      "type": "gazeteci"
+    },
+    {
+      "key": "ozlem",
+      "name": "Özlem Gürses",
+      "channelId": "UCojOP7HHZvM2nZz4Rwnd6-Q",
+      "type": "gazeteci"
+    },
+    {
+      "key": "altayli",
+      "name": "Fatih Altaylı",
+      "channelId": "UCdS7OE5qbJQc7AG4SwlTzKg",
+      "type": "gazeteci"
+    },
+    {
+      "key": "barisozcan",
+      "name": "Barış Özcan",
+      "channelId": "UCv6jcPwFujuTIwFQ11jt1Yw",
+      "type": "gazeteci"
     }
   ]
 }

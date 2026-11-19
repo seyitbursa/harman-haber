@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,500;12..96,75..100,700;12..96,75..100,800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F4F6F9; --surface:#FFFFFF; --ink:#14213D; --ink-2:#4F5A70; --ink-3:#737D92; --line:#E2E6ED;
+  --paper:#F4F6F9; --surface:#FFFFFF; --ink:#14213D; --ink-2:#4A5468; --ink-3:#667085; --line:#E2E6ED;
   --accent:#2350E6; --accent-ink:#FFFFFF; --fresh:#D9480F; --up:#15803D; --down:#B91C1C; --saved:#B7791F;
   --shade:rgba(20,33,61,.06);
   --head:"Bricolage Grotesque","Avenir Next Condensed","Segoe UI",system-ui,sans-serif;
@@ -108,7 +108,7 @@ a{color:inherit} button,select,input{font:inherit;color:inherit}
 
 /* ---------- Manşet ---------- */
 .hero{position:relative;background:var(--surface);border-radius:18px;overflow:hidden;margin-top:12px;box-shadow:0 1px 0 var(--line),0 10px 30px -18px var(--shade)}
-.hero .img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--line)}
+.hero .img{display:block;width:100%;aspect-ratio:2/1;object-fit:cover;background:var(--line)}
 .hero .body{padding:16px 18px 18px}
 .weight{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .weight strong{font-family:var(--head);font-weight:800;font-size:15px;line-height:1.15}
@@ -612,6 +612,25 @@ body.in-game .tabs{display:none}
 .player-bar .t span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .player-bar button{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:inherit;display:grid;place-items:center;cursor:pointer}
 @media (min-width:900px){.player-bar{bottom:24px}}
+
+/* Satır alt bağlantıları (video, konu) */
+.rlinks{grid-area:tl;position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rl{border:0;background:var(--paper);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl.yt{color:#DC2626}
+.rl:hover{color:var(--accent)}
+.row .bias .bias-bar{height:10px} .row .seg{font-size:0;padding:0} .row .bias-txt{font-size:12px}
+/* Keşfet */
+.kesfet{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media (min-width:700px){.kesfet{grid-template-columns:repeat(3,1fr)}}
+.kf{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;background:var(--surface);border:0;border-radius:16px;padding:14px;box-shadow:0 1px 0 var(--line);cursor:pointer;color:var(--ink);min-height:118px}
+.kf .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;font-family:var(--head);font-weight:800;font-size:13px}
+.kf b{font-family:var(--head);font-weight:700;font-size:17px;line-height:1.2}
+.kf span{font-size:13px;color:var(--ink-3);line-height:1.35}
+.kf.wide{grid-column:1 / -1;flex-direction:row;align-items:center;min-height:0}
+.back-link{border:0;background:none;padding:0 0 6px;color:var(--accent);font-weight:600;cursor:pointer;font-size:14px}
+/* Ayarlar içindekiler */
+.set-nav{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.set-nav button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-2)}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -633,6 +652,9 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
   .hero > .cluster{grid-area:cl}
   .hero.noimg{grid-template-columns:minmax(0,1fr);grid-template-areas:"body" "cl"}
   .hero .body{padding:24px;display:flex;flex-direction:column;justify-content:center}
+  .hero h2{font-size:clamp(26px,2.4vw,34px)}
+  .hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .hero .weight{flex-wrap:nowrap}
   .feed .feed-mod{display:none}
   .newbar{top:calc(env(safe-area-inset-top,0px) + 124px)}
 }
@@ -653,10 +675,11 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
           <input id="qDesk" type="search" placeholder="Haberlerde ara" aria-label="Haberlerde ara" autocomplete="off">
         </label>
         <button class="text-btn desk" type="button" data-go="yerel">Şehrim</button>
-        <button class="text-btn desk" type="button" data-go="saved">Kaydettiklerim</button>
+        <button class="text-btn desk" type="button" data-go="kesfet">Keşfet</button>
         <button class="text-btn desk" type="button" data-go="oyunlar">Oyunlar</button>
         <button class="text-btn desk" type="button" data-sheet>Ayarlar</button>
         <button class="text-btn" id="install" type="button" hidden>Uygulamayı yükle</button>
+        <button class="icon-btn" id="listenBtn" type="button" aria-label="Gündemi dinle" title="Gündemi dinle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
         <button class="icon-btn mobile" id="searchBtn" type="button" aria-label="Ara" aria-expanded="false" aria-controls="searchRow">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         </button>
@@ -701,7 +724,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
 <nav class="bottom" id="bottom" aria-label="Bölümler">
   <button type="button" data-go="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/></svg>Akış</button>
   <button type="button" data-go="yerel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Şehrim</button>
-  <button type="button" data-go="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>Kaydettiklerim</button>
+  <button type="button" data-go="kesfet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Keşfet</button>
   <button type="button" data-go="oyunlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><path d="M17 13v8M13 17h8"/></svg>Oyunlar</button>
   <button type="button" data-sheet><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Ayarlar</button>
 </nav>
@@ -725,14 +748,18 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
 <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
   <div class="sheet-in">
     <div class="sheet-h"><h2 id="sheetTitle">Ayarlar</h2><button class="icon-btn" type="button" id="sheetClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <div id="notifBox"></div>
-    <div id="leanBox"></div>
-    <div id="ytBox"></div>
+    <nav class="set-nav" aria-label="Ayarlar bölümleri">
+      <button type="button" data-jump="teamBox">Takımım</button><button type="button" data-jump="notifBox">Bildirimler</button><button type="button" data-jump="srcHead">Kaynaklar</button><button type="button" data-jump="ytBox">YouTube</button><button type="button" data-jump="leanBox">Eğilim etiketleri</button>
+    </nav>
     <div id="teamBox"></div>
-    <h3>Kaynaklar</h3>
+    <div id="notifBox"></div>
+    <h3 id="srcHead">Kaynaklar</h3>
     <p>Okumak istemediğin kaynakları kapat. Seçimin bu cihazda saklanır.</p>
     <div class="src-grid" id="srcGrid"></div>
-    <div class="sheet-f"><button class="btn ghost" type="button" id="allOn">Tümünü aç</button><button class="btn" type="button" id="sheetDone">Tamam</button></div>
+    <div class="sheet-f"><button class="btn ghost" type="button" id="allOn">Tüm kaynakları aç</button></div>
+    <div id="ytBox"></div>
+    <div id="leanBox"></div>
+    <div class="sheet-f" style="position:sticky;bottom:0;background:var(--surface);padding-top:10px"><span></span><button class="btn" type="button" id="sheetDone">Tamam</button></div>
   </div>
 </dialog>
 <script>
@@ -741,8 +768,11 @@ const CATS = [
   {id:"all",label:"Tümü"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
   {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"yapayzeka",label:"Yapay zekâ"},{id:"teknoloji",label:"Teknoloji"}
 ];
-CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"}, {id:"xgundem", label:"X gündemi"}, {id:"youtube", label:"YouTube"}, {id:"resmigazete", label:"Resmî Gazete"});
+// Özel bölümler sekme çubuğunda değil, Keşfet sayfasında; adresleri (#kornokta…) çalışmaya devam eder
+const SPECIAL = [{id:"kornokta", label:"Kör nokta"}, {id:"xgundem", label:"X gündemi"}, {id:"youtube", label:"YouTube"}, {id:"resmigazete", label:"Resmî Gazete"}];
+
 const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
+SPECIAL.forEach(x => CAT_LABEL[x.id] = x.label);
 CAT_LABEL.gundem = "Gündem";
 const CITY_ALIASES = {"Kocaeli":["İzmit","Gebze"],"Sakarya":["Adapazarı"],"Hatay":["Antakya","İskenderun"],"Afyonkarahisar":["Afyon"],"Mersin":["Tarsus"],"Antalya":["Alanya","Manavgat"],"Muğla":["Bodrum","Fethiye","Marmaris"],"Balıkesir":["Bandırma","Ayvalık"],"Kahramanmaraş":["Maraş"]};
 const PAGE = 30;
@@ -1037,7 +1067,8 @@ function route(){
   if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); }
   else if (h === "oyunlar" || h.startsWith("oyun-")) view = h;
   else if (h === "yerel" || h === "saved") view = h;
-  else { view = "feed"; cat = CATS.some(c => c.id === h) ? h : "all"; }
+  else if (h === "kesfet") view = "kesfet";
+  else { view = "feed"; cat = (CATS.some(c => c.id === h) || SPECIAL.some(c => c.id === h)) ? h : "all"; }
   shown = PAGE; activeTopic = null;
   render();
 }
@@ -1049,7 +1080,8 @@ function renderNav(){
     b.onclick = () => { location.hash = c.id === "all" ? "" : c.id; if (c.id === "all") route(); window.scrollTo({top:0}); };
     tabs.appendChild(b);
   });
-  $$("[data-go]").forEach(b => { const on = b.dataset.go === view || (b.dataset.go === "oyunlar" && view.startsWith("oyun-")); on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
+  const inKesfet = view === "kesfet" || view === "saved" || (view === "feed" && SPECIAL.some(x => x.id === cat));
+  $$("[data-go]").forEach(b => { const on = b.dataset.go === view || (b.dataset.go === "oyunlar" && view.startsWith("oyun-")) || (b.dataset.go === "kesfet" && inKesfet); on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
 }
 
 // ---- Liste ----
@@ -1068,9 +1100,10 @@ function render(){
   document.body.classList.toggle("in-game", view.startsWith("oyun-"));
   if (view === "topic"){ renderTopic(); return; }
   if (view === "oyunlar" || view.startsWith("oyun-")){ renderGames(); return; }
-  if (view === "feed" && cat === "xgundem"){ $("#top").textContent = ""; renderXTab(); return; }
-  if (view === "feed" && cat === "youtube"){ $("#top").textContent = ""; renderYTTab(); return; }
-  if (view === "feed" && cat === "resmigazete"){ $("#top").textContent = ""; renderRGTab(); return; }
+  if (view === "kesfet"){ renderKesfet(); return; }
+  if (view === "feed" && cat === "xgundem"){ $("#top").textContent = ""; renderXTab(); $(".blind-intro")?.prepend(backToKesfet()); return; }
+  if (view === "feed" && cat === "youtube"){ $("#top").textContent = ""; renderYTTab(); $(".blind-intro")?.prepend(backToKesfet()); return; }
+  if (view === "feed" && cat === "resmigazete"){ $("#top").textContent = ""; renderRGTab(); $(".blind-intro")?.prepend(backToKesfet()); return; }
   const q = query();
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
@@ -1091,7 +1124,7 @@ function render(){
     } else hero = list.find(s => s.items[0].image) || list[0];
     top.appendChild(heroCard(hero));
     if (cat === "all" || cat === "gundem"){ const tp = topicsRow(); if (tp){ tp.classList.add("mobile"); top.appendChild(tp); } }
-    if (cat === "all"){ const lc = listenCard(); if (lc) top.appendChild(lc); const rc = rgCard(); if (rc) top.appendChild(rc); }
+
     if (talked.length){
       const sec = el("div","sec"); sec.appendChild(el("h3", null, "Çok konuşulanlar")); top.appendChild(sec);
       const rail = el("div","rail"); talked.forEach(s => rail.appendChild(talkCard(s))); top.appendChild(rail);
@@ -1117,6 +1150,7 @@ function render(){
     intro.appendChild(legend());
     top.appendChild(intro);
     renderBlind(list);
+    intro.prepend(backToKesfet());
     renderAside();
     return;
   }
@@ -1188,14 +1222,12 @@ function heroCard(story){
   const c = el("article","hero" + (i.image ? "" : " noimg"));
   if (i.image){ const im = img(i.image, "img", true); im.onerror = () => { im.remove(); c.classList.add("noimg"); }; c.appendChild(im); }
   const body = el("div","body");
-  if (story.items.length >= 2) body.appendChild(weightLabel(story));
+  if (story.items.length >= 2){ const wl = weightLabel(story); wl.style.cursor = "pointer"; wl.setAttribute("role","button"); wl.tabIndex = 0; wl.setAttribute("aria-label", story.items.length + " kaynak verdi. Kaynakları göster"); wl.onclick = () => biasOf(story) ? openBias(story) : openSources(story); wl.onkeydown = e => { if (e.key === "Enter") wl.click(); }; body.appendChild(wl); }
   const h = el("h2"); h.appendChild(link(i.title, i.url)); body.appendChild(h);
   const ld = lede(i); if (ld) body.appendChild(ld);
   const bb = biasBar(story); if (bb) body.appendChild(bb);
-  const fk = farkEl(story); if (fk) body.appendChild(fk);
   const m = meta(i); m.appendChild(actions(i, story)); body.appendChild(m);
   c.appendChild(body);
-  if (story.items.length > 1){ const cl = clusterBlock(story, story.items.slice(1)); cl.style.padding = "0 18px 18px"; cl.style.marginTop = "0"; c.appendChild(cl); }
   return c;
 }
 function talkCard(story){
@@ -1216,15 +1248,16 @@ function row(story, inTopic){
   const h = el("h4"); h.appendChild(link(i.title, i.url, r)); r.appendChild(h);
   const ld = lede(i); if (ld) r.appendChild(ld);
   const bb = biasBar(story); if (bb) r.appendChild(bb);
-  const fk = farkEl(story); if (fk) r.appendChild(fk);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
+  const links = el("div","rlinks");
   if (story.yt?.length && data.youtube){
     const vids = data.youtube.items.filter(v => story.yt.includes(v.id) && !ytOff.has(v.ch));
-    if (vids.length){ const b = el("button","yt-chip"); b.type = "button"; b.append("▶ YouTube’da " + vids.length + " video"); b.setAttribute("aria-label", "Bu haberle ilgili " + vids.length + " YouTube videosu"); b.onclick = () => openVideo(vids[0], vids); r.appendChild(b); }
+    if (vids.length){ const b = el("button","rl yt"); b.type = "button"; b.append("▶ " + vids.length + " video"); b.setAttribute("aria-label", "Bu haberle ilgili " + vids.length + " YouTube videosu"); b.onclick = () => openVideo(vids[0], vids); links.appendChild(b); }
   }
   const tp = !inTopic && topicOfStory(story.id);
-  if (tp){ const b = el("button","tlink", (tp.title || tp.label) + " konusundaki " + tp.storyIds.length + " haber"); b.type = "button"; b.onclick = () => goTopic(tp); r.appendChild(b); }
+  if (tp){ const b = el("button","rl", "Konu: " + (tp.title || tp.label)); b.type = "button"; b.setAttribute("aria-label", (tp.title || tp.label) + " konusundaki " + tp.storyIds.length + " haberi aç"); b.onclick = () => goTopic(tp); links.appendChild(b); }
+  if (links.childNodes.length) r.appendChild(links);
   return r;
 }
 function clusterBlock(story, others){
@@ -2218,6 +2251,35 @@ function speakNext(){
 }
 function stopListen(){ TTS.on = false; try { speechSynthesis.cancel(); } catch(e){} $("#playerBar").hidden = true; }
 
+
+// ---- Keşfet ----
+function renderKesfet(){
+  const top = $("#top"), feed = $("#feed"); top.textContent = ""; feed.classList.remove("skel"); feed.textContent = ""; $("#feedHead").hidden = true;
+  const h = el("div","sec"); h.style.marginTop = "14px"; h.appendChild(el("h3", null, "Keşfet")); top.appendChild(h);
+  const g = el("div","kesfet");
+  const card = (ic, color, title, desc, fn, wide) => { const b = el("button","kf" + (wide ? " wide" : "")); b.type = "button"; const i = el("span","ic", ic); i.style.background = color; const t = el("span"); t.style.display = "flex"; t.style.flexDirection = "column"; t.style.gap = "4px"; t.append(el("b", null, title), el("span", null, desc)); b.append(i, t); b.onclick = fn; return b; };
+  const go2 = h => () => { location.hash = h; window.scrollTo({top:0}); };
+  const rgN = data.rg?.items?.length, ytN = data.youtube?.items?.length, xN = data.xtrends?.items?.length;
+  if ("speechSynthesis" in window) g.appendChild(card("▶", "var(--accent)", "Gündemi dinle", "Günün en önemli 10 haberi, yaklaşık 3 dakika", startListen, true));
+  g.appendChild(card("KN", "#6D28D9", "Kör nokta", "Yalnızca bir kesimin verdiği haberler", go2("kornokta")));
+  g.appendChild(card("X", "#0F172A", "X gündemi", (xN || 20) + " başlık ve ilgili haberler", go2("xgundem")));
+  g.appendChild(card("▶", "#DC2626", "YouTube", (ytN ? ytN + " video, " : "") + "haber kanalları ve gazeteciler", go2("youtube")));
+  g.appendChild(card("RG", "#B91C1C", "Resmî Gazete", rgN ? "Bugün " + rgN + " düzenleme, sade dille" : "Günün düzenlemeleri, sade dille", go2("resmigazete")));
+  g.appendChild(card("★", "#B7791F", "Kaydettiklerim", Object.keys(savedMap).length + " kayıtlı haber", go2("saved")));
+  g.appendChild(card("📅", "#0F766E", "Gündem arşivi", "Son 30 günün gündemi", () => { location.href = "/gundem/"; }));
+  top.appendChild(g);
+  renderAside();
+}
+// Özel bölümlerin başına "Keşfet" dönüş bağlantısı
+function backToKesfet(){ const b = el("button","back-link","← Keşfet"); b.type = "button"; b.onclick = () => { location.hash = "kesfet"; window.scrollTo({top:0}); }; return b; }
+// Tek kaynaklı ya da etiketsiz olaylar için kaynak listesi
+function openSources(story){
+  const body = $("#actBody"); body.textContent = ""; $("#actTitle").textContent = story.items.length + " kaynak verdi";
+  const ul = el("ul","vlist");
+  story.items.forEach(i => { const li = el("li"), a = link("", i.url), t = el("span"); t.append(el("b", null, i.title), el("small", null, src(i.source).name + ", " + ago(i.date))); a.style.cssText = "display:flex;gap:10px;align-items:center;padding:8px 0;text-decoration:none;border-top:1px solid var(--line)"; a.append(mono(i.source), t); li.appendChild(a); ul.appendChild(li); });
+  body.appendChild(ul); if (!$("#actSheet").open) $("#actSheet").showModal();
+}
+
 // ---- Konu sayfaları ----
 let topicSlug = null;
 function topicOfStory(id){ return (data.topics || []).find(t => (t.storyIds || []).includes(id)); }
@@ -2487,10 +2549,12 @@ function openSheet(){ renderSheet(); renderNotif(); renderLeanSettings(); render
 function closeSheet(){ const d = $("#sheet"); d.close ? d.close() : d.removeAttribute("open"); }
 $("#sheet").addEventListener("close", () => { shown = PAGE; render(); });
 $("#sheet").addEventListener("click", e => { if (e.target === $("#sheet")) closeSheet(); });
+$$("[data-jump]").forEach(b => b.onclick = () => document.getElementById(b.dataset.jump)?.scrollIntoView({behavior:"smooth", block:"start"}));
 $("#sheetClose").onclick = closeSheet; $("#sheetDone").onclick = closeSheet;
 $("#allOn").onclick = () => { off.clear(); store.set("gk-off",[]); renderSheet(); };
 
 // ---- Olaylar ----
+$("#listenBtn").onclick = () => { if (!("speechSynthesis" in window)) return toast("Tarayıcın sesli okumayı desteklemiyor"); TTS.on ? stopListen() : startListen(); };
 $$("[data-sheet]").forEach(b => b.onclick = openSheet);
 $$("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
 $("#home").onclick = e => { e.preventDefault(); cat = "all"; history.replaceState(null, "", location.pathname); route(); window.scrollTo({top:0}); };
@@ -2512,7 +2576,7 @@ $("#install").onclick = async () => { if (!installEvt) return; installEvt.prompt
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
 // ---- Başlat ----
-{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
+{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h === "yerel" || h === "saved" || h === "kesfet") view = h; else if (CATS.some(c => c.id === h) || SPECIAL.some(c => c.id === h)) cat = h; }
 renderNav(); renderTicker();
 load(true);
 Promise.all([loadWeather(), loadPrayer()]).then(() => { if (loaded) render(); else renderTicker(); });

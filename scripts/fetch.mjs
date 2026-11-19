@@ -13,7 +13,7 @@ import { dailyGames } from "./games.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
-const MAX_TOTAL = 700;
+const MAX_TOTAL = 900;
 const SUMMARY_LEN = 220;
 
 const config = JSON.parse(await readFile(new URL("../feeds.json", import.meta.url), "utf8"));
@@ -105,6 +105,11 @@ const results = await Promise.allSettled(config.feeds.map(async f => {
   let feed;
   try { feed = await once(); }
   catch { await new Promise(r => setTimeout(r, 3000)); feed = await once(); }
+  // Google News akışları: başlıktaki " - Kaynak" ekini at, HTML bağlantı listesi olan özeti kullanma
+  if (f.gnews) feed.items.forEach(it => {
+    it.title = (it.title || "").replace(new RegExp("\\s+-\\s+[^-]*" + (f.suffix ? "" : "") + "$"), "").trim();
+    it.contentSnippet = ""; it.content = ""; it.summary = "";
+  });
   return feed.items.slice(0, MAX_PER_FEED).map(it => {
     const date = parseDate(it.pubDate, it.isoDate);
     return {

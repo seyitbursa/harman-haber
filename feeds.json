@@ -138,6 +138,107 @@
       "lean": "hukumet",
       "leanNote": "MOM Türkiye: AKP’ye yakın İhlas Grubu (İHA’nın da sahibi)",
       "leanUrl": "https://bianet.org/haber/turkiye-de-medyayi-kimler-kontrol-ediyor-208089"
+    },
+    "oksijen": {
+      "name": "Gazete Oksijen",
+      "mono": "OK",
+      "color": "#0EA5E9",
+      "lean": null,
+      "leanNote": "Kendini bağımsız olarak tanımlıyor; bağımsız bir kuruluşun değerlendirmesi bulunamadığı için etiketsiz"
+    },
+    "diken": {
+      "name": "Diken",
+      "mono": "DK",
+      "color": "#BE185D",
+      "lean": "bagimsiz",
+      "leanNote": "Reuters/Arab News: Google değişikliklerinden etkilenen bağımsız haber sitelerinden",
+      "leanUrl": "https://www.arabnews.pk/node/2593503"
+    },
+    "t24": {
+      "name": "T24",
+      "mono": "T24",
+      "color": "#DC2626",
+      "lean": "bagimsiz",
+      "leanNote": "Reuters/Arab News: Google değişikliklerinden etkilenen bağımsız haber sitelerinden",
+      "leanUrl": "https://www.arabnews.pk/node/2593503"
+    },
+    "ekonomim": {
+      "name": "Ekonomim",
+      "mono": "EK",
+      "color": "#0F766E",
+      "lean": "bagimsiz",
+      "leanNote": "Bianet: Google’a karşı ortak açıklama yapan bağımsız yayın kuruluşlarından",
+      "leanUrl": "https://bianet.org/haber/turkey-s-independent-media-protest-google-over-traffic-embargo-305389"
+    },
+    "bbc": {
+      "name": "BBC Türkçe",
+      "mono": "BBC",
+      "color": "#1F2937",
+      "lean": "bagimsiz",
+      "leanNote": "İngiltere merkezli uluslararası kamu yayıncısı"
+    },
+    "evrensel": {
+      "name": "Evrensel",
+      "mono": "EV",
+      "color": "#B91C1C",
+      "lean": "muhalefet",
+      "leanNote": "Basın İlan Kurumu’nun ilan yasağı uyguladığı, hükümeti eleştiren gazetelerden",
+      "leanUrl": "https://www.ecoi.net/de/dokument/2030332.html"
+    },
+    "aksam": {
+      "name": "Akşam",
+      "mono": "AK",
+      "color": "#7C2D12",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: hükümete yakın Türk Medya grubu",
+      "leanUrl": "https://bianet.org/haber/media-in-turkey-owners-in-data-transparency-and-concentration-in-findings-254400"
+    },
+    "star": {
+      "name": "Star",
+      "mono": "ST",
+      "color": "#9A3412",
+      "lean": "hukumet",
+      "leanNote": "MOM Türkiye: hükümete yakın Türk Medya grubu",
+      "leanUrl": "https://bianet.org/haber/media-in-turkey-owners-in-data-transparency-and-concentration-in-findings-254400"
+    },
+    "ahaber": {
+      "name": "A Haber",
+      "mono": "AH",
+      "color": "#991B1B",
+      "lean": "hukumet",
+      "leanNote": "Reuters Enstitüsü 2026: Turkuvaz grubu; MOM: Kalyon",
+      "leanUrl": "https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2026/turkey"
+    },
+    "karar": {
+      "name": "Karar",
+      "mono": "KR",
+      "color": "#334155",
+      "lean": null,
+      "leanNote": "Kaynaklar çelişiyor: 2016’da hükümet çizgisinde gösterilmiş, sonraki yıllarda eleştirel çizgiye geçmiş; etiketsiz"
+    },
+    "odatv": {
+      "name": "Odatv",
+      "mono": "OD",
+      "color": "#4B5563",
+      "lean": null,
+      "leanNote": "Ulusalcı çizgide; hükümete yakınlığı konusunda kaynaklar farklı değerlendiriyor, etiketsiz"
+    },
+    "independent": {
+      "name": "Independent Türkçe",
+      "mono": "IT",
+      "color": "#B91C1C",
+      "lean": null,
+      "leanNote": "İngiliz Independent’ın Suudi ortaklı Türkçe yayını; değerlendirme bulunamadığı için etiketsiz"
+    },
+    "bloomberght": {
+      "name": "Bloomberg HT",
+      "mono": "BHT",
+      "color": "#1D4ED8"
+    },
+    "dunya": {
+      "name": "Dünya",
+      "mono": "DN",
+      "color": "#0369A1"
     }
   },
   "feeds": [
@@ -270,6 +371,86 @@
       "source": "turkiye",
       "category": "gundem",
       "url": "https://www.turkiyegazetesi.com.tr/feed"
+    },
+    {
+      "source": "oksijen",
+      "category": "gundem",
+      "url": "https://news.google.com/rss/search?q=site%3Agazeteoksijen.com+when:1d&hl=tr&gl=TR&ceid=TR:tr",
+      "gnews": true,
+      "suffix": "Gazete Oksijen"
+    },
+    {
+      "source": "t24",
+      "category": "gundem",
+      "url": "https://news.google.com/rss/search?q=site%3At24.com.tr+when:1d&hl=tr&gl=TR&ceid=TR:tr",
+      "gnews": true,
+      "suffix": "T24"
+    },
+    {
+      "source": "bbc",
+      "category": "gundem",
+      "url": "https://news.google.com/rss/search?q=site%3Abbc.com/turkce+when:1d&hl=tr&gl=TR&ceid=TR:tr",
+      "gnews": true,
+      "suffix": "BBC"
+    },
+    {
+      "source": "odatv",
+      "category": "gundem",
+      "url": "https://news.google.com/rss/search?q=site%3Aodatv.com+when:1d&hl=tr&gl=TR&ceid=TR:tr",
+      "gnews": true,
+      "suffix": "Odatv"
+    },
+    {
+      "source": "independent",
+      "category": "gundem",
+      "url": "https://news.google.com/rss/search?q=site%3Aindyturk.com+when:1d&hl=tr&gl=TR&ceid=TR:tr",
+      "gnews": true,
+      "suffix": "Independent Türkçe"
+    },
+    {
+      "source": "diken",
+      "category": "gundem",
+      "url": "https://www.diken.com.tr/feed/"
+    },
+    {
+      "source": "karar",
+      "category": "gundem",
+      "url": "https://www.karar.com/rss"
+    },
+    {
+      "source": "evrensel",
+      "category": "gundem",
+      "url": "https://www.evrensel.net/rss/haber.xml"
+    },
+    {
+      "source": "aksam",
+      "category": "gundem",
+      "url": "https://www.aksam.com.tr/rss/rss.asp"
+    },
+    {
+      "source": "star",
+      "category": "gundem",
+      "url": "https://www.star.com.tr/rss/rss.asp"
+    },
+    {
+      "source": "ahaber",
+      "category": "gundem",
+      "url": "https://www.ahaber.com.tr/rss/gundem.xml"
+    },
+    {
+      "source": "ekonomim",
+      "category": "ekonomi",
+      "url": "https://www.ekonomim.com/rss"
+    },
+    {
+      "source": "bloomberght",
+      "category": "ekonomi",
+      "url": "https://www.bloomberght.com/rss"
+    },
+    {
+      "source": "dunya",
+      "category": "ekonomi",
+      "url": "https://www.dunya.com/rss"
     }
   ],
   "leanInfo": {

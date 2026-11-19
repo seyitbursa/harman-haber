@@ -58,6 +58,9 @@ npm run dev
 
 ## Kaynak eklemek / çıkarmak
 
+RSS akışı olmayan ya da isteklerimizi reddeden siteler (Gazete Oksijen, T24, BBC Türkçe, Odatv, Independent Türkçe) Google Haberler’in site araması akışıyla (`"gnews": true`) alınır; bunlarda başlık ve bağlantı gelir, özet ve görsel gelmez.
+
+
 `feeds.json` içinde `sources` kısmına kaynağı (ad, kısaltma, renk), `feeds` kısmına akış adresini ve varsayılan kategorisini ekle. Kategoriler: `gundem`, `siyaset`, `ekonomi`, `dunya`, `spor`, `yapayzeka`, `teknoloji`. Genel akışlarda kategori, haberin adresine ve RSS etiketlerine bakılarak tahmin edilir.
 
 ## Bilmen gerekenler

@@ -81,7 +81,8 @@ export async function addGists({ stories, prevGists, prevUsage, key, log = conso
   const gists = {};
   for (const [url, g] of Object.entries(prevGists || {})) if (now - new Date(g.at) < 72 * 3600e3) gists[url] = g;
 
-  const primaries = stories.map(s => s.items[0]);
+  // Google News yönlendirme bağlantılarında makale metni okunamadığı için onlar özetlenmez
+  const primaries = stories.map(s => s.items[0]).filter(i => !/^https:\/\/news\.google\.com\//.test(i.url));
   const todo = primaries
     .filter(i => !(i.url in gists))
     .sort((a, b) => (BAIT.test(b.title) - BAIT.test(a.title)) || b.date.localeCompare(a.date));

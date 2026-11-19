@@ -7,7 +7,8 @@ import { trendingTopics } from "./topics.mjs";
 import { getXTrends } from "./xtrends.mjs";
 import { getQuakes } from "./quakes.mjs";
 import { notify, previousJson } from "./notify.mjs";
-import { addGists, addTopicSummaries } from "./summarize.mjs";
+import { addGists, addTopicSummaries, addContrasts, callGeminiRaw } from "./summarize.mjs";
+import { resmiGazete } from "./resmigazete.mjs";
 import { dailyWord } from "./wordgame.mjs";
 import { dailyGames } from "./games.mjs";
 import { getYoutube } from "./youtube.mjs";
@@ -164,6 +165,9 @@ const [markets, xtrends, quakes, prevJson] = await Promise.all([getMarkets(), ge
 const prev = prevJson?.notified || null;     // eski sürümde durum yoksa ilk çalıştırma sayılır
 const sum = await addGists({ stories, prevGists: prevJson?.gists, prevUsage: prevJson?.gistUsage, key: process.env.GEMINI_API_KEY });
 
+const farkCache = await addContrasts({ stories, sources: config.sources, prevFark: prevJson?.farkCache, usage: sum.usage, key: process.env.GEMINI_API_KEY });
+const rg = await resmiGazete({ prev: prevJson?.rg, key: process.env.GEMINI_API_KEY, usage: sum.usage, callGeminiRaw });
+
 // Gündemdeki konular ve her konunun haberleri (konu sayfaları için)
 const topics = trendingTopics(stories, { max: 10 });
 const twords = t => t.toLocaleLowerCase("tr").replace(/['’‘`]/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
@@ -192,11 +196,11 @@ const note = cfg.ntfyTopic
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 const soc = await socialPost({ stories, topics, sources: config.sources, prev: prevJson?.social, dry: !process.env.GITHUB_ACTIONS || !prevJson }).catch(e => ({ state: prevJson?.social || {}, sent: ["HATA " + e.message] }));
-const stat = await buildStatic({ stories, topics, sources: config.sources, prev: prevJson }).catch(e => { console.log("  ✗ sabit sayfalar → " + e.message); return { topicPages: prevJson?.topicPages || {}, archive: prevJson?.archive || [], count: 0 }; });
+const stat = await buildStatic({ stories, topics, sources: config.sources, prev: prevJson, rg }).catch(e => { console.log("  ✗ sabit sayfalar → " + e.message); return { topicPages: prevJson?.topicPages || {}, archive: prevJson?.archive || [], rgArchive: prevJson?.rgArchive || [], count: 0 }; });
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, topicPages: stat.topicPages, archive: stat.archive, social: soc.state, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, rg, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);
@@ -205,6 +209,7 @@ if (markets.error) console.log("  ✗ piyasa →", markets.error);
 if (xtrends.error) console.log("  ✗ X gündemi →", xtrends.error);
 console.log(`Özet: bu turda ${sum.made} yeni, bekleyen ${sum.pending}, bugün ${sum.usage.requests} istek${sum.usage.model ? " (" + sum.usage.model + ")" : ""}${process.env.GEMINI_API_KEY ? "" : " — GEMINI_API_KEY yok"}.`);
 if (soc.sent.length) console.log("Sosyal medya: " + soc.sent.join(", "));
+console.log(`Fark özeti: ${stories.filter(s => s.fark).length} olay. Resmî Gazete: ${rg ? rg.date + ", " + rg.items.length + " madde" + (rg.done ? ", özetlendi" : ", özet bekliyor") : "alınamadı"}.`);
 console.log(`Sabit sayfalar: ${stat.count} sayfa (konu ve günlük gündem), site haritası ve RSS.`);
 console.log(`Spor: ${sports.standings?.length || 0} takım, ${sports.matches?.length || 0} lig maçı, ${sports.europe?.length || 0} Avrupa maçı${sports.errors?.length ? "; hatalar: " + sports.errors.join(", ") : ""}.`);
 if (youtube) console.log(`YouTube: ${youtube.items.length} video, ${youtube.items.filter(v => v.story).length} tanesi haberlerle eşleşti${youtube.errors.length ? "; hatalar: " + youtube.errors.join(", ") : ""}.`);

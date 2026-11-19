@@ -584,6 +584,34 @@ body.in-game .tabs{display:none}
 .sp-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 .sp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11.5px;color:var(--ink-3)}
 .sp-foot button{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;padding:4px 0;cursor:pointer}
+
+/* Fark ne? */
+.fark{grid-area:fark;position:relative;z-index:2;margin:8px 0 0;font-size:14px;line-height:1.45;color:var(--ink-2);background:var(--paper);border-radius:10px;padding:8px 10px}
+.fark b{color:var(--ink)}
+.row{grid-template-areas:"meta meta" "title img" "sum img" "bias bias" "fark fark" "cl cl" "yt yt" "tl tl"}
+.row.noimg{grid-template-areas:"meta" "title" "sum" "bias" "fark" "cl" "yt" "tl"}
+/* Resmî Gazete */
+.rg-card{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;background:var(--surface);border:0;border-radius:14px;padding:12px 14px;box-shadow:0 1px 0 var(--line);text-align:left;cursor:pointer;color:var(--ink)}
+.rg-card .ic{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:#B91C1C;color:#fff;display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:13px}
+.rg-card b{display:block;font-size:15px} .rg-card span{font-size:13px;color:var(--ink-3)}
+.rg-item{border-top:1px solid var(--line);padding:12px 0}
+.rg-item:first-child{border-top:0}
+.rg-item h4{font-family:var(--head);font-weight:700;font-size:18px;line-height:1.25;margin:0 0 4px}
+.rg-item p{margin:4px 0 0;color:var(--ink-2);font-size:15px}
+.rg-item .who{font-size:13px;color:var(--ink);font-weight:600}
+.rg-item .orig{font-size:12.5px;color:var(--ink-3)} .rg-item .orig a{color:var(--accent)}
+.rg-badge{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 7px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);margin-bottom:4px}
+/* Dinle */
+.listen{display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;background:var(--surface);border:0;border-radius:14px;padding:10px 14px;box-shadow:0 1px 0 var(--line);text-align:left;cursor:pointer;color:var(--ink)}
+.listen .ic{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:0 0 auto}
+.listen b{display:block;font-size:15px} .listen span{font-size:13px;color:var(--ink-3)}
+.player-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 76px);z-index:26;width:min(560px,calc(100% - 24px));background:var(--ink);color:var(--paper);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+.player-bar[hidden]{display:none}
+.player-bar .t{flex:1 1 auto;min-width:0;font-size:13.5px;line-height:1.3}
+.player-bar .t small{display:block;opacity:.7;font-size:11.5px}
+.player-bar .t span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.player-bar button{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:inherit;display:grid;place-items:center;cursor:pointer}
+@media (min-width:900px){.player-bar{bottom:24px}}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -685,6 +713,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
   </div>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="player-bar" id="playerBar" hidden role="region" aria-label="Sesli gündem"></div>
 
 <dialog class="sheet" id="biasSheet" aria-labelledby="biasTitle">
   <div class="sheet-in">
@@ -712,7 +741,7 @@ const CATS = [
   {id:"all",label:"Tümü"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
   {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"yapayzeka",label:"Yapay zekâ"},{id:"teknoloji",label:"Teknoloji"}
 ];
-CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"}, {id:"xgundem", label:"X gündemi"}, {id:"youtube", label:"YouTube"});
+CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"}, {id:"xgundem", label:"X gündemi"}, {id:"youtube", label:"YouTube"}, {id:"resmigazete", label:"Resmî Gazete"});
 const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
 CAT_LABEL.gundem = "Gündem";
 const CITY_ALIASES = {"Kocaeli":["İzmit","Gebze"],"Sakarya":["Adapazarı"],"Hatay":["Antakya","İskenderun"],"Afyonkarahisar":["Afyon"],"Mersin":["Tarsus"],"Antalya":["Alanya","Manavgat"],"Muğla":["Bodrum","Fethiye","Marmaris"],"Balıkesir":["Bandırma","Ayvalık"],"Kahramanmaraş":["Maraş"]};
@@ -1030,7 +1059,7 @@ function storiesFor(){
   if (view === "yerel" && !city) return [];
   let list = data.stories.map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length);
   if (re) list = list.filter(s => s.items.some(i => re.test(i.title + " " + i.summary)));
-  else if (!["all","kornokta","xgundem","youtube"].includes(cat)) list = list.filter(s => s.category === cat);
+  else if (!["all","kornokta","xgundem","youtube","resmigazete"].includes(cat)) list = list.filter(s => s.category === cat);
   return list;
 }
 
@@ -1041,6 +1070,7 @@ function render(){
   if (view === "oyunlar" || view.startsWith("oyun-")){ renderGames(); return; }
   if (view === "feed" && cat === "xgundem"){ $("#top").textContent = ""; renderXTab(); return; }
   if (view === "feed" && cat === "youtube"){ $("#top").textContent = ""; renderYTTab(); return; }
+  if (view === "feed" && cat === "resmigazete"){ $("#top").textContent = ""; renderRGTab(); return; }
   const q = query();
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
@@ -1061,6 +1091,7 @@ function render(){
     } else hero = list.find(s => s.items[0].image) || list[0];
     top.appendChild(heroCard(hero));
     if (cat === "all" || cat === "gundem"){ const tp = topicsRow(); if (tp){ tp.classList.add("mobile"); top.appendChild(tp); } }
+    if (cat === "all"){ const lc = listenCard(); if (lc) top.appendChild(lc); const rc = rgCard(); if (rc) top.appendChild(rc); }
     if (talked.length){
       const sec = el("div","sec"); sec.appendChild(el("h3", null, "Çok konuşulanlar")); top.appendChild(sec);
       const rail = el("div","rail"); talked.forEach(s => rail.appendChild(talkCard(s))); top.appendChild(rail);
@@ -1161,6 +1192,7 @@ function heroCard(story){
   const h = el("h2"); h.appendChild(link(i.title, i.url)); body.appendChild(h);
   const ld = lede(i); if (ld) body.appendChild(ld);
   const bb = biasBar(story); if (bb) body.appendChild(bb);
+  const fk = farkEl(story); if (fk) body.appendChild(fk);
   const m = meta(i); m.appendChild(actions(i, story)); body.appendChild(m);
   c.appendChild(body);
   if (story.items.length > 1){ const cl = clusterBlock(story, story.items.slice(1)); cl.style.padding = "0 18px 18px"; cl.style.marginTop = "0"; c.appendChild(cl); }
@@ -1184,6 +1216,7 @@ function row(story, inTopic){
   const h = el("h4"); h.appendChild(link(i.title, i.url, r)); r.appendChild(h);
   const ld = lede(i); if (ld) r.appendChild(ld);
   const bb = biasBar(story); if (bb) r.appendChild(bb);
+  const fk = farkEl(story); if (fk) r.appendChild(fk);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
   if (story.yt?.length && data.youtube){
@@ -2101,6 +2134,90 @@ function renderTeamSettings(){
   box.appendChild(sel);
 }
 
+
+// ---- "Fark ne?" satırı ----
+function farkEl(story){
+  if (!story.fark) return null;
+  const p = el("p","fark"); p.title = "Başlıklardan yapay zekâyla çıkarılmıştır; hata içerebilir.";
+  p.append(el("b", null, "Fark: "), story.fark); return p;
+}
+
+// ---- Resmî Gazete ----
+function rgCard(){
+  const rg = data.rg; if (!rg?.items?.length) return null;
+  const b = el("button","rg-card"); b.type = "button";
+  const t = el("div"); t.append(el("b", null, "Resmî Gazete’de bugün"), el("span", null, rg.items.length + " düzenleme, sade dille" + (rg.items.some(i => i.onem === 3) ? "; geniş kesimi ilgilendirenler var" : "")));
+  b.append(el("span","ic","RG"), t); b.onclick = () => { location.hash = "resmigazete"; window.scrollTo({top:0}); };
+  return b;
+}
+function renderRGTab(){
+  const rg = data.rg, top = $("#top"), feed = $("#feed");
+  feed.classList.remove("skel"); feed.textContent = ""; $("#feedHead").hidden = true;
+  const intro = el("div","blind-intro"); intro.appendChild(el("h2", null, "Resmî Gazete"));
+  if (!rg?.items?.length){ intro.appendChild(el("p", null, "Bugünkü sayı henüz alınamadı.")); top.appendChild(intro); renderAside(); return; }
+  const d = new Date(rg.date + "T12:00:00").toLocaleDateString("tr-TR", {day:"numeric", month:"long", year:"numeric", weekday:"long"});
+  const p = el("p"); p.append(d + " sayısındaki düzenlemeler, sade Türkçe ile. ");
+  if (rg.pdf){ const a = el("a", null, "Resmî metin (PDF)"); a.href = rg.pdf; a.target = "_blank"; a.rel = "noopener"; p.appendChild(a); }
+  intro.appendChild(p);
+  if (!rg.done) intro.appendChild(el("p","hint","Sade özetler hazırlanıyor; şimdilik resmî başlıklar gösteriliyor."));
+  intro.appendChild(el("p","hint","Özetler yapay zekâyla çıkarılır ve hukuki tavsiye değildir; bağlayıcı olan resmî metindir."));
+  top.appendChild(intro);
+  const box = el("div","mod"); box.style.marginTop = "12px";
+  [...rg.items].sort((a, b) => (b.onem || 0) - (a.onem || 0)).forEach(it => {
+    const r = el("div","rg-item");
+    if (it.onem === 3) r.appendChild(el("span","rg-badge","Geniş kesimi ilgilendiriyor"));
+    r.appendChild(el("h4", null, it.sade || it.title));
+    if (it.ozet) r.appendChild(el("p", null, it.ozet));
+    if (it.etki) { const w = el("p","who"); w.textContent = "Kimi etkiler: " + it.etki; r.appendChild(w); }
+    const o = el("p","orig"); o.append((it.sec ? it.sec.charAt(0) + it.sec.slice(1).toLocaleLowerCase("tr") + ": " : ""), it.title + " ");
+    const a = el("a", null, "Resmî metin"); a.href = it.url; a.target = "_blank"; a.rel = "noopener"; o.appendChild(a); r.appendChild(o);
+    box.appendChild(r);
+  });
+  top.appendChild(box);
+  renderAside();
+}
+
+// ---- Gündemi dinle (cihazın kendi Türkçe sesiyle) ----
+const TTS = { q: [], i: 0, on: false, paused: false };
+const ttsVoice = () => (window.speechSynthesis?.getVoices() || []).find(v => /^tr/i.test(v.lang));
+function listenCard(){
+  if (!("speechSynthesis" in window)) return null;
+  const b = el("button","listen"); b.type = "button";
+  const ic = el("span","ic"); ic.appendChild(svgIcon("M8 5v14l11-7z", 20, {fill:"currentColor"}));
+  const t = el("div"); t.append(el("b", null, "Gündemi dinle"), el("span", null, "Günün en önemli 10 haberi, yaklaşık 3 dakika"));
+  b.append(ic, t); b.onclick = startListen; return b;
+}
+function startListen(){
+  const since = Date.now() - 24 * 3600e3;
+  const top = data.stories.filter(s => new Date(s.date) > since).map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length)
+    .sort((a, b) => b.items.length - a.items.length || b.date.localeCompare(a.date)).slice(0, 10);
+  if (!top.length) return toast("Dinlenecek haber yok");
+  const day = new Date().toLocaleDateString("tr-TR", {day:"numeric", month:"long", weekday:"long"});
+  TTS.q = [{t: "Harman Haber. " + day + " gündemi.", label: "Giriş"}].concat(top.map((s, k) => {
+    const i = s.items[0];
+    return {t: `${k + 1}. ${i.title.replace(/[“”"]/g, "")}. ${i.gist || ""} ${s.items.length > 1 ? s.items.length + " kaynak verdi." : src(i.source).name + " verdi."}`, label: i.title};
+  }));
+  TTS.i = 0; TTS.on = true; TTS.paused = false; speakNext();
+}
+function speakNext(){
+  const bar = $("#playerBar");
+  if (!TTS.on || TTS.i >= TTS.q.length){ stopListen(); return; }
+  const it = TTS.q[TTS.i], u = new SpeechSynthesisUtterance(it.t);
+  u.lang = "tr-TR"; const v = ttsVoice(); if (v) u.voice = v; u.rate = 1.02;
+  u.onend = () => { if (TTS.on && !TTS.skip){ TTS.i++; speakNext(); } TTS.skip = false; };
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+  bar.hidden = false; bar.textContent = "";
+  const t = el("div","t"); t.append(el("small", null, "Gündem dinleniyor · " + (TTS.i) + "/" + (TTS.q.length - 1)), el("span", null, it.label));
+  const pp = el("button"); pp.type = "button"; pp.setAttribute("aria-label", "Duraklat ya da devam et"); pp.appendChild(svgIcon(TTS.paused ? "M8 5v14l11-7z" : "M8 5v14M16 5v14", 18));
+  pp.onclick = () => { if (speechSynthesis.paused){ speechSynthesis.resume(); TTS.paused = false; } else { speechSynthesis.pause(); TTS.paused = true; } pp.textContent = ""; pp.appendChild(svgIcon(TTS.paused ? "M8 5v14l11-7z" : "M8 5v14M16 5v14", 18)); };
+  const nx = el("button"); nx.type = "button"; nx.setAttribute("aria-label","Sonraki haber"); nx.appendChild(svgIcon("M6 5l8 7-8 7M18 5v14", 18));
+  nx.onclick = () => { TTS.skip = true; speechSynthesis.cancel(); TTS.i++; TTS.paused = false; speakNext(); };
+  const st = el("button"); st.type = "button"; st.setAttribute("aria-label","Durdur"); st.appendChild(svgIcon("M6 6h12v12H6z", 16));
+  st.onclick = stopListen;
+  bar.append(t, pp, nx, st);
+}
+function stopListen(){ TTS.on = false; try { speechSynthesis.cancel(); } catch(e){} $("#playerBar").hidden = true; }
+
 // ---- Konu sayfaları ----
 let topicSlug = null;
 function topicOfStory(id){ return (data.topics || []).find(t => (t.storyIds || []).includes(id)); }
@@ -2205,6 +2322,7 @@ function legend(){
 function openBias(story){
   const b = biasOf(story), body = $("#biasBody"); body.textContent = "";
   body.appendChild(el("p", null, story.items[0].title));
+  const fk0 = farkEl(story); if (fk0) body.appendChild(fk0);
   const big = barEl(b); big.style.height = "24px"; body.append(big, legend());
   GROUPS.forEach(g => {
     const box = el("div","grp"), h = el("h4");

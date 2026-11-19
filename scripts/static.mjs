@@ -46,7 +46,7 @@ footer{color:var(--ink-3);font-size:13px;padding:30px 0}
 <header><div class="w"><a href="/" aria-label="Harman Haber ana sayfa">${logo}</a><a class="cta" href="${esc(appLink || "/")}">Canlı gündemi aç</a></div></header>
 <main class="w">${body}</main>
 <footer class="w"><p><b>Harman Haber</b>: haberin özü, her kaynaktan. 40’a yakın Türk haber kaynağını tek yerde toplar, bir olayı kimin nasıl verdiğini yan yana gösterir.</p>
-<p><a href="/">Ana sayfa</a> · <a href="/gundem/">Gündem arşivi</a> · <a href="/rss.xml">RSS</a></p></footer>
+<p><a href="/">Ana sayfa</a> · <a href="/gundem/">Gündem arşivi</a> · <a href="/resmi-gazete/">Resmî Gazete özeti</a> · <a href="/rss.xml">RSS</a></p></footer>
 </body></html>`;
   const dir = new URL("../public" + path, import.meta.url);
   await mkdir(dir, { recursive: true });
@@ -60,7 +60,7 @@ function itemList(items, sources, noTag) {
   }).join("")}</ul>`;
 }
 
-export async function buildStatic({ stories, topics, sources, prev }) {
+export async function buildStatic({ stories, topics, sources, prev, rg }) {
   const today = todayTR();
   const byId = Object.fromEntries(stories.map(s => [s.id, s]));
   const pick = s => ({ t: s.items[0].title, u: s.items[0].url, s: s.items[0].source, g: s.items[0].gist || null, n: s.items.length });
@@ -107,14 +107,35 @@ ${a.topics.length ? `<h2>Günün konuları</h2>${a.topics.map(t => `<div class="
     body: `<h1>Gündem arşivi</h1><div class="card"><ul class="l">${archive.map(a => `<li><a href="/gundem/${a.date}/">${trDate(a.date)}</a><small>${esc(a.top.slice(0, 2).map(x => x.t).join(" · "))}</small></li>`).join("")}</ul></div>`,
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: "Gündem arşivi", url: `${SITE}/gundem/` } });
 
+  // Resmî Gazete: günün sayısı ve 30 günlük arşiv (sade özetlerle)
+  const rgArchive = (prev?.rgArchive || []).filter(x => x.date !== rg?.date && Date.now() - new Date(x.date) < 31 * 864e5);
+  if (rg?.items?.length) rgArchive.unshift({ date: rg.date, pdf: rg.pdf, items: rg.items.map(i => ({ sec: i.sec, title: i.title, url: i.url, sade: i.sade || null, ozet: i.ozet || null, etki: i.etki || null, onem: i.onem || 1 })) });
+  rgArchive.sort((a, b) => b.date.localeCompare(a.date));
+  const rgBody = x => `<p class="muted">Resmî Gazete</p><h1>${trDate(x.date)} Resmî Gazete özeti</h1>
+<div class="card">${x.pdf ? `<a href="${esc(x.pdf)}" rel="noopener" target="_blank">Resmî metin (PDF)</a> · ` : ""}<span class="muted">Sade özetler yapay zekâyla çıkarılır, hukuki tavsiye değildir; bağlayıcı olan resmî metindir.</span></div>
+${[...x.items].sort((a, b) => b.onem - a.onem).map(i => `<div class="card"><h2 style="margin:0 0 6px">${esc(i.sade || i.title)}</h2>${i.ozet ? `<p>${esc(i.ozet)}</p>` : ""}${i.etki ? `<p><b>Kimi etkiler:</b> ${esc(i.etki)}</p>` : ""}<p class="muted">${esc(i.title)} · <a href="${esc(i.url)}" rel="noopener" target="_blank">Resmî metin</a></p></div>`).join("")}
+${rgArchive.length > 1 ? `<h2>Önceki sayılar</h2><div class="card"><ul class="l">${rgArchive.filter(y => y.date !== x.date).slice(0, 10).map(y => `<li><a href="/resmi-gazete/${y.date}/">${trDate(y.date)}</a><small>${esc(y.items.slice(0, 2).map(i => i.sade || i.title).join(" · "))}</small></li>`).join("")}</ul></div>` : ""}
+<p><a class="cta" href="/#resmigazete">Harman Haber’de aç</a></p>`;
+  for (const x of rgArchive) {
+    const desc = `${trDate(x.date)} Resmî Gazete’de neler var? ${x.items.slice(0, 3).map(i => i.sade || i.title).join("; ")}.`;
+    await page({ path: `/resmi-gazete/${x.date}/`, title: `${trDate(x.date)} Resmî Gazete özeti: bugün neler değişti? | Harman Haber`, desc, body: rgBody(x), appLink: "/#resmigazete",
+      jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: `${trDate(x.date)} Resmî Gazete özeti`, description: desc, url: `${SITE}/resmi-gazete/${x.date}/`, datePublished: x.date } });
+  }
+  if (rgArchive[0]) await page({ path: "/resmi-gazete/", title: "Bugünkü Resmî Gazete özeti: sade dille | Harman Haber",
+    desc: `Bugünkü (${trDate(rgArchive[0].date)}) Resmî Gazete’deki düzenlemeler, sade Türkçe özet ve kimi etkilediğiyle.`, body: rgBody(rgArchive[0]), appLink: "/#resmigazete",
+    jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: "Bugünkü Resmî Gazete özeti", url: `${SITE}/resmi-gazete/` } });
+
   // Site haritası, robots.txt, RSS
   const urls = [[`${SITE}/`, new Date().toISOString(), "always"], [`${SITE}/gundem/`, new Date().toISOString(), "daily"],
     ...archive.map(a => [`${SITE}/gundem/${a.date}/`, a.date, a.date === today ? "hourly" : "never"]),
-    ...Object.entries(topicPages).map(([slug, p]) => [`${SITE}/konu/${slug}/`, p.at, "hourly"])];
+    ...Object.entries(topicPages).map(([slug, p]) => [`${SITE}/konu/${slug}/`, p.at, "hourly"]),
+    ...(rgArchive.length ? [[`${SITE}/resmi-gazete/`, rgArchive[0].date, "daily"]] : []),
+    ...rgArchive.map(x => [`${SITE}/resmi-gazete/${x.date}/`, x.date, "never"])];
   await writeFile(new URL("../public/sitemap.xml", import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d, f]) => `<url><loc>${u}</loc><lastmod>${new Date(d).toISOString()}</lastmod><changefreq>${f}</changefreq></url>`).join("\n")}\n</urlset>\n`);
   await writeFile(new URL("../public/robots.txt", import.meta.url), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
   const rssItems = [...archive.slice(0, 10).map(a => ({ t: `${trDate(a.date)} gündemi`, u: `${SITE}/gundem/${a.date}/`, d: a.date + "T08:00:00+03:00", s: a.top.slice(0, 5).map(x => x.t).join(" · ") })),
-    ...Object.entries(topicPages).map(([slug, p]) => ({ t: p.title, u: `${SITE}/konu/${slug}/`, d: p.at, s: p.summary || "" }))].sort((a, b) => new Date(b.d) - new Date(a.d)).slice(0, 40);
+    ...Object.entries(topicPages).map(([slug, p]) => ({ t: p.title, u: `${SITE}/konu/${slug}/`, d: p.at, s: p.summary || "" })),
+    ...rgArchive.slice(0, 10).map(x => ({ t: `${trDate(x.date)} Resmî Gazete özeti`, u: `${SITE}/resmi-gazete/${x.date}/`, d: x.date + "T07:00:00+03:00", s: x.items.slice(0, 4).map(i => i.sade || i.title).join(" · ") }))].sort((a, b) => new Date(b.d) - new Date(a.d)).slice(0, 40);
   await writeFile(new URL("../public/rss.xml", import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Harman Haber</title><link>${SITE}/</link><description>Haberin özü, her kaynaktan.</description><language>tr</language>\n${rssItems.map(i => `<item><title>${esc(i.t)}</title><link>${i.u}</link><guid>${i.u}</guid><pubDate>${new Date(i.d).toUTCString()}</pubDate><description>${esc(i.s)}</description></item>`).join("\n")}\n</channel></rss>\n`);
-  return { topicPages, archive, count: Object.keys(topicPages).length + archive.length };
+  return { topicPages, archive, rgArchive, count: Object.keys(topicPages).length + archive.length + rgArchive.length };
 }

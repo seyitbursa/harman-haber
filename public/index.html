@@ -516,6 +516,37 @@ body.in-game .tabs{display:none}
 .pt-next{margin:10px 0 0;font-size:14.5px;color:var(--ink-2)}
 .pt-next b{color:var(--ink)}
 .pt-note{font-size:11.5px;color:var(--ink-3);margin:8px 0 0}
+
+/* YouTube */
+.yt-tools{display:flex;gap:6px;margin:12px 0 4px;flex-wrap:wrap}
+.yt-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
+@media (min-width:600px){.yt-grid{grid-template-columns:1fr 1fr}}
+.yt-card{display:flex;flex-direction:column;gap:8px;background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line);border:0;padding:0;text-align:left;cursor:pointer;color:var(--ink)}
+.yt-card .th{position:relative;display:block;aspect-ratio:16/9;background:var(--line)}
+.yt-card .th img{width:100%;height:100%;object-fit:cover;display:block}
+.yt-card .th i{position:absolute;inset:auto auto 8px 8px;background:rgba(0,0,0,.72);color:#fff;font-style:normal;font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px}
+.yt-card .b{padding:0 14px 14px}
+.yt-card h4{font-family:var(--head);font-weight:700;font-size:17px;line-height:1.25;margin:0 0 6px}
+.yt-card .story{display:block;margin-top:8px;font-size:13px;color:var(--accent);font-weight:600}
+.yt-chip{position:relative;z-index:2;grid-area:yt;justify-self:start;display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:6px 0 0;color:#DC2626;font-weight:700;font-size:13px;cursor:pointer}
+.row{grid-template-areas:"meta meta" "title img" "sum img" "bias bias" "cl cl" "yt yt" "tl tl"}
+.row.noimg{grid-template-areas:"meta" "title" "sum" "bias" "cl" "yt" "tl"}
+.player{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;margin-top:6px}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vlist{list-style:none;margin:10px 0 0;padding:0}
+.vlist li button{display:flex;gap:10px;align-items:center;width:100%;border:0;background:none;text-align:left;padding:8px 0;cursor:pointer;color:var(--ink);border-top:1px solid var(--line)}
+.vlist li:first-child button{border-top:0}
+.vlist img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:0 0 auto}
+.vlist b{display:block;font-size:14px;line-height:1.3}
+.vlist small{color:var(--ink-3);font-size:12px}
+
+.sh-rail{display:grid;grid-auto-flow:column;grid-auto-columns:132px;gap:10px;overflow-x:auto;scrollbar-width:none;margin:8px -16px 0;padding:2px 16px 6px}
+.sh-rail::-webkit-scrollbar{display:none}
+.sh{display:flex;flex-direction:column;gap:6px;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--ink)}
+.sh img{width:132px;aspect-ratio:9/16;object-fit:cover;border-radius:12px;background:var(--line)}
+.sh b{font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sh small{font-size:11.5px;color:var(--ink-3)}
+@media (min-width:900px){.sh-rail{margin:8px 0 0;padding:2px 0 6px}}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -640,7 +671,7 @@ const CATS = [
   {id:"all",label:"Tümü"},{id:"gundem",label:"Gündem"},{id:"siyaset",label:"Siyaset"},{id:"ekonomi",label:"Ekonomi"},
   {id:"dunya",label:"Dünya"},{id:"spor",label:"Spor"},{id:"yapayzeka",label:"Yapay zekâ"},{id:"teknoloji",label:"Teknoloji"}
 ];
-CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"}, {id:"xgundem", label:"X gündemi"});
+CATS.splice(1, 0, {id:"kornokta", label:"Kör nokta"}, {id:"xgundem", label:"X gündemi"}, {id:"youtube", label:"YouTube"});
 const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
 CAT_LABEL.gundem = "Gündem";
 const CITY_ALIASES = {"Kocaeli":["İzmit","Gebze"],"Sakarya":["Adapazarı"],"Hatay":["Antakya","İskenderun"],"Afyonkarahisar":["Afyon"],"Mersin":["Tarsus"],"Antalya":["Alanya","Manavgat"],"Muğla":["Bodrum","Fethiye","Marmaris"],"Balıkesir":["Bandırma","Ayvalık"],"Kahramanmaraş":["Maraş"]};
@@ -957,7 +988,7 @@ function storiesFor(){
   if (view === "yerel" && !city) return [];
   let list = data.stories.map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length);
   if (re) list = list.filter(s => s.items.some(i => re.test(i.title + " " + i.summary)));
-  else if (cat !== "all" && cat !== "kornokta" && cat !== "xgundem") list = list.filter(s => s.category === cat);
+  else if (!["all","kornokta","xgundem","youtube"].includes(cat)) list = list.filter(s => s.category === cat);
   return list;
 }
 
@@ -967,6 +998,7 @@ function render(){
   if (view === "topic"){ renderTopic(); return; }
   if (view === "oyunlar" || view.startsWith("oyun-")){ renderGames(); return; }
   if (view === "feed" && cat === "xgundem"){ $("#top").textContent = ""; renderXTab(); return; }
+  if (view === "feed" && cat === "youtube"){ $("#top").textContent = ""; renderYTTab(); return; }
   const q = query();
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
@@ -1111,6 +1143,10 @@ function row(story, inTopic){
   const bb = biasBar(story); if (bb) r.appendChild(bb);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
+  if (story.yt?.length && data.youtube){
+    const vids = data.youtube.items.filter(v => story.yt.includes(v.id));
+    if (vids.length){ const b = el("button","yt-chip"); b.type = "button"; b.append("▶ YouTube’da " + vids.length + " video"); b.setAttribute("aria-label", "Bu haberle ilgili " + vids.length + " YouTube videosu"); b.onclick = () => openVideo(vids[0], vids); r.appendChild(b); }
+  }
   const tp = !inTopic && topicOfStory(story.id);
   if (tp){ const b = el("button","tlink", (tp.title || tp.label) + " konusundaki " + tp.storyIds.length + " haber"); b.type = "button"; b.onclick = () => goTopic(tp); r.appendChild(b); }
   return r;
@@ -1802,6 +1838,78 @@ function renderXTab(){
   renderAside();
 }
 
+
+// ---- YouTube haber gündemi ----
+let ytSort = "views";
+const ytChan = k => data.youtube?.channels?.find(c => c.key === k) || {name: k};
+const ytViews = n => n >= 1e6 ? (n / 1e6).toLocaleString("tr-TR", {maximumFractionDigits: 1}) + " Mn" : n >= 1e3 ? Math.round(n / 1e3).toLocaleString("tr-TR") + " B" : String(n);
+const ytThumb = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+function ytMeta(v){
+  const c = ytChan(v.ch), m = el("div","meta");
+  if (c.source && data.sources[c.source]) m.appendChild(mono(c.source));
+  m.append(el("b", null, c.name), el("span", null, ago(v.date) + ", " + ytViews(v.views) + " izlenme"));
+  return m;
+}
+function openVideo(v, list){
+  const body = $("#actBody"); body.textContent = ""; $("#actTitle").textContent = ytChan(v.ch).name;
+  const pl = el("div","player"), fr = el("iframe");
+  fr.src = `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0`; fr.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; fr.title = v.title; fr.allowFullscreen = true;
+  pl.appendChild(fr); body.appendChild(pl);
+  body.appendChild(el("p","menu-title", v.title));
+  const acts = el("div","sheet-f");
+  const yt = el("a","btn ghost","YouTube’da aç"); yt.href = "https://www.youtube.com/watch?v=" + v.id; yt.target = "_blank"; yt.rel = "noopener";
+  acts.appendChild(yt);
+  const st = v.story && data.stories.find(s => s.id === v.story);
+  if (st){ const a = el("a","btn","İlgili haberi oku"); a.href = st.items[0].url; a.target = "_blank"; a.rel = "noopener"; acts.appendChild(a); }
+  body.appendChild(acts);
+  const others = (list || []).filter(x => x.id !== v.id);
+  if (others.length){
+    body.appendChild(el("h3", null, "Aynı konuda diğer videolar"));
+    const ul = el("ul","vlist");
+    others.forEach(o => { const li = el("li"), b = el("button"); b.type = "button"; const im = img(ytThumb(o.id)); const t = el("span"); t.append(el("b", null, o.title), el("small", null, ytChan(o.ch).name + ", " + ytViews(o.views) + " izlenme")); b.append(im, t); b.onclick = () => openVideo(o, list); li.appendChild(b); ul.appendChild(li); });
+    body.appendChild(ul);
+  }
+  if (!$("#actSheet").open) $("#actSheet").showModal();
+}
+// Diyalog kapanınca videoyu durdur
+$("#actSheet").addEventListener("close", () => { $("#actBody").querySelectorAll("iframe").forEach(f => f.remove()); });
+function ytCard(v){
+  const c = el("button","yt-card"); c.type = "button";
+  const th = el("span","th"); th.appendChild(img(ytThumb(v.id))); th.appendChild(el("i", null, "▶ " + ytViews(v.views)));
+  const b = el("span","b"); b.append(el("h4", null, v.title), ytMeta(v));
+  const st = v.story && data.stories.find(s => s.id === v.story);
+  if (st) b.appendChild(el("span","story", "İlgili haber: " + st.items[0].title));
+  c.append(th, b);
+  c.setAttribute("aria-label", v.title + ", " + ytChan(v.ch).name + ", videoyu oynat");
+  c.onclick = () => openVideo(v, st ? data.youtube.items.filter(x => x.story === v.story) : []);
+  return c;
+}
+function renderYTTab(){
+  const y = data.youtube, top = $("#top"), feed = $("#feed");
+  feed.classList.remove("skel"); feed.textContent = ""; $("#feedHead").hidden = true;
+  const intro = el("div","blind-intro"); intro.appendChild(el("h2", null, "YouTube"));
+  if (!y?.items?.length){ intro.appendChild(el("p", null, "Videolar şu an alınamıyor.")); top.appendChild(intro); renderAside(); return; }
+  intro.appendChild(el("p", null, "Haber kanallarının son 36 saatteki videoları. " + y.channels.length + " kanal izleniyor: " + y.channels.map(c => c.name).join(", ") + "."));
+  const tools = el("div","yt-tools");
+  [["views","En çok izlenen"],["date","En yeni"],["news","Haberlerle eşleşen"]].forEach(([k, l]) => { const b = el("button","topic", l); b.type = "button"; b.setAttribute("aria-pressed", ytSort === k ? "true" : "false"); b.onclick = () => { ytSort = k; render(); }; tools.appendChild(b); });
+  intro.appendChild(tools); top.appendChild(intro);
+  const all = y.items.filter(v => { const c = ytChan(v.ch); return !(c.source && off.has(c.source)); });
+  const shorts = all.filter(v => v.s).sort((a, b) => b.date.localeCompare(a.date));
+  if (shorts.length){
+    const sec = el("div","sec"); sec.appendChild(el("h3", null, "Kısa videolar")); top.appendChild(sec);
+    const rail = el("div","sh-rail");
+    shorts.slice(0, 16).forEach(v => { const b = el("button","sh"); b.type = "button"; b.append(img(`https://i.ytimg.com/vi/${v.id}/oar2.jpg`), el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ytViews(v.views))); b.onclick = () => openVideo(v, []); rail.appendChild(b); });
+    top.appendChild(rail);
+    const sec2 = el("div","sec"); sec2.appendChild(el("h3", null, "Videolar")); top.appendChild(sec2);
+  }
+  let list = all.filter(v => !v.s);
+  if (ytSort === "date") list = [...list].sort((a, b) => b.date.localeCompare(a.date));
+  if (ytSort === "news") list = list.filter(v => v.story);
+  const grid = el("div","yt-grid"); list.slice(0, 40).forEach(v => grid.appendChild(ytCard(v)));
+  top.appendChild(grid);
+  renderAside();
+}
+
 // ---- Konu sayfaları ----
 let topicSlug = null;
 function topicOfStory(id){ return (data.topics || []).find(t => (t.storyIds || []).includes(id)); }
@@ -1843,6 +1951,11 @@ function renderTopic(){
     col.appendChild(ul); grid.appendChild(col);
   });
   top.appendChild(grid);
+  const tv = (data.youtube?.items || []).filter(v => v.story && t.storyIds.includes(v.story));
+  if (tv.length){
+    const sv = el("div","sec"); sv.appendChild(el("h3", null, "YouTube’da")); top.appendChild(sv);
+    const g = el("div","yt-grid"); tv.slice(0, 4).forEach(v => g.appendChild(ytCard(v))); top.appendChild(g);
+  }
   $("#feedHead").hidden = false;
   $("#feedTitle").textContent = "Tüm haberler";
   $("#count").textContent = list.length + " haber";

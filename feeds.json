@@ -239,6 +239,28 @@
       "name": "Dünya",
       "mono": "DN",
       "color": "#0369A1"
+    },
+    "cnnturk": {
+      "name": "CNN Türk",
+      "mono": "CNN",
+      "color": "#B91C1C",
+      "lean": "hukumet",
+      "leanNote": "Reuters Enstitüsü 2026: hükümete yakın Demirören Medya’nın kanalı",
+      "leanUrl": "https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2026/turkey"
+    },
+    "dw": {
+      "name": "DW Türkçe",
+      "mono": "DW",
+      "color": "#0C4A6E",
+      "lean": "bagimsiz",
+      "leanNote": "Almanya merkezli uluslararası kamu yayıncısı"
+    },
+    "tv100": {
+      "name": "tv100",
+      "mono": "100",
+      "color": "#1E293B",
+      "lean": null,
+      "leanNote": "Değerlendirme bulunamadığı için etiketsiz"
     }
   },
   "feeds": [
@@ -460,5 +482,79 @@
       "muhalefet": "Muhalefete yakın"
     },
     "about": "Etiketler Reuters Enstitüsü Dijital Haber Raporu ve RSF/Bianet Medya Sahipliği İzleme (MOM) projesindeki değerlendirmelere dayanır. Bir haberin nasıl yazıldığını değil, onu hangi kesimden kaynakların verdiğini gösterir."
-  }
+  },
+  "youtube": [
+    {
+      "key": "trt",
+      "name": "TRT Haber",
+      "channelId": "UCBgTP2LOFVPmq15W-RH-WXA",
+      "source": "trt"
+    },
+    {
+      "key": "aa",
+      "name": "Anadolu Ajansı",
+      "channelId": "UCVbZYhcirOke2vipxs4lT2w",
+      "source": "aa"
+    },
+    {
+      "key": "ahaber",
+      "name": "A Haber",
+      "channelId": "UCKQhfw-lzz0uKnE1fY1PsAA",
+      "source": "ahaber"
+    },
+    {
+      "key": "cnnturk",
+      "name": "CNN Türk",
+      "channelId": "UCV6zcRug6Hqp1UX_FdyUeBg",
+      "source": "cnnturk"
+    },
+    {
+      "key": "ntv",
+      "name": "NTV",
+      "channelId": "UC9TDTjbOjFB9jADmPhSAPsw",
+      "source": "ntv"
+    },
+    {
+      "key": "haberturk",
+      "name": "Habertürk TV",
+      "channelId": "UCn6dNfiRE_Xunu7iMyvD7AA",
+      "source": "haberturk"
+    },
+    {
+      "key": "tv100",
+      "name": "tv100",
+      "channelId": "UCndsdUW_oPLqpQJY9J8oIRg",
+      "source": "tv100"
+    },
+    {
+      "key": "sozcu",
+      "name": "Sözcü TV",
+      "channelId": "UCOulx_rep5O4i9y6AyDqVvw",
+      "source": "sozcu"
+    },
+    {
+      "key": "bbc",
+      "name": "BBC News Türkçe",
+      "channelId": "UCeMQiXmFNTtN3OHlNJxnnUw",
+      "source": "bbc"
+    },
+    {
+      "key": "dw",
+      "name": "DW Türkçe",
+      "channelId": "UCpi_jv70749NkAmkdugyiPQ",
+      "source": "dw"
+    },
+    {
+      "key": "euronews",
+      "name": "Euronews Türkçe",
+      "channelId": "UC7nLr-rPOKYhRE4wRZoLxkg",
+      "source": "euronews"
+    },
+    {
+      "key": "bianet",
+      "name": "Bianet",
+      "channelId": "UC7ZaeDI9kIYm2e2szwCnmRA",
+      "source": "bianet"
+    }
+  ]
 }

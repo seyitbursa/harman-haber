@@ -10,6 +10,7 @@ import { notify, previousJson } from "./notify.mjs";
 import { addGists, addTopicSummaries } from "./summarize.mjs";
 import { dailyWord } from "./wordgame.mjs";
 import { dailyGames } from "./games.mjs";
+import { getYoutube } from "./youtube.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -176,6 +177,7 @@ for (let i = topics.length - 1; i > 0; i--) {
   const dup = topics.slice(0, i).some(t => t.storyIds.filter(id => mine.has(id)).length / mine.size >= 0.6);
   if (dup) topics.splice(i, 1);
 }
+const youtube = config.youtube ? await getYoutube({ channels: config.youtube, stories }) : null;
 const game = { kelime: await dailyWord({ stories, prevGame: prevJson?.game?.kelime }), gunluk: await dailyGames({ stories, sources: config.sources, prev: prevJson?.game?.gunluk }) };
 const topicSums = await addTopicSummaries({ topics, stories, sources: config.sources, prevTopicSums: prevJson?.topicSums, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const cfg = config.notify || {};
@@ -188,7 +190,7 @@ await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);
@@ -196,6 +198,7 @@ errors.forEach(e => console.log("  ✗", e.url, "→", e.error));
 if (markets.error) console.log("  ✗ piyasa →", markets.error);
 if (xtrends.error) console.log("  ✗ X gündemi →", xtrends.error);
 console.log(`Özet: bu turda ${sum.made} yeni, bekleyen ${sum.pending}, bugün ${sum.usage.requests} istek${sum.usage.model ? " (" + sum.usage.model + ")" : ""}${process.env.GEMINI_API_KEY ? "" : " — GEMINI_API_KEY yok"}.`);
+if (youtube) console.log(`YouTube: ${youtube.items.length} video, ${youtube.items.filter(v => v.story).length} tanesi haberlerle eşleşti${youtube.errors.length ? "; hatalar: " + youtube.errors.join(", ") : ""}.`);
 console.log(`Depremler: ${quakes.items.length}${quakes.error ? " (hata: " + quakes.error + ")" : ""}. Bildirim: ${note.first ? "ilk çalıştırma, yalnızca işaretlendi" : note.sent.length ? note.sent.join(" | ") : "yok"}`);
 
 // Açık kalan bağlantılar yüzünden işlem asılı kalmasın

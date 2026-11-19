@@ -497,6 +497,14 @@ body.in-game .tabs{display:none}
 .xt-news a{text-decoration:none} .xt-news a:hover{color:var(--accent)}
 .xt-none{margin:6px 0 0 38px;font-size:13px;color:var(--ink-3)}
 .xt-more{margin:6px 0 0 38px;border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer}
+
+.city + .city{margin-top:8px}
+.city-search{margin-top:8px}
+.city-search input{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:0 12px;font-weight:600;color:var(--ink)}
+.city-res{display:flex;flex-direction:column;margin-top:6px}
+.city-opt{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;background:none;text-align:left;padding:8px 10px;border-radius:9px;cursor:pointer;color:var(--ink)}
+.city-opt:hover,.city-opt:focus-visible{background:var(--paper)}
+.city-opt b{font-size:15px} .city-opt span{font-size:12.5px;color:var(--ink-3)}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -635,7 +643,12 @@ let data = {sources:{}, stories:[], markets:{items:[]}, topics:[], xtrends:null}
 let off = new Set(store.get("gk-off", []));
 let savedMap = store.get("gk-saved-items", {});
 let read = new Set(store.get("gk-read", []));
+// Şehir: [ad, enlem, boylam, ülke kodu, bölge]; eski kayıtlar ([ad, enlem, boylam]) Türkiye kabul edilir
 let city = store.get("gk-city", null);
+if (city && !city[3]) city = [...city, "TR", null];
+let country = store.get("gk-country", city ? city[3] : "TR");
+const COUNTRY_CODES = "AF AX AL DZ AS AD AO AI AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BA BW BR BN BG BF BI CV KH CM CA KY CF TD CL CN CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FO FJ FI FR GF PF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW GY HT VA HN HK HU IS IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KP KR XK KW KG LA LV LB LS LR LY LI LT LU MO MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ MM NA NR NP NL NC NZ NI NE NG MK NO OM PK PW PS PA PG PY PE PH PL PT PR QA RE RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TW TJ TZ TH TL TG TO TT TN TR TM TC TV UG UA AE GB US UY UZ VU VE VN YE ZM ZW".split(" ");
+const countryName = cc => { try { return new Intl.DisplayNames(["tr"], {type: "region"}).of(cc) || cc; } catch(e){ return cc; } };
 let view = "feed", cat = "all", activeTopic = null, shown = PAGE, xOpen = false, weather = null;
 const openClusters = new Set();
 
@@ -768,10 +781,10 @@ const WMO = {0:["Açık","☀️"],1:["Çoğunlukla açık","🌤️"],2:["Parç
 const wmo = (c, day = 1) => { const w = WMO[c] || ["—","🌡️"]; return !day && c <= 2 ? [w[0], c === 0 ? "🌙" : "☁️"] : w; };
 async function loadWeather(){
   if (!city){ weather = null; return; }
-  const key = "gk-wx2-" + city[0], cached = store.get(key, null);
+  const key = "gk-wx3-" + city[3] + "-" + city[0] + "-" + city[1], cached = store.get(key, null);
   if (cached && Date.now() - cached.at < 30 * 60000){ weather = cached.data; return; }
   try{
-    const u = `https://api.open-meteo.com/v1/forecast?latitude=${city[1]}&longitude=${city[2]}&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FIstanbul&forecast_days=5`;
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${city[1]}&longitude=${city[2]}&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=5`;
     const r = await fetch(u); if (!r.ok) throw new Error(r.status);
     weather = await r.json(); store.set(key, {at: Date.now(), data: weather});
   }catch(e){ weather = cached ? cached.data : null; }
@@ -779,12 +792,41 @@ async function loadWeather(){
 function weatherModule(){
   const m = el("section","mod");
   const h = el("div","mod-h"); h.appendChild(el("h3", null, "Hava durumu")); m.appendChild(h);
-  const row = el("label","city"); row.appendChild(el("span","sr","Şehir seç"));
-  const sel = el("select"); const ph = el("option", null, "Şehrini seç"); ph.value = ""; sel.appendChild(ph);
-  [...ILLER].sort((a,b) => a[0].localeCompare(b[0],"tr")).forEach(([n]) => { const o = el("option", null, n); o.value = n; if (city && city[0] === n) o.selected = true; sel.appendChild(o); });
-  sel.onchange = async () => { city = ILLER.find(x => x[0] === sel.value) || null; store.set("gk-city", city); weather = null; render(); await loadWeather(); render(); };
-  row.appendChild(sel); m.appendChild(row);
-  if (!city){ m.appendChild(el("p","hint","Şehrini seçince hava durumu ve şehrinle ilgili haberler burada görünür.")); return m; }
+  // Ülke seçimi (varsayılan Türkiye)
+  const crow = el("label","city"); crow.appendChild(el("span","sr","Ülke seç"));
+  const csel = el("select"); csel.setAttribute("aria-label","Ülke");
+  const list = COUNTRY_CODES.map(cc => [cc, countryName(cc)]).sort((a, b) => a[0] === "TR" ? -1 : b[0] === "TR" ? 1 : a[1].localeCompare(b[1], "tr"));
+  list.forEach(([cc, n]) => { const o = el("option", null, n); o.value = cc; if (cc === country) o.selected = true; csel.appendChild(o); });
+  csel.onchange = () => { country = csel.value; store.set("gk-country", country); if (city && city[3] !== country){ city = null; store.set("gk-city", null); weather = null; } render(); };
+  crow.appendChild(csel); m.appendChild(crow);
+  // Şehir seçimi: Türkiye’de 81 il listesi, diğer ülkelerde arama
+  if (country === "TR"){
+    const row = el("label","city"); row.appendChild(el("span","sr","Şehir seç"));
+    const sel = el("select"); const ph = el("option", null, "Şehrini seç"); ph.value = ""; sel.appendChild(ph);
+    [...ILLER].sort((a,b) => a[0].localeCompare(b[0],"tr")).forEach(([n]) => { const o = el("option", null, n); o.value = n; if (city && city[3] === "TR" && city[0] === n) o.selected = true; sel.appendChild(o); });
+    sel.onchange = async () => { const f = ILLER.find(x => x[0] === sel.value); city = f ? [f[0], f[1], f[2], "TR", null] : null; store.set("gk-city", city); weather = null; render(); await loadWeather(); render(); };
+    row.appendChild(sel); m.appendChild(row);
+  } else {
+    const box = el("div","city-search");
+    const inp = el("input"); inp.type = "search"; inp.placeholder = city ? city[0] + (city[4] ? ", " + city[4] : "") : countryName(country) + " içinde şehir ara"; inp.setAttribute("aria-label","Şehir ara"); inp.autocomplete = "off";
+    const res = el("div","city-res"); res.setAttribute("role","listbox");
+    let t;
+    inp.oninput = () => { clearTimeout(t); const q = inp.value.trim(); if (q.length < 2){ res.textContent = ""; return; } t = setTimeout(async () => {
+      try {
+        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=tr&countryCode=${country}`);
+        const d = await r.json(); res.textContent = "";
+        (d.results || []).forEach(x => {
+          const b = el("button","city-opt"); b.type = "button"; b.setAttribute("role","option");
+          b.append(el("b", null, x.name), el("span", null, [x.admin1, x.admin2].filter(Boolean).join(", ")));
+          b.onclick = async () => { city = [x.name, +x.latitude.toFixed(3), +x.longitude.toFixed(3), country, x.admin1 || null]; store.set("gk-city", city); weather = null; render(); await loadWeather(); render(); };
+          res.appendChild(b);
+        });
+        if (!(d.results || []).length) res.appendChild(el("p","hint","Sonuç bulunamadı."));
+      } catch(e){ res.textContent = ""; res.appendChild(el("p","hint","Arama yapılamadı. Bağlantını kontrol et.")); }
+    }, 300); };
+    box.append(inp, res); m.appendChild(box);
+  }
+  if (!city){ m.appendChild(el("p","hint", country === "TR" ? "Şehrini seçince hava durumu ve şehrinle ilgili haberler burada görünür." : "Şehrini arayıp seç; hava durumu ve Türk kaynaklarında şehrinin geçtiği haberler burada görünür.")); return m; }
   if (!weather){ m.appendChild(el("p","hint","Hava durumu yükleniyor…")); return m; }
   const c = weather.current, [lab, ic] = wmo(c.weather_code, c.is_day);
   const now = el("div","wx-now"); const t = el("div");
@@ -968,7 +1010,7 @@ function emptyState(q, total){
   if (view === "saved"){ e.append(el("h4",null,"Kaydettiğin haber yok"), el("p",null,"Bir haberin yanındaki kaydet simgesine dokun, burada toplansın.")); return e; }
   if (view === "yerel" && !city){ e.append(el("h4",null,"Şehrini seç"), el("p",null,"Yukarıdan şehrini seçince hava durumu ve şehrinin geçtiği haberler gelir.")); return e; }
   if (q){ e.append(el("h4",null,"“" + q + "” için haber bulunamadı"), el("p",null,"Başka bir kelime dene ya da kapalı kaynakları aç.")); return e; }
-  if (view === "yerel"){ e.append(el("h4",null, city[0] + " ile ilgili yeni haber yok"), el("p",null,"Ulusal kaynaklarda şehrinin adı geçen haberler burada listelenir; 15 dakikada bir yeniden bakılır.")); return e; }
+  if (view === "yerel"){ e.append(el("h4",null, city[0] + " ile ilgili yeni haber yok"), el("p",null,(city && city[3] !== "TR" ? "Türk kaynaklarında " + city[0] + " adının geçtiği haberler burada listelenir; 15 dakikada bir yeniden bakılır." : "Ulusal kaynaklarda şehrinin adı geçen haberler burada listelenir; 15 dakikada bir yeniden bakılır."))); return e; }
   if (total) return el("div");
   e.append(el("h4",null,"Bu kategoride açık kaynak yok"), el("p",null,"Kaynaklar panelinden kapattığın kaynakları açabilirsin."));
   const b = el("button",null,"Kaynakları düzenle"); b.type = "button"; b.onclick = openSheet; e.appendChild(b);

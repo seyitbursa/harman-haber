@@ -32,7 +32,7 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
   - **Petek:** 7 harf, ortadaki harf zorunlu; en az 4 harfli kelimeler, 7 harfin hepsini kullanan kelimeye +7 puan. Sözlük `data/sozluk.json` (Vikisözlük, CC BY-SA 4.0).
   Ölüm, kaza, şiddet gibi acı haberler oyun sorusu olarak seçilmez.
 - **Yapay zekâ sekmesi:** Tüm kaynaklardan başlığında ya da özetinde yapay zekâ geçen haberler (yapay zekâ, ChatGPT, OpenAI, Gemini, Claude, Anthropic, Copilot, deepfake vb.).
-- **Şehrim:** 81 il arasından seçilen şehir için Open-Meteo’dan hava durumu (anlık ve 5 günlük) ve ulusal kaynaklarda şehrin adı geçen haberler. Seçim cihazda saklanır.
+- **Şehrim:** Önce ülke seçilir (varsayılan Türkiye). Türkiye’de 81 il listesinden, diğer ülkelerde Open-Meteo şehir aramasıyla (Türkçe adlarla: Londra, Moskova) seçilen şehir için Open-Meteo’dan hava durumu (anlık ve 5 günlük) ve ulusal kaynaklarda şehrin adı geçen haberler. Seçim cihazda saklanır.
 - **Uygulama olarak kurulum (PWA):** Telefonda “Ana ekrana ekle” ile uygulama gibi açılır; internet yokken son indirilen haberler gösterilir.
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
 - Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.

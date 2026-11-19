@@ -663,6 +663,61 @@
       "channelId": "UCNCVuaQDvPrZ4oTKG90iqOA",
       "source": "medyascope",
       "type": "kurum"
+    },
+    {
+      "key": "t24yt",
+      "name": "T24",
+      "channelId": "UCun2Dl8daN--PBivgQJZn_w",
+      "source": "t24",
+      "type": "kurum"
+    },
+    {
+      "key": "onlar",
+      "name": "Onlar (Pehlivan, Ağırel, Soykan, Terkoğlu)",
+      "channelId": "UC8n7mdTh0PsepLg43FgXTyw",
+      "type": "gazeteci"
+    },
+    {
+      "key": "levent",
+      "name": "Levent Gültekin",
+      "channelId": "UCCi9ZyZfCqCVKieVJptUKlg",
+      "type": "gazeteci"
+    },
+    {
+      "key": "rusen",
+      "name": "Ruşen Çakır",
+      "channelId": "UCfeZdjH_RKcQgJCebxUpBSw",
+      "type": "gazeteci"
+    },
+    {
+      "key": "atakli",
+      "name": "Can Ataklı",
+      "channelId": "UCT2Bh5Xd5NLMnO69_QW2UKg",
+      "type": "gazeteci"
+    },
+    {
+      "key": "capa",
+      "name": "Emin Çapa",
+      "channelId": "UC2XC0oI68vtIRWxD-gtEURw",
+      "type": "gazeteci"
+    },
+    {
+      "key": "acarer",
+      "name": "Erk Acarer",
+      "channelId": "UCVsnWUJoznC1KlRbqa7C03g",
+      "type": "gazeteci"
+    },
+    {
+      "key": "dundar",
+      "name": "Can Dündar",
+      "channelId": "UCd1zyr90qdI6WqGbI40Ef4g",
+      "type": "gazeteci"
+    },
+    {
+      "key": "aysever",
+      "name": "Enver Aysever",
+      "channelId": "UCxKbAeXN4VjL_NRj_ijhH-Q",
+      "type": "gazeteci"
     }
   ]
 }

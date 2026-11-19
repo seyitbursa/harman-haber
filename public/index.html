@@ -655,6 +655,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     </div>
     <footer>
       <p><b>Harman Haber</b>: haberin özü, her kaynaktan.</p>
+      <p>Ziyaret istatistikleri çerez kullanmayan ve kişisel veri toplamayan Cloudflare Web Analytics ile tutulur. Kaydettiğin haberler ve ayarların yalnızca kendi cihazında saklanır.</p>
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
       <p>Kaynak dağılımı çubuğu, haberi hangi kesimden kaynakların verdiğini gösterir; etiketler Reuters Enstitüsü ve Medya Sahipliği İzleme (MOM) değerlendirmelerine dayanır ve Ayarlar’dan değiştirilebilir.</p>
       <p>“Özü” satırları haber metninden Google Gemini ile otomatik çıkarılır ve hata içerebilir; ayrıntı için habere dokun.</p>
@@ -2399,5 +2400,7 @@ setInterval(() => load(false), 5 * 60 * 1000);
 setInterval(renderStatus, 60 * 1000);
 setInterval(() => loadWeather().then(renderTicker), 30 * 60 * 1000);
 </script>
+<!-- Cloudflare Web Analytics: çerezsiz ziyaretçi istatistiği -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3eae1e480b86457fa28243ab3d96bec2", "spa": true}'></script>
 </body>
 </html>

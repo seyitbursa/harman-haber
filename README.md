@@ -33,6 +33,7 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
   Ölüm, kaza, şiddet gibi acı haberler oyun sorusu olarak seçilmez.
 - **Yapay zekâ sekmesi:** Tüm kaynaklardan başlığında ya da özetinde yapay zekâ geçen haberler (yapay zekâ, ChatGPT, OpenAI, Gemini, Claude, Anthropic, Copilot, deepfake vb.).
 - **Şehrim:** Önce ülke seçilir (varsayılan Türkiye). Türkiye’de 81 il listesinden, diğer ülkelerde Open-Meteo şehir aramasıyla (Türkçe adlarla: Londra, Moskova) seçilen şehir için Open-Meteo’dan hava durumu (anlık ve 5 günlük) ve ulusal kaynaklarda şehrin adı geçen haberler. Seçim cihazda saklanır.
+- **Namaz vakitleri:** Şehrim’de seçili şehir için günün altı vakti ve sıradaki vakte kalan süre; şeritte sıradaki vakit. Veri Aladhan API’den; Türkiye’de Diyanet hesaplama yöntemi (Diyanet’in yayımladığı vakitlerden 1–2 dakika farklı olabilir), diğer ülkelerde Müslüman Dünya Birliği yöntemi.
 - **Uygulama olarak kurulum (PWA):** Telefonda “Ana ekrana ekle” ile uygulama gibi açılır; internet yokken son indirilen haberler gösterilir.
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
 - Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.

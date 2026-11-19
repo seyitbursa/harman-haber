@@ -505,6 +505,17 @@ body.in-game .tabs{display:none}
 .city-opt{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;background:none;text-align:left;padding:8px 10px;border-radius:9px;cursor:pointer;color:var(--ink)}
 .city-opt:hover,.city-opt:focus-visible{background:var(--paper)}
 .city-opt b{font-size:15px} .city-opt span{font-size:12.5px;color:var(--ink-3)}
+
+/* Namaz vakitleri */
+.pt{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.pt div{background:var(--paper);border-radius:10px;padding:8px 6px;text-align:center}
+.pt div span{display:block;font-size:12.5px;color:var(--ink-3);font-weight:600}
+.pt div b{font-family:var(--head);font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.pt div.next{background:var(--accent);color:var(--accent-ink)}
+.pt div.next span{color:inherit;opacity:.85}
+.pt-next{margin:10px 0 0;font-size:14.5px;color:var(--ink-2)}
+.pt-next b{color:var(--ink)}
+.pt-note{font-size:11.5px;color:var(--ink-3);margin:8px 0 0}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -797,14 +808,14 @@ function weatherModule(){
   const csel = el("select"); csel.setAttribute("aria-label","Ülke");
   const list = COUNTRY_CODES.map(cc => [cc, countryName(cc)]).sort((a, b) => a[0] === "TR" ? -1 : b[0] === "TR" ? 1 : a[1].localeCompare(b[1], "tr"));
   list.forEach(([cc, n]) => { const o = el("option", null, n); o.value = cc; if (cc === country) o.selected = true; csel.appendChild(o); });
-  csel.onchange = () => { country = csel.value; store.set("gk-country", country); if (city && city[3] !== country){ city = null; store.set("gk-city", null); weather = null; } render(); };
+  csel.onchange = () => { country = csel.value; store.set("gk-country", country); if (city && city[3] !== country){ city = null; store.set("gk-city", null); weather = null; prayer = null; } render(); };
   crow.appendChild(csel); m.appendChild(crow);
   // Şehir seçimi: Türkiye’de 81 il listesi, diğer ülkelerde arama
   if (country === "TR"){
     const row = el("label","city"); row.appendChild(el("span","sr","Şehir seç"));
     const sel = el("select"); const ph = el("option", null, "Şehrini seç"); ph.value = ""; sel.appendChild(ph);
     [...ILLER].sort((a,b) => a[0].localeCompare(b[0],"tr")).forEach(([n]) => { const o = el("option", null, n); o.value = n; if (city && city[3] === "TR" && city[0] === n) o.selected = true; sel.appendChild(o); });
-    sel.onchange = async () => { const f = ILLER.find(x => x[0] === sel.value); city = f ? [f[0], f[1], f[2], "TR", null] : null; store.set("gk-city", city); weather = null; render(); await loadWeather(); render(); };
+    sel.onchange = async () => { const f = ILLER.find(x => x[0] === sel.value); city = f ? [f[0], f[1], f[2], "TR", null] : null; store.set("gk-city", city); weather = null; prayer = null; render(); await Promise.all([loadWeather(), loadPrayer()]); render(); };
     row.appendChild(sel); m.appendChild(row);
   } else {
     const box = el("div","city-search");
@@ -818,7 +829,7 @@ function weatherModule(){
         (d.results || []).forEach(x => {
           const b = el("button","city-opt"); b.type = "button"; b.setAttribute("role","option");
           b.append(el("b", null, x.name), el("span", null, [x.admin1, x.admin2].filter(Boolean).join(", ")));
-          b.onclick = async () => { city = [x.name, +x.latitude.toFixed(3), +x.longitude.toFixed(3), country, x.admin1 || null]; store.set("gk-city", city); weather = null; render(); await loadWeather(); render(); };
+          b.onclick = async () => { city = [x.name, +x.latitude.toFixed(3), +x.longitude.toFixed(3), country, x.admin1 || null]; store.set("gk-city", city); weather = null; prayer = null; render(); await Promise.all([loadWeather(), loadPrayer()]); render(); };
           res.appendChild(b);
         });
         if (!(d.results || []).length) res.appendChild(el("p","hint","Sonuç bulunamadı."));
@@ -848,6 +859,52 @@ function weatherModule(){
   return m;
 }
 
+
+// ---- Namaz vakitleri (Aladhan; Türkiye’de Diyanet hesaplama yöntemi) ----
+const VAKIT = [["Fajr","İmsak"],["Sunrise","Güneş"],["Dhuhr","Öğle"],["Asr","İkindi"],["Maghrib","Akşam"],["Isha","Yatsı"]];
+let prayer = null;
+async function loadPrayer(){
+  if (!city){ prayer = null; return; }
+  const tzNow = new Date();
+  const d = new Intl.DateTimeFormat("en-GB", {day:"2-digit", month:"2-digit", year:"numeric"}).format(tzNow).split("/").join("-");
+  const key = "gk-pt2-" + city[3] + "-" + city[0] + "-" + city[1] + "-" + d, cached = store.get(key, null);
+  if (cached){ prayer = cached; return; }
+  try{
+    // Türkiye: Diyanet yöntemi (13); diğer ülkeler: Müslüman Dünya Birliği (3)
+    const method = city[3] === "TR" ? "13" : "3";
+    const r = await fetch(`https://api.aladhan.com/v1/timings/${d}?latitude=${city[1]}&longitude=${city[2]}&method=${method}`);
+    if (!r.ok) throw new Error(r.status);
+    const j = (await r.json()).data;
+    prayer = { t: Object.fromEntries(VAKIT.map(([k]) => [k, j.timings[k].slice(0, 5)])), tz: j.meta.timezone, tr: city[3] === "TR" };
+    store.set(key, prayer);
+  }catch(e){ prayer = null; }
+}
+// Şehrin saat dilimine göre şu anki dakika ve sıradaki vakit
+function nextPrayer(){
+  if (!prayer) return null;
+  const parts = new Intl.DateTimeFormat("en-GB", {timeZone: prayer.tz, hour:"2-digit", minute:"2-digit", hourCycle:"h23"}).format(new Date()).split(":");
+  const now = (+parts[0]) * 60 + (+parts[1]);
+  const mins = VAKIT.map(([k, n]) => { const [h, m] = prayer.t[k].split(":"); return {k, n, at: (+h) * 60 + (+m)}; });
+  let nx = mins.find(x => x.at > now), left;
+  if (nx) left = nx.at - now; else { nx = mins[0]; left = nx.at + 1440 - now; }
+  return {...nx, left};
+}
+const leftTxt = m => m >= 60 ? Math.floor(m / 60) + " sa " + (m % 60) + " dk" : m + " dk";
+function prayerModule(){
+  if (!city) return null;
+  const m = el("section","mod"), h = el("div","mod-h");
+  h.append(el("h3", null, "Namaz vakitleri"), el("small", null, city[0]));
+  m.appendChild(h);
+  if (!prayer){ m.appendChild(el("p","hint","Vakitler yükleniyor…")); return m; }
+  const nx = nextPrayer();
+  const p = el("p","pt-next"); p.append(el("b", null, nx.n), " vaktine " + leftTxt(nx.left) + " kaldı"); m.appendChild(p);
+  const g = el("div","pt");
+  VAKIT.forEach(([k, n]) => { const d = el("div", k === nx.k ? "next" : null); d.append(el("span", null, n), el("b", null, prayer.t[k])); g.appendChild(d); });
+  m.appendChild(g);
+  m.appendChild(el("p","pt-note", prayer.tr ? "Diyanet hesaplama yöntemiyle hesaplanır; Diyanet’in yayımladığı vakitlerden 1–2 dakika farklı olabilir." : "Müslüman Dünya Birliği hesaplama yöntemiyle, şehrin yerel saatine göre."));
+  return m;
+}
+
 // ---- Şerit ----
 function renderTicker(){
   const t = $("#ticker"); t.textContent = "";
@@ -856,6 +913,8 @@ function renderTicker(){
   else w.append(el("span","l","Hava"), el("span","v", city ? "…" : "Şehrini seç"));
   w.onclick = () => go("yerel");
   t.appendChild(w);
+  const nx = city && nextPrayer();
+  if (nx){ const pk = el("button","tk wx"); pk.type = "button"; pk.append(el("span","l", nx.n), el("span","v", prayer.t[nx.k])); pk.setAttribute("aria-label", nx.n + " vakti " + prayer.t[nx.k] + ", " + leftTxt(nx.left) + " kaldı"); pk.onclick = () => go("yerel"); t.appendChild(pk); }
   (data.markets?.items || []).forEach(x => {
     const dir = x.change > 0 ? "up" : x.change < 0 ? "down" : "flat";
     const k = el("span","tk");
@@ -935,6 +994,7 @@ function render(){
   if (view === "yerel"){
     const al = quakeAlert(); if (al) top.appendChild(al);
     const w = weatherModule(); w.style.marginTop = "12px"; top.appendChild(w);
+    const pm = prayerModule(); if (pm){ pm.style.marginTop = "12px"; top.appendChild(pm); }
     const qm = quakeModule(); if (qm){ qm.style.marginTop = "12px"; top.appendChild(qm); }
   }
   if (q){
@@ -1113,7 +1173,7 @@ function xModule(inFeed){
 }
 function renderAside(){
   const a = $("#aside"); a.textContent = "";
-  if (view !== "yerel"){ a.appendChild(weatherModule()); const qm = quakeModule(); if (qm) a.appendChild(qm); }
+  if (view !== "yerel"){ a.appendChild(weatherModule()); const pm = prayerModule(); if (pm) a.appendChild(pm); const qm = quakeModule(); if (qm) a.appendChild(qm); }
   const x = xModule(false); if (x) a.appendChild(x);
   if (view === "feed"){ const t = topicsRow(); if (t){ const m = el("section","mod"); const h = el("div","mod-h"); h.appendChild(el("h3",null,"Gündemde")); m.appendChild(h); t.querySelector(".lbl").remove(); t.style.margin = "6px 0 0"; m.appendChild(t); a.appendChild(m); } }
 }
@@ -2033,7 +2093,9 @@ if ("serviceWorker" in navigator) window.addEventListener("load", () => navigato
 { const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h === "yerel" || h === "saved") view = h; else if (CATS.some(c => c.id === h)) cat = h; }
 renderNav(); renderTicker();
 load(true);
-loadWeather().then(() => { if (loaded) render(); else renderTicker(); });
+Promise.all([loadWeather(), loadPrayer()]).then(() => { if (loaded) render(); else renderTicker(); });
+// Her dakika sıradaki vakit sayacını güncelle (gece yarısı geçince yeni günün vakitlerini al)
+setInterval(async () => { const before = prayer; await loadPrayer(); renderTicker(); if (view === "yerel" && !document.querySelector("dialog[open]") && !document.activeElement?.matches("input,select")) render(); }, 60 * 1000);
 setInterval(() => load(false), 5 * 60 * 1000);
 setInterval(renderStatus, 60 * 1000);
 setInterval(() => loadWeather().then(renderTicker), 30 * 60 * 1000);

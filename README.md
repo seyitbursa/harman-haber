@@ -40,6 +40,18 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
 - Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.
 
+## Arama motorları ve paylaşım
+
+Uygulama tek sayfa olduğu için arama motorları içeriği göremez. Her güncellemede `scripts/static.mjs` şunları üretir:
+- `/konu/<konu>/`: her gündem konusu için özet, “Kim nasıl verdi?” ve haber bağlantıları içeren sabit sayfa (14 gün saklanır).
+- `/gundem/<tarih>/` ve `/gundem/`: son 30 günün günlük gündem arşivi.
+- `/sitemap.xml`, `/robots.txt`, `/rss.xml`.
+Konu paylaşımları bu sabit sayfaların adresini kullanır.
+
+## Sosyal medyaya otomatik paylaşım (isteğe bağlı)
+
+`scripts/social.mjs`, repo ayarlarında şu secret’lar tanımlıysa çalışır: `TELEGRAM_BOT_TOKEN` ve `TELEGRAM_CHAT_ID` (Telegram kanalı), `BSKY_HANDLE` ve `BSKY_APP_PASSWORD` (Bluesky). Her sabah 08.00’den sonra günün gündemini, gün içinde de 5 ve daha fazla kaynağın verdiği olayları (günde en fazla 4) paylaşır.
+
 ## Zamanlama
 
 GitHub’ın kendi zamanlayıcısı (`schedule`) yoğun saatlerde saatlerce gecikebildiği için asıl tetikleme Cloudflare’den yapılır: `harman-tetikleyici` adlı Cloudflare Worker her 15 dakikada bu iş akışını `workflow_dispatch` ile başlatır. GitHub token’ı Worker’da `GH_TOKEN` gizli değişkeni olarak durur. GitHub zamanlayıcısı yedek olarak açık kalır. Token’ın süresi dolarsa Cloudflare panelinde Workers → harman-tetikleyici → Settings → Variables bölümünden `GH_TOKEN` güncellenir.

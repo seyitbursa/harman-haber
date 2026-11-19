@@ -15,6 +15,9 @@
 <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="alternate" type="application/rss+xml" title="Harman Haber" href="/rss.xml">
+<link rel="canonical" href="https://harmanhaber.app/">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Harman Haber","alternateName":"Harman","url":"https://harmanhaber.app/","inLanguage":"tr","description":"Türk haber kaynaklarını tek yerde toplar, bir olayı kimin nasıl verdiğini yan yana gösterir."},{"@type":"Organization","name":"Harman Haber","url":"https://harmanhaber.app/","logo":"https://harmanhaber.app/icons/icon-512.png"}]}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#161E31" media="(prefers-color-scheme: dark)">
@@ -656,6 +659,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     <footer>
       <p><b>Harman Haber</b>: haberin özü, her kaynaktan.</p>
       <p>Ziyaret istatistikleri çerez kullanmayan ve kişisel veri toplamayan Cloudflare Web Analytics ile tutulur. Kaydettiğin haberler ve ayarların yalnızca kendi cihazında saklanır.</p>
+      <p><a href="/gundem/">Gündem arşivi</a> · <a href="/rss.xml">RSS</a></p>
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
       <p>Kaynak dağılımı çubuğu, haberi hangi kesimden kaynakların verdiğini gösterir; etiketler Reuters Enstitüsü ve Medya Sahipliği İzleme (MOM) değerlendirmelerine dayanır ve Ayarlar’dan değiştirilebilir.</p>
       <p>“Özü” satırları haber metninden Google Gemini ile otomatik çıkarılır ve hata içerebilir; ayrıntı için habere dokun.</p>
@@ -1274,7 +1278,7 @@ function shareStory(i){
   shareOrCopy({title: i.title, text, url: i.url});
 }
 function shareTopic(t){
-  shareOrCopy({title: t.title || t.label, text: (t.title || t.label) + (t.summary ? "\n" + t.summary : "") + "\nHarman Haber’de tüm kaynaklarıyla:", url: SITE + "#konu-" + t.slug});
+  shareOrCopy({title: t.title || t.label, text: (t.title || t.label) + (t.summary ? "\n" + t.summary : "") + "\nHarman Haber’de tüm kaynaklarıyla:", url: location.origin + "/konu/" + t.slug + "/"});
 }
 const ICON = {
   share: "M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5",

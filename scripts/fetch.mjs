@@ -12,6 +12,8 @@ import { dailyWord } from "./wordgame.mjs";
 import { dailyGames } from "./games.mjs";
 import { getYoutube } from "./youtube.mjs";
 import { getSports } from "./sports.mjs";
+import { buildStatic } from "./static.mjs";
+import { socialPost } from "./social.mjs";
 
 const MAX_PER_FEED = 30;          // her akıştan en fazla
 const MAX_AGE_HOURS = 48;         // bundan eski haberler atılır
@@ -189,10 +191,12 @@ const note = cfg.ntfyTopic
 
 
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
+const soc = await socialPost({ stories, topics, sources: config.sources, prev: prevJson?.social, dry: !process.env.GITHUB_ACTIONS || !prevJson }).catch(e => ({ state: prevJson?.social || {}, sent: ["HATA " + e.message] }));
+const stat = await buildStatic({ stories, topics, sources: config.sources, prev: prevJson }).catch(e => { console.log("  ✗ sabit sayfalar → " + e.message); return { topicPages: prevJson?.topicPages || {}, archive: prevJson?.archive || [], count: 0 }; });
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, topicPages: stat.topicPages, archive: stat.archive, social: soc.state, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);
@@ -200,6 +204,8 @@ errors.forEach(e => console.log("  ✗", e.url, "→", e.error));
 if (markets.error) console.log("  ✗ piyasa →", markets.error);
 if (xtrends.error) console.log("  ✗ X gündemi →", xtrends.error);
 console.log(`Özet: bu turda ${sum.made} yeni, bekleyen ${sum.pending}, bugün ${sum.usage.requests} istek${sum.usage.model ? " (" + sum.usage.model + ")" : ""}${process.env.GEMINI_API_KEY ? "" : " — GEMINI_API_KEY yok"}.`);
+if (soc.sent.length) console.log("Sosyal medya: " + soc.sent.join(", "));
+console.log(`Sabit sayfalar: ${stat.count} sayfa (konu ve günlük gündem), site haritası ve RSS.`);
 console.log(`Spor: ${sports.standings?.length || 0} takım, ${sports.matches?.length || 0} lig maçı, ${sports.europe?.length || 0} Avrupa maçı${sports.errors?.length ? "; hatalar: " + sports.errors.join(", ") : ""}.`);
 if (youtube) console.log(`YouTube: ${youtube.items.length} video, ${youtube.items.filter(v => v.story).length} tanesi haberlerle eşleşti${youtube.errors.length ? "; hatalar: " + youtube.errors.join(", ") : ""}.`);
 console.log(`Depremler: ${quakes.items.length}${quakes.error ? " (hata: " + quakes.error + ")" : ""}. Bildirim: ${note.first ? "ilk çalıştırma, yalnızca işaretlendi" : note.sent.length ? note.sent.join(" | ") : "yok"}`);

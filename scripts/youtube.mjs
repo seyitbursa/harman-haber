@@ -29,7 +29,7 @@ async function channel(c) {
   } finally { clearTimeout(timer); }
 }
 
-export async function getYoutube({ channels, stories, hours = 36, max = 240 }) {
+export async function getYoutube({ channels, stories, hours = 36, max = 320 }) {
   const errors = [];
   const res = await Promise.allSettled(channels.map(channel));
   const since = Date.now() - hours * 3600e3;

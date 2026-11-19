@@ -36,6 +36,10 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
 - Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.
 
+## Zamanlama
+
+GitHub’ın kendi zamanlayıcısı (`schedule`) yoğun saatlerde saatlerce gecikebildiği için asıl tetikleme Cloudflare’den yapılır: `harman-tetikleyici` adlı Cloudflare Worker her 15 dakikada bu iş akışını `workflow_dispatch` ile başlatır. GitHub token’ı Worker’da `GH_TOKEN` gizli değişkeni olarak durur. GitHub zamanlayıcısı yedek olarak açık kalır. Token’ın süresi dolarsa Cloudflare panelinde Workers → harman-tetikleyici → Settings → Variables bölümünden `GH_TOKEN` güncellenir.
+
 ## Kurulum (5 dakika)
 
 1. GitHub’da yeni bir **public** repo aç ve bu klasördeki her şeyi yükle (`.github` klasörü dahil).

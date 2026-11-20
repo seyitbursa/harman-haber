@@ -1610,7 +1610,7 @@ function renderGames(){
     const cd = el("p","g-next"); head.append(ht, pr, cd); top.appendChild(head);
     const pubLine = el("p","g-pub"); head.appendChild(pubLine);
     loadPublic().then(ps => {
-      const n = ps["ziyaret:oyunlar"] || 0;
+      const n = ps["oyun:oynayan"] || 0;
       if (n >= 3) pubLine.textContent = "Bugün " + n.toLocaleString("tr-TR") + " kişi Harman oyunlarını oynadı";
       GAMES.forEach(g => { const k = ps["oyun:" + g.id + ":bitti"] || 0; const card = [...document.querySelectorAll(".game-card")].find(c => c.querySelector("h3")?.textContent === g.name); if (card && k >= 3) card.querySelector(".gt").appendChild(el("small","pub", k.toLocaleString("tr-TR") + " kişi bugün bitirdi")); });
     });
@@ -2781,7 +2781,7 @@ function trackView(){
   const name = view === "feed" ? "akis-" + cat : view === "topic" ? "konu" : view;
   track("sayfa:" + name);
   if (view === "oyunlar" || view.startsWith("oyun-")) track("ziyaret:oyunlar", true);
-  if (view.startsWith("oyun-")) track("oyun:" + view.slice(5) + ":acildi", true);
+  if (view.startsWith("oyun-")){ track("oyun:" + view.slice(5) + ":acildi", true); track("oyun:oynayan", true); }
 }
 // Oyun bitişlerini (günde bir kez) say
 function trackGameEnd(id){
@@ -2826,10 +2826,10 @@ async function renderStats(){
   const days = [...new Set(rows.map(r => r.gun))].sort();
   const last7 = days.slice(-7);
   const kpi = el("div","stat-kpi");
-  [["Bugün ziyaretçi", sum(o => o === "ziyaret", today)], ["Son 7 gün ziyaretçi", last7.reduce((a, g) => a + sum(o => o === "ziyaret", g), 0)], ["Bugün oyun oynayan", sum(o => o === "ziyaret:oyunlar", today)], ["Bugün sayfa görüntüleme", sum(o => o.startsWith("sayfa:") && o !== "sayfa:istatistik", today)]]
+  [["Bugün ziyaretçi", sum(o => o === "ziyaret", today)], ["Son 7 gün ziyaretçi", last7.reduce((a, g) => a + sum(o => o === "ziyaret", g), 0)], ["Bugün oyun oynayan", sum(o => o === "oyun:oynayan", today)], ["Bugün sayfa görüntüleme", sum(o => o.startsWith("sayfa:") && o !== "sayfa:istatistik", today)]]
     .forEach(([l, v]) => { const x = el("div"); x.append(el("b", null, v.toLocaleString("tr-TR")), el("span", null, l)); kpi.appendChild(x); });
   box.appendChild(kpi);
-  box.appendChild(el("p","hint","Ziyaretçi sayısı, her cihazın günde bir kez sayılmasıyla bulunur; reklam engelleyici kullananlar sayılmayabilir."));
+  box.appendChild(el("p","hint","Ziyaretçi sayısı, her cihazın günde bir kez sayılmasıyla bulunur; reklam engelleyici kullananlar sayılmayabilir. “Oyun oynayan”, en az bir oyunu açan cihaz sayısıdır; bugün Oyunlar sayfasına giren " + sum(o => o === "ziyaret:oyunlar", today) + " cihaz."));
   // Günlük ziyaretçi grafiği
   box.appendChild(el("h3", null, "Son 30 gün: günlük ziyaretçi"));
   const ch = el("div","stat-bars"), maxV = Math.max(1, ...days.map(g => sum(o => o === "ziyaret", g)));

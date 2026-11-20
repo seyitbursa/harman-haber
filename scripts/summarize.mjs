@@ -4,8 +4,8 @@
 
 const MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
 const BATCH = 10;                 // istek başına haber
-const MAX_REQ_PER_RUN = 3;        // tur başına en fazla istek
-const MAX_REQ_PER_DAY = 400;      // ücretsiz sınırın altında kalmak için günlük tavan (UTC günü)
+const MAX_REQ_PER_RUN = 2;        // tur başına en fazla istek
+const MAX_REQ_PER_DAY = +(process.env.GEMINI_DAILY_CAP || 400);      // ücretsiz sınırın altında kalmak için günlük tavan (UTC günü)
 const TEXT_LEN = 1400;            // haber başına gönderilen metin (karakter)
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
@@ -120,13 +120,16 @@ Her konu için okuyucuya ne olduğunu anlatan 2–3 cümlelik özet yaz:
 - En fazla 60 kelime. Düz, tarafsız Türkçe; yorum, değerlendirme ya da sıfat yükleme yok.
 - Yalnızca verilen başlık ve özetlerdeki bilgiyi kullan. Tarafların iddialarını kendi ağızlarından aktar ("X'e göre...").
 - Kaynaklar birbiriyle çelişiyorsa bunu belirt.
-- Ayrıca konuya 2–4 kelimelik, eksiz ve yalın bir başlık ver (ör. "Fon soruşturması", "CHP kurultay davası"). Konu adı birden çok kişiyi ya da olayı karıştırıyorsa başlığı en çok haberin ilgili olduğuna göre seç.
+- Ayrıca konuya 3–7 kelimelik bir başlık ver: başlıkta mutlaka kişi ya da kurum ve somut gelişme olsun (ör. "Fon soruşturmasında Altınbaş yakalandı", "CHP kurultay davası ertelendi", "Arda Güler Real Madrid'de sakatlandı").
+- "Güncel gelişmeler", "X haberleri", "X açıklamaları", "son durum" gibi genel başlıklar YASAK.
+- Bütün konu başlıkları birbirinden farklı olsun; iki konu aynı olayı anlatıyorsa bunu başlıklarda ayırt edici ayrıntıyla belirt.
+- Konu adı birden çok kişiyi ya da olayı karıştırıyorsa başlığı en çok haberin ilgili olduğuna göre seç; ilgisiz kişileri özete katma.
 Yalnızca şu biçimde JSON dizi döndür: [{"k":1,"baslik":"...","oz":"..."}, ...]`;
 
 export async function addTopicSummaries({ topics, stories, sources, prevTopicSums, usage, key, log = console.log }) {
   const now = Date.now();
   const cache = {};
-  for (const [slug, v] of Object.entries(prevTopicSums || {})) if (now - new Date(v.at) < 24 * 3600e3) cache[slug] = v;
+  for (const [slug, v] of Object.entries(prevTopicSums || {})) if (now - new Date(v.at) < 24 * 3600e3 && v.v === 2) cache[slug] = v;
   const byId = Object.fromEntries(stories.map(s => [s.id, s]));
   const need = topics.filter(t => {
     const c = cache[t.slug]; if (!c) return true;
@@ -149,11 +152,15 @@ export async function addTopicSummaries({ topics, stories, sources, prevTopicSum
         const o = out.find(x => x.k === n + 1);
         const oz = (o?.oz || "").replace(/\s+/g, " ").trim();
         if (oz && !/[\u0400-\u04FF\u0600-\u06FF\u4E00-\u9FFF]/.test(oz))
-          cache[t.slug] = { oz, title: (o?.baslik || "").replace(/\s+/g, " ").trim().slice(0, 40) || null, at: new Date().toISOString(), urls: t.storyIds.map(id => byId[id]?.items[0]?.url).filter(Boolean) };
+          cache[t.slug] = { v: 2, oz, title: (o?.baslik || "").replace(/\s+/g, " ").trim().slice(0, 60) || null, at: new Date().toISOString(), urls: t.storyIds.map(id => byId[id]?.items[0]?.url).filter(Boolean) };
       });
     } catch (e) { log("  ✗ konu özeti → " + e.message); }
   }
-  topics.forEach(t => { if (cache[t.slug]){ t.summary = cache[t.slug].oz; if (cache[t.slug].title) t.title = cache[t.slug].title; } });
+  const GENERIC_T = /^(güncel gelişmeler|son durum|son gelişmeler|.* haberleri|.* açıklamaları)$/i;
+  topics.forEach(t => { if (cache[t.slug]){ t.summary = cache[t.slug].oz; const ti = cache[t.slug].title; if (ti && !GENERIC_T.test(ti)) t.title = ti; } });
+  // Aynı başlığı taşıyan konuları ayırt et: ikinci ve sonrakilere konu anahtar kelimesini ekle
+  const seen = new Map();
+  topics.forEach(t => { const k = (t.title || t.label).toLocaleLowerCase("tr"); if (seen.has(k)) t.title = (t.title || t.label) + " (" + t.label + ")"; else seen.set(k, t); });
   return cache;
 }
 
@@ -174,7 +181,8 @@ export async function addContrasts({ stories, sources, prevFark, usage, key, log
     return { s, g };
   }).filter(x => x.g.hukumet && (x.g.muhalefet || x.g.bagimsiz));
   const todo = cands.filter(x => !(keyOf(x.s) in cache)).sort((a, b) => b.s.items.length - a.s.items.length).slice(0, 8);
-  if (key && todo.length && usage.requests < MAX_REQ_PER_DAY) {
+  const turn = Math.floor(Date.now() / (15 * 60000)) % 2 === 0;      // kotayı korumak için iki turda bir
+  if (key && turn && todo.length && usage.requests < MAX_REQ_PER_DAY) {
     const body = todo.map((x, n) => `#${n + 1}\n` + Object.entries(x.g).map(([l, its]) => `${GLN[l]}:\n` + its.slice(0, 4).map(i => `- ${sources[i.source]?.name}: ${i.title}`).join("\n")).join("\n")).join("\n\n");
     try {
       usage.requests++;
@@ -184,5 +192,33 @@ export async function addContrasts({ stories, sources, prevFark, usage, key, log
     } catch (e) { log("  ✗ fark özeti → " + e.message); }
   }
   for (const x of cands) { const c = cache[keyOf(x.s)]; if (c?.f) x.s.fark = c.f; }
+  return cache;
+}
+
+// ---- Ortak olay başlığı: tek bir yayıncının yorum yüklü başlığı yerine, kim ne yaptı diyen tarafsız başlık ----
+const NEUTRAL_PROMPT = `Sen tarafsız bir haber editörüsün. Aşağıda her biri aynı olayı anlatan haber başlıkları grupları var.
+Her grup için olayı anlatan tek bir tarafsız başlık yaz:
+- En fazla 12 kelime. Kim, ne yaptı ya da ne oldu: özne ve eylem açık olsun.
+- Yorum, sıfat, abartı, ünlem ve tırnak içinde alıntı yok ("sert yanıt", "ifşa etti", "olay yaratan" gibi ifadeler kullanma).
+- Yalnızca başlıkların hepsinde ya da çoğunda geçen bilgiyi kullan; tek bir yayıncının iddiasını gerçekmiş gibi yazma.
+Yalnızca şu biçimde JSON dizi döndür: [{"i":1,"b":"..."}, ...]`;
+export async function addNeutralTitles({ stories, sources, prev, usage, key, log = console.log }) {
+  const now = Date.now(), cache = {};
+  for (const [k, v] of Object.entries(prev || {})) if (now - new Date(v.at) < 48 * 3600e3) cache[k] = v;
+  const keyOf = s => s.items[0].url;
+  const uniq = s => new Set(s.items.map(i => i.source)).size;
+  const cands = stories.filter(s => uniq(s) >= 3 && now - new Date(s.date) < 36 * 3600e3);
+  const todo = cands.filter(s => !(keyOf(s) in cache) || (cache[keyOf(s)].n < uniq(s) - 2)).sort((a, b) => uniq(b) - uniq(a)).slice(0, 15);
+  const turn = Math.floor(Date.now() / (15 * 60000)) % 2 === 1 || todo.length >= 8;
+  if (key && turn && todo.length && usage.requests < MAX_REQ_PER_DAY) {
+    const body = todo.map((s, n) => `#${n + 1}\n` + s.items.slice(0, 8).map(i => `- ${sources[i.source]?.name || i.source}: ${i.title}`).join("\n")).join("\n\n");
+    try {
+      usage.requests++;
+      const { out } = await callGeminiRaw(key, NEUTRAL_PROMPT + "\n\n" + body);
+      todo.forEach((s, n) => { const o = out.find(r => r.i === n + 1); const b = (o?.b || "").replace(/\s+/g, " ").replace(/[!]+/g, "").trim();
+        if (b.length > 10 && b.length < 140 && !/[\u0400-\u04FF\u4E00-\u9FFF]/.test(b)) cache[keyOf(s)] = { b, n: uniq(s), at: new Date().toISOString() }; });
+    } catch (e) { log("  ✗ ortak başlık → " + e.message); }
+  }
+  for (const s of cands) { const c = cache[keyOf(s)]; if (c?.b) s.neutral = c.b; }
   return cache;
 }

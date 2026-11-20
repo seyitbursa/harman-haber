@@ -27,6 +27,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      # Kalıcı regresyon testleri (yanlış konu eşleşmesi, birleştirme): başarısızsa yayın yapılmaz
+      - run: node scripts/test.mjs
       - run: node scripts/fetch.mjs
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

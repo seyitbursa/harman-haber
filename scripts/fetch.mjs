@@ -1,13 +1,13 @@
 // RSS kaynaklarını çeker, birleştirir ve public/news.json dosyasını üretir.
 import Parser from "rss-parser";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { cluster } from "./cluster.mjs";
+import { cluster, mergeByGist } from "./cluster.mjs";
 import { getMarkets } from "./markets.mjs";
-import { trendingTopics } from "./topics.mjs";
+import { trendingTopics, matchTopic, SENSITIVE } from "./topics.mjs";
 import { getXTrends } from "./xtrends.mjs";
 import { getQuakes } from "./quakes.mjs";
 import { notify, previousJson } from "./notify.mjs";
-import { addGists, addTopicSummaries, addContrasts, callGeminiRaw } from "./summarize.mjs";
+import { addGists, addTopicSummaries, addContrasts, addNeutralTitles, callGeminiRaw } from "./summarize.mjs";
 import { resmiGazete } from "./resmigazete.mjs";
 import { dailyWord } from "./wordgame.mjs";
 import { dailyGames } from "./games.mjs";
@@ -159,6 +159,7 @@ const stories = cluster(items).map((group, i) => {
     id: i.toString(36),
     category,
     date: group.map(m => m.date).sort().at(-1),
+    first: group.map(m => m.date).sort()[0],
     items: members.map(({ category: _c, ...rest }) => rest)
   };
 }).sort((a, b) => b.date.localeCompare(a.date));
@@ -167,6 +168,10 @@ const [markets, xtrends, quakes, prevJson] = await Promise.all([getMarkets(), ge
 const prev = prevJson?.notified || null;     // eski sürümde durum yoksa ilk çalıştırma sayılır
 const sum = await addGists({ stories, prevGists: prevJson?.gists, prevUsage: prevJson?.gistUsage, key: process.env.GEMINI_API_KEY });
 
+// Özetler eklendikten sonra: başlıkları farklı yazılmış ama aynı olayı anlatan haberleri birleştir
+const merged = mergeByGist(stories);
+if (merged){ stories.sort((a, b) => b.date.localeCompare(a.date)); console.log(`Özete göre birleştirilen haber: ${merged}.`); }
+const neutralCache = await addNeutralTitles({ stories, sources: config.sources, prev: prevJson?.neutralCache, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const farkCache = await addContrasts({ stories, sources: config.sources, prevFark: prevJson?.farkCache, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const rg = await resmiGazete({ prev: prevJson?.rg, key: process.env.GEMINI_API_KEY, usage: sum.usage, callGeminiRaw });
 
@@ -175,9 +180,14 @@ const topics = trendingTopics(stories, { max: 10 });
 const twords = t => t.toLocaleLowerCase("tr").replace(/['’‘`]/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 const slugify = t => t.toLocaleLowerCase("tr").replace(/ç/g,"c").replace(/ğ/g,"g").replace(/ı/g,"i").replace(/ö/g,"o").replace(/ş/g,"s").replace(/ü/g,"u").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 for (const t of topics) {
-  const ws = twords(t.label).map(w => w.slice(0, Math.min(w.length, 6)));
   t.slug = slugify(t.label);
-  t.storyIds = stories.filter(s => s.items.some(i => { const tw = twords(i.title + " " + (i.gist || "")); return ws.every(p => tw.some(x => x.startsWith(p))); })).map(s => s.id);
+  // Önce gevşek eşleşmeyle konunun baskın kategorisini bul, sonra sıkı kurallarla haberleri seç
+  const loose = stories.filter(s => matchTopic(t.label, s, {}));
+  const cc = {}; loose.forEach(s => cc[s.category] = (cc[s.category] || 0) + 1);
+  const dominantCat = Object.entries(cc).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const sensitive = SENSITIVE.test(t.label) || loose.filter(s => SENSITIVE.test(s.items.map(i => i.title).join(" "))).length >= loose.length / 2;
+  t.sensitive = sensitive || undefined;
+  t.storyIds = stories.filter(s => matchTopic(t.label, s, { dominantCat, sensitive })).map(s => s.id);
 }
 // Aynı haberleri kapsayan konuları birleştir ("Cem Küçük" ve "Tahir Sarıkaya" gibi): öndeki kalır
 for (let i = topics.length - 1; i > 0; i--) {
@@ -205,7 +215,7 @@ const stat = await buildStatic({ stories, topics, sources: config.sources, prev:
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, gtrends, wtop, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, rg, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, gtrends, wtop, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, neutralCache, rg, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);

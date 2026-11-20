@@ -49,6 +49,13 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
 - Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.
 
+## Doğruluk güvenceleri
+
+- **Konu eşleştirme** (`scripts/topics.mjs`): kısa kelimeler yalnızca ekli biçimleriyle eşleşir (fon ≠ fonksiyon); suç, soruşturma ve dava konularında ve konunun baskın kategorisinden farklı kategorideki haberlerde konu kelimelerinin hepsi başlıkta geçmelidir. Birden çok kişiyi kapsayan tek ad (ör. "Serdar") konu olamaz.
+- **Aynı olayın birleştirilmesi** (`mergeByGist`, `scripts/cluster.mjs`): başlıkları farklı yazılmış haberler “Özü” özetlerinin benzerliği, ortak özel isimler ve 12 saatlik pencereyle tek olayda toplanır.
+- **Ortak başlık**: 3 ve daha fazla kaynağın verdiği olaylarda kartta tek bir yayıncının başlığı yerine Gemini’nin yazdığı tarafsız “kim ne yaptı” başlığı gösterilir; her yayıncının özgün başlığı “başlıkları karşılaştır” panelinde.
+- **Regresyon testleri** (`scripts/test.mjs`): her güncellemeden önce çalışır; başarısız olursa yayın yapılmaz.
+
 ## Arama motorları ve paylaşım
 
 Uygulama tek sayfa olduğu için arama motorları içeriği göremez. Her güncellemede `scripts/static.mjs` şunları üretir:

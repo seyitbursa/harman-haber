@@ -70,6 +70,20 @@ export function trendingTopics(stories, { hours = 12, minSources = 3, max = 8 } 
     }
   }
   for (const e of bySources.values()) e.label = [...e.forms].sort((a, b) => b[1] - a[1] || a[0].length - b[0].length)[0][0];
+  // Tek kelimelik özel isim birden çok farklı kişiyi kapsıyorsa (ör. "Serdar" → Serdar Altınbaş ve Serdar Dursun) konu olamaz
+  const follow = new Map();
+  for (const s of stories) {
+    if (new Date(s.date).getTime() < since) continue;
+    for (const it of s.items) {
+      const ws = it.title.split(/\s+/).map(clean);
+      for (let i = 0; i + 1 < ws.length; i++) if (isCap(ws[i]) && isCap(ws[i + 1]) && !GENERIC.has(ws[i + 1])) {
+        const k = ws[i].toLocaleLowerCase("tr").slice(0, 6);
+        if (!follow.has(k)) follow.set(k, new Set());
+        follow.get(k).add(ws[i + 1].toLocaleLowerCase("tr").slice(0, 5));
+      }
+    }
+  }
+  for (const [k, e] of bySources) if (!k.includes(" ") && (follow.get(k)?.size || 0) >= 2) bySources.delete(k);
   let list = [...bySources.values()].filter(e => e.sources.size >= minSources && e.stories.size >= 2)
     .map(e => ({ label: e.label, sources: e.sources.size, stories: e.stories.size, words: e.label.split(" ").length }));
   // Uzun ifade aynı kapsama sahipse kısasını ele: "Mustafa Yazıcı" varken "Yazıcı" gösterilmez
@@ -82,4 +96,27 @@ export function trendingTopics(stories, { hours = 12, minSources = 3, max = 8 } 
   for (const t of list) { const st = stems(t.label); if (!kept.some(k => [...stems(k.label)].some(w => st.has(w)))) kept.push(t); }
   list = kept;
   return list.slice(0, max).map(({ label, sources, stories }) => ({ label: label === label.toLocaleLowerCase("tr") ? label.charAt(0).toLocaleUpperCase("tr") + label.slice(1) : label, sources, stories }));
+}
+
+// ---- Bir haberin bir konuya ait olup olmadığı ----
+// Kurallar (yanlış eşleşmeler, ör. bir sporcunun haberinin bir adli soruşturmaya bağlanması, kişiye zarar verebilir):
+//  - Kısa kelimeler (5 harften az) yalnızca kendisi ya da yaygın bir ekle eşleşir: "fon" → "fonu", "fondan"; ama "fonksiyon" değil.
+//  - Konu adındaki kelimelerin hepsi başlıkta ya da özette geçmeli.
+//  - Suç, soruşturma ve dava konularında ve haberin kategorisi konunun baskın kategorisinden farklıysa kelimelerin hepsi BAŞLIKTA geçmeli.
+const SUFFIX = new Set(["","u","ü","ı","i","a","e","da","de","ta","te","dan","den","tan","ten","un","ün","ın","in","nun","nün","nın","nin","ya","ye","yu","yü","yı","yi","lar","ler","ları","leri","ların","lerin","larda","lerde","lardan","lerden","la","le","yla","yle","dır","dir","tır","tir"]);
+const words = t => t.toLocaleLowerCase("tr").replace(/['’‘`]/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+export function wordHit(pattern, tokens) {
+  const short = pattern.length < 5;
+  const p = short ? pattern : pattern.slice(0, 6);
+  return tokens.some(x => x.startsWith(p) && (!short || SUFFIX.has(x.slice(p.length))));
+}
+export const SENSITIVE = /(soruşturma|gözaltı|tutukla|yakalan|iddianame|dava|mahkeme|kovuşturma|operasyon|şüpheli|sanık|suç|hapis|cinayet|dolandırıc|rüşvet|kaçakçı|firari|terör)/i;
+export function matchTopic(label, story, { dominantCat, sensitive } = {}) {
+  const ws = words(label);
+  if (!ws.length) return false;
+  const strict = sensitive || (dominantCat && story.category !== dominantCat && story.category !== "gundem" && dominantCat !== "gundem");
+  return story.items.some(i => {
+    const tw = words(strict ? i.title : i.title + " " + (i.gist || ""));
+    return ws.every(w => wordHit(w, tw));
+  });
 }

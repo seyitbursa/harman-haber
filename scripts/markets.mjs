@@ -46,9 +46,9 @@ async function fromYahoo() {
 }
 
 export async function getMarkets() {
-  try { return { source: "Truncgil Finans", items: await fromTruncgil() }; }
+  try { return { source: "Truncgil Finans", at: new Date().toISOString(), items: await fromTruncgil() }; }
   catch (e1) {
-    try { return { source: "Yahoo Finance", items: await fromYahoo() }; }
+    try { return { source: "Yahoo Finance", at: new Date().toISOString(), items: await fromYahoo() }; }
     catch (e2) { return { source: null, items: [], error: `${e1.message} / ${e2.message}` }; }
   }
 }

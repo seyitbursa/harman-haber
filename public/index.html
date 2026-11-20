@@ -2758,7 +2758,11 @@ document.addEventListener("keydown", e => {
 // ---- Anonim kullanım sayacı (Cloudflare Worker + D1; kişisel veri yok) ----
 const SAYAC = "https://harman-sayac.harmanhaber.workers.dev";
 const EVQ = [];
+const noTrack = () => store.get("gk-nosay", false) || view === "istatistik";
+// Yönetici anahtarı daha önce girilmiş cihazlar varsayılan olarak sayılmaz
+if (store.get("gk-admin", "") && store.get("gk-nosay", null) === null) store.set("gk-nosay", true);
 function track(e, oncePerDay){
+  if (noTrack()) return;
   if (oncePerDay){ const k = "gk-ev-" + todayISO() + "-" + e; if (store.get(k, false)) return; store.set(k, true); }
   EVQ.push(e); if (EVQ.length >= 10) flushEv();
 }
@@ -2773,6 +2777,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) flush
 // Eski günlerin "bir kez sayıldı" işaretlerini temizle
 try { Object.keys(localStorage).filter(k => k.startsWith("gk-ev-") && !k.startsWith("gk-ev-" + todayISO())).forEach(k => localStorage.removeItem(k)); } catch(e){}
 function trackView(){
+  if (view === "istatistik") return;
   const name = view === "feed" ? "akis-" + cat : view === "topic" ? "konu" : view;
   track("sayfa:" + name);
   if (view === "oyunlar" || view.startsWith("oyun-")) track("ziyaret:oyunlar", true);
@@ -2809,7 +2814,7 @@ async function renderStats(){
   let key = store.get("gk-admin", "");
   if (!key){
     const p = el("p","hint","Bu sayfa yalnızca site yöneticisi içindir. Anahtarı gir:"); const i = el("input"); i.type = "password"; i.style.cssText = "width:100%;height:42px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--paper);color:var(--ink)";
-    const b = el("button","btn","Göster"); b.type = "button"; b.style.marginTop = "8px"; b.onclick = () => { store.set("gk-admin", i.value.trim()); render(); };
+    const b = el("button","btn","Göster"); b.type = "button"; b.style.marginTop = "8px"; b.onclick = () => { store.set("gk-admin", i.value.trim()); store.set("gk-nosay", true); EVQ.length = 0; render(); };
     box.append(p, i, b); return;
   }
   box.appendChild(el("p","hint","Yükleniyor…"));
@@ -2821,7 +2826,7 @@ async function renderStats(){
   const days = [...new Set(rows.map(r => r.gun))].sort();
   const last7 = days.slice(-7);
   const kpi = el("div","stat-kpi");
-  [["Bugün ziyaretçi", sum(o => o === "ziyaret", today)], ["Son 7 gün ziyaretçi", last7.reduce((a, g) => a + sum(o => o === "ziyaret", g), 0)], ["Bugün oyun oynayan", sum(o => o === "ziyaret:oyunlar", today)], ["Bugün sayfa görüntüleme", sum(o => o.startsWith("sayfa:"), today)]]
+  [["Bugün ziyaretçi", sum(o => o === "ziyaret", today)], ["Son 7 gün ziyaretçi", last7.reduce((a, g) => a + sum(o => o === "ziyaret", g), 0)], ["Bugün oyun oynayan", sum(o => o === "ziyaret:oyunlar", today)], ["Bugün sayfa görüntüleme", sum(o => o.startsWith("sayfa:") && o !== "sayfa:istatistik", today)]]
     .forEach(([l, v]) => { const x = el("div"); x.append(el("b", null, v.toLocaleString("tr-TR")), el("span", null, l)); kpi.appendChild(x); });
   box.appendChild(kpi);
   box.appendChild(el("p","hint","Ziyaretçi sayısı, her cihazın günde bir kez sayılmasıyla bulunur; reklam engelleyici kullananlar sayılmayabilir."));
@@ -2881,6 +2886,11 @@ async function renderStats(){
   // Diğer
   const other = {}; rows.filter(r => last7.includes(r.gun) && /^(paylas|dinle):/.test(r.olay)).forEach(r => other[r.olay] = (other[r.olay] || 0) + r.n);
   if (Object.keys(other).length){ box.appendChild(el("h3", null, "Paylaşım ve dinleme (son 7 gün)")); const u2 = el("ul","notes"); Object.entries(other).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => u2.appendChild(el("li", null, k + ": " + v))); box.appendChild(u2); }
+  const ns = store.get("gk-nosay", false);
+  const tg = el("label"); tg.style.cssText = "display:flex;gap:10px;align-items:center;margin-top:16px;font-size:15px";
+  const cb = el("input"); cb.type = "checkbox"; cb.checked = ns; cb.onchange = () => { store.set("gk-nosay", cb.checked); toast(cb.checked ? "Bu cihazın ziyaretleri artık sayılmıyor" : "Bu cihaz yeniden sayılıyor"); };
+  tg.append(cb, "Bu cihazdaki ziyaretlerimi istatistiklere katma"); box.appendChild(tg);
+  box.appendChild(el("p","hint","İstatistik sayfasının kendisi hiçbir zaman sayılmaz. Sayfa görüntülemeleri normal sitelerdeki gibi her açılışta ve yenilemede artar; ziyaretçi sayısı ise her cihaz için günde bir kez artar."));
   const out = el("button","btn ghost","Bu cihazda anahtarı unut"); out.type = "button"; out.style.marginTop = "12px"; out.onclick = () => { store.set("gk-admin", ""); render(); }; box.appendChild(out);
 }
 

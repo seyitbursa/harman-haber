@@ -730,6 +730,25 @@ body.in-game footer{display:none}
 .stat-bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
 .stat-bars i{width:100%;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
 .stat-bars span{font-size:9px;color:var(--ink-3);margin-top:2px}
+
+/* Öne çıkan bölümler şeridi */
+.qs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,1fr);gap:8px;overflow-x:auto;scrollbar-width:none;margin:12px -16px 0;padding:0 16px}
+.qs::-webkit-scrollbar{display:none}
+@media (min-width:900px){.qs{margin:12px 0 0;padding:0}}
+.qs-i{display:flex;align-items:center;gap:10px;border:0;background:var(--surface);border-radius:12px;padding:9px 12px;box-shadow:0 1px 0 var(--line);cursor:pointer;text-align:left;color:var(--ink);min-width:0}
+.qs-ic{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-family:var(--head);font-weight:800;font-size:13px}
+.qs-i b{display:block;font-size:14px;line-height:1.2;white-space:nowrap}
+.qs-i small{display:block;font-size:12px;color:var(--ink-3);white-space:nowrap}
+/* Akış içi YouTube şeridi */
+.feed .feed-yt{margin:0;border-radius:0;box-shadow:none;background:var(--paper);border-top:1px solid var(--line);padding:16px}
+.yt-rail{display:grid;grid-auto-flow:column;grid-auto-columns:220px;gap:10px;overflow-x:auto;scrollbar-width:none;margin-top:8px;padding-bottom:4px}
+.yt-rail::-webkit-scrollbar{display:none}
+.yt-mini{display:flex;flex-direction:column;gap:6px;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--ink)}
+.yt-mini .th{position:relative;display:block;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--line)}
+.yt-mini .th img{width:100%;height:100%;object-fit:cover;display:block}
+.yt-mini .th i{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.72);color:#fff;font-style:normal;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 6px}
+.yt-mini b{font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.yt-mini small{font-size:12px;color:var(--ink-3)}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -1217,6 +1236,7 @@ function render(){
 
   if (view === "feed" && !q){ const al = quakeAlert(); if (al) top.appendChild(al); }
   if (view === "feed" && cat === "spor" && !q){ const spm = sportsModule(); if (spm) top.appendChild(spm); }
+  if (view === "feed" && cat === "all" && !q){ const qs = quickStrip(); if (qs) top.appendChild(qs); }
   if (front && list.length){
     const since = Date.now() - 12 * 3600e3;
     if (cat === "all"){
@@ -1268,12 +1288,14 @@ function render(){
   } else {
     let lastGroup = null, n = 0;
     const xMod = (cat === "all" || cat === "gundem") && view === "feed" && !q ? xModule(true) : null;
+    const ytMod = (cat === "all" || cat === "gundem") && view === "feed" && !q ? ytFeedModule() : null;
     rest.slice(0, shown).forEach(s => {
       const g = groupOf(s.date);
       if (g !== lastGroup && view !== "saved"){ feed.appendChild(el("div","group", g)); lastGroup = g; }
       feed.appendChild(row(s));
       n++;
       if (n === 6 && xMod) feed.appendChild(xMod);
+      if (n === 14 && ytMod) feed.appendChild(ytMod);
     });
     if (rest.length > shown){
       const more = el("button","more","Daha fazla göster"); more.type = "button";
@@ -1422,6 +1444,7 @@ function renderAside(){
   const a = $("#aside"); a.textContent = "";
   if (view !== "yerel"){ a.appendChild(weatherModule()); const pm = prayerModule(); if (pm) a.appendChild(pm); const qm = quakeModule(); if (qm) a.appendChild(qm); }
   const x = xModule(false); if (x) a.appendChild(x);
+  const ya = ytAsideModule(); if (ya) a.appendChild(ya);
   if (view === "feed"){ const t = topicsRow(); if (t){ const m = el("section","mod"); const h = el("div","mod-h"); h.appendChild(el("h3",null,"Gündemde")); m.appendChild(h); t.querySelector(".lbl").remove(); t.style.margin = "6px 0 0"; m.appendChild(t); a.appendChild(m); } }
 }
 
@@ -2810,6 +2833,59 @@ async function renderStats(){
   const other = {}; rows.filter(r => last7.includes(r.gun) && /^(paylas|dinle):/.test(r.olay)).forEach(r => other[r.olay] = (other[r.olay] || 0) + r.n);
   if (Object.keys(other).length){ box.appendChild(el("h3", null, "Paylaşım ve dinleme (son 7 gün)")); const u2 = el("ul","notes"); Object.entries(other).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => u2.appendChild(el("li", null, k + ": " + v))); box.appendChild(u2); }
   const out = el("button","btn ghost","Bu cihazda anahtarı unut"); out.type = "button"; out.style.marginTop = "12px"; out.onclick = () => { store.set("gk-admin", ""); render(); }; box.appendChild(out);
+}
+
+
+// ---- Öne çıkan bölümler: Keşfet’teki bölümlere ana akıştan kısa yollar ----
+function quickStrip(){
+  const items = [];
+  const xN = data.xtrends?.items?.length, ytN = (data.youtube?.items || []).filter(v => !ytOff.has(v.ch)).length, rgN = data.rg?.items?.length;
+  const bl = (() => { try { const b = blindspots(data.stories.map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length)); return b.gov.length + b.opp.length; } catch(e){ return 0; } })();
+  if (xN) items.push(["xgundem", "X gündemi", xN + " başlık", "#0F172A", "X"]);
+  if (ytN) items.push(["youtube", "YouTube", ytN + " video", "#DC2626", "▶"]);
+  if (bl) items.push(["kornokta", "Kör nokta", bl + " haber", "#6D28D9", "◐"]);
+  if (rgN) items.push(["resmigazete", "Resmî Gazete", rgN + " düzenleme", "#B91C1C", "RG"]);
+  if (!items.length) return null;
+  const row = el("nav","qs"); row.setAttribute("aria-label","Öne çıkan bölümler");
+  items.forEach(([h, name, sub, color, ic]) => {
+    const b = el("button","qs-i"); b.type = "button";
+    const i = el("span","qs-ic", ic); i.style.background = color;
+    const t = el("span"); t.append(el("b", null, name), el("small", null, sub));
+    b.append(i, t); b.onclick = () => { location.hash = h; window.scrollTo({top:0}); };
+    row.appendChild(b);
+  });
+  return row;
+}
+// Akışın içinde YouTube şeridi: haberlerle eşleşen en çok izlenen videolar
+function ytFeedModule(){
+  const y = data.youtube; if (!y?.items?.length) return null;
+  const vids = y.items.filter(v => !v.s && !ytOff.has(v.ch)).sort((a, b) => (b.story ? 1 : 0) - (a.story ? 1 : 0) || b.views - a.views).slice(0, 8);
+  if (vids.length < 3) return null;
+  const m = el("section","mod feed-yt");
+  const h = el("div","mod-h"); h.append(el("h3", null, "YouTube’da gündem"));
+  const all = el("button","xt-more","Tümü"); all.type = "button"; all.style.margin = "0"; all.onclick = () => { location.hash = "youtube"; window.scrollTo({top:0}); };
+  h.appendChild(all); m.appendChild(h);
+  const rail = el("div","yt-rail");
+  vids.forEach(v => {
+    const c = el("button","yt-mini"); c.type = "button";
+    const th = el("span","th"); th.appendChild(img(ytThumb(v.id))); th.appendChild(el("i", null, "▶ " + ytViews(v.views)));
+    c.append(th, el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ago(v.date)));
+    c.onclick = () => { const st = v.story && data.stories.find(s => s.id === v.story); openVideo(v, st ? y.items.filter(x => x.story === v.story) : []); };
+    rail.appendChild(c);
+  });
+  m.appendChild(rail);
+  return m;
+}
+// Yan sütun için kısa YouTube listesi
+function ytAsideModule(){
+  const y = data.youtube; if (!y?.items?.length) return null;
+  const vids = y.items.filter(v => !v.s && !ytOff.has(v.ch)).sort((a, b) => b.views - a.views).slice(0, 4);
+  if (!vids.length) return null;
+  const m = el("section","mod"), h = el("div","mod-h"); h.append(el("h3", null, "YouTube"));
+  const all = el("button","xt-more","Tümü"); all.type = "button"; all.style.margin = "0"; all.onclick = () => { location.hash = "youtube"; window.scrollTo({top:0}); }; h.appendChild(all); m.appendChild(h);
+  const ul = el("ul","vlist");
+  vids.forEach(v => { const li = el("li"), b = el("button"); b.type = "button"; const t = el("span"); t.append(el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ytViews(v.views) + " izlenme")); b.append(img(ytThumb(v.id)), t); b.onclick = () => openVideo(v, []); li.appendChild(b); ul.appendChild(li); });
+  m.appendChild(ul); return m;
 }
 
 // ---- Konu sayfaları ----

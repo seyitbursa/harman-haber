@@ -1,5 +1,5 @@
 // Harman Haber servis çalışanı: sayfa çevrimdışı açılır, son indirilen haberler gösterilir.
-const VERSION = "hh-v31";
+const VERSION = "hh-v32";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", e => {

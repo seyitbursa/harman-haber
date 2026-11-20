@@ -52,8 +52,12 @@ function guessCategory(item, fallback) {
   const cats = (item.categories || []).map(c => (typeof c === "string" ? c : c?._ || "")).join(" ");
   const hay = (path + " " + cats).replace(/[-_]/g, " ");
   for (const [cat, re] of RULES) if (re.test(hay)) return cat;
+  // Akışların çoğu siyaset haberini "gündem" altında veriyor: başlıktan tanı (partiler, Meclis, seçim, siyasetçiler)
+  if (POLITICS.test(item.title || "") && !SPORTY.test(item.title || "")) return "siyaset";
   return fallback;
 }
+const SPORTY = /(spor\b|\bkulüb|Galatasaray|Fenerbahçe|Beşiktaş|Trabzonspor|Gençlerbirliği|Başakşehir|\bmaç|transfer|teknik direktör|federasyon|\bTFF\b|\blig\b)/i;
+const POLITICS = /(\bAK Parti|\bAKP\b|\bCHP\b|\bMHP\b|İYİ Parti|DEM Parti|Yeniden Refah|Yeni Parti|Zafer Partisi|Saadet Partisi|Gelecek Partisi|DEVA Partisi|\bTİP\b|milletvekil|\bTBMM\b|\bMeclis|Genel Başkan|kurultay|erken seçim|seçim anket|\bseçim|kabine|anayasa|kanun teklifi|grup toplantısı|Cumhurbaşkanı Erdoğan|\bErdoğan|Bahçeli|Özgür Özel|İmamoğlu|Mansur Yavaş|Davutoğlu|Babacan|Dervişoğlu|Erbakan|muhalefet|iktidar|partiye geç|rozet tak|belediye başkanı.*(?:parti|istifa|geçti)|fezleke|dokunulmazlık)/i;
 
 function sanitize(xml) {
   return xml

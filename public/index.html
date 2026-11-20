@@ -1477,6 +1477,8 @@ function emptyState(q, total){
   if (q){ e.append(el("h4",null,"“" + q + "” için haber bulunamadı"), el("p",null,"Başka bir kelime dene ya da kapalı kaynakları aç.")); return e; }
   if (view === "yerel"){ e.append(el("h4",null, city[0] + " ile ilgili yeni haber yok"), el("p",null,(city && city[3] !== "TR" ? "Türk kaynaklarında " + city[0] + " adının geçtiği haberler burada listelenir; 15 dakikada bir yeniden bakılır." : "Ulusal kaynaklarda şehrinin adı geçen haberler burada listelenir; 15 dakikada bir yeniden bakılır."))); return e; }
   if (total) return el("div");
+  // Kapalı kaynak yoksa sorun kaynaklarda değil: bu kategoride şu an haber yok
+  if (!off.size){ e.append(el("h4",null,"Şu an bu kategoride haber yok"), el("p",null,"Haberler 15 dakikada bir yenilenir. Bu arada Tümü sekmesine bakabilirsin.")); const b = el("button",null,"Tüm haberler"); b.type = "button"; b.onclick = () => { location.hash = ""; cat = "all"; render(); }; e.appendChild(b); return e; }
   e.append(el("h4",null,"Bu kategoride açık kaynak yok"), el("p",null,"Kaynaklar panelinden kapattığın kaynakları açabilirsin."));
   const b = el("button",null,"Kaynakları düzenle"); b.type = "button"; b.onclick = openSheet; e.appendChild(b);
   return e;

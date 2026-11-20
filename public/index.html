@@ -697,6 +697,27 @@ body.in-game footer{display:none}
 .sd-pad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:min(100%,440px);margin:12px auto 0}
 .sd-pad .key{height:48px;font-size:20px}
 .sd-pad .key.a{opacity:.35}
+
+/* Mini Bulmaca */
+.g-mini{background:#0EA5E9}
+.mb{display:grid;grid-template-columns:repeat(5,1fr);width:min(100%,340px,max(220px,calc(100dvh - 480px)));margin:0 auto;border:2px solid var(--ink);background:var(--ink);gap:1px}
+.mb-c{position:relative;aspect-ratio:1;border:0;background:var(--surface);color:var(--ink);font-family:var(--head);font-weight:800;font-size:clamp(20px,6.5vw,32px);cursor:pointer;padding:0}
+.mb-c small{position:absolute;top:2px;left:4px;font-family:var(--body);font-size:11px;font-weight:700;color:var(--ink-2)}
+.mb-c.blk{background:var(--ink)}
+.mb-c.word{background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.mb-c.sel{background:#FBD34D;color:#111}
+.mb-c.bad{color:#DC2626}
+.mb-c.ok{color:var(--accent)}
+.mb-clue{display:flex;align-items:center;gap:4px;width:min(100%,440px);margin:12px auto 0;background:color-mix(in srgb,var(--accent) 12%,var(--surface));border-radius:12px;padding:4px}
+.mb-ct{flex:1 1 auto;border:0;background:none;text-align:left;font-size:15px;line-height:1.35;color:var(--ink);cursor:pointer;padding:8px 4px}
+.mb-ct b{margin-right:4px}
+.mb-lists{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+@media (min-width:600px){.mb-lists{grid-template-columns:1fr 1fr}}
+.mb-lists h4{margin:0 0 4px;font-size:14px;color:var(--ink-3)}
+.mb-li{display:block;width:100%;border:0;background:none;text-align:left;padding:7px 8px;border-radius:8px;font-size:14.5px;color:var(--ink);cursor:pointer}
+.mb-li b{display:inline-block;min-width:18px}
+.mb-li.on{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.mb-li.full{color:var(--ink-3)}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -1563,6 +1584,7 @@ function renderGames(){
   if (view === "oyun-baglanti"){ renderBag(); renderAside(); return; }
   if (view === "oyun-harf"){ renderHarf(); renderAside(); return; }
   if (view === "oyun-sudoku"){ renderSudoku(); renderAside(); return; }
+  if (view === "oyun-mini"){ renderMini(); renderAside(); return; }
   // Oyun ekranı
   if (!data.game?.kelime){ top.appendChild(el("p","hint","Günün kelimesi yükleniyor…")); return; }
   if (!khState || khState.date !== data.game.kelime.date) khState = khLoad();
@@ -1771,17 +1793,18 @@ const GAMES = [
   {id:"petek", name:"Petek", desc:"7 harfle, ortadaki harfi kullanarak olabildiğince çok kelime türet."},
   {id:"baglanti", name:"Bağlantılar", desc:"16 kelimeyi ortak noktası olan 4’lü gruplara ayır."},
   {id:"harf", name:"Harf Kutusu", desc:"Kenarlardaki 12 harfin hepsini birbirine bağlanan kelimelerle kullan."},
-  {id:"sudoku", name:"Sudoku", desc:"Her satır, sütun ve kutuda 1’den 9’a kadar rakamlar bir kez."}
+  {id:"sudoku", name:"Sudoku", desc:"Her satır, sütun ve kutuda 1’den 9’a kadar rakamlar bir kez."},
+  {id:"mini", name:"Mini Bulmaca", desc:"5×5’lik küçük çengel bulmaca; birkaç dakikada biter."}
 ];
 const gDec = s => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.split("").reverse().join("")), c => c.charCodeAt(0))));
 const gData = id => { const g = data.game?.gunluk; if (!g || !g[id]) return null; try { return id === "petek" ? g.petek : gDec(g[id]); } catch(e){ return null; } };
 const gState = id => { const d = data.game?.gunluk?.date, st = store.get("g-" + id, null); return st && st.date === d ? st : { date: d, ans: [], done: false }; };
 const gSave = (id, st) => store.set("g-" + id, st);
-const GAME_ICON = {kelime:"K", manset:"M", rakam:"#", kaynak:"?", petek:"⬢", baglanti:"▦", harf:"◻", sudoku:"9"};
+const GAME_ICON = {kelime:"K", manset:"M", rakam:"#", kaynak:"?", petek:"⬢", baglanti:"▦", harf:"◻", sudoku:"9", mini:"✎"};
 // Bir oyun bugün bitti mi?
 function gDone(id){
   if (id === "kelime"){ const st = khLoad(); return !!st?.done; }
-  if (["baglanti","harf","sudoku"].includes(id)) return !!nyState(id).done;
+  if (["baglanti","harf","sudoku","mini"].includes(id)) return !!nyState(id).done;
   const st = gState(id);
   if (id === "petek"){ const p = data.game?.gunluk?.petek; if (!p) return false; const sc = (st.found || []).reduce((a, w) => a + pkScore(w), 0); return sc >= Math.ceil(0.3 * p.max); }
   return !!st.done;
@@ -1801,9 +1824,10 @@ function nextGameBtn(cur){
   return b;
 }
 const gStatus = id => {
-  if (["baglanti","harf","sudoku"].includes(id)){
+  if (["baglanti","harf","sudoku","mini"].includes(id)){
     const st = nyState(id), n = nytData();
-    if (!n || (id === "baglanti" && !n.bag) || (id === "harf" && !n.harf)) return "Hazırlanıyor";
+    if (!n || (id === "baglanti" && !n.bag) || (id === "harf" && !n.harf) || (id === "mini" && !n.mini)) return "Hazırlanıyor";
+    if (id === "mini") return st.done ? (st.gaveUp ? "Bitti" : "Çözüldü") : st.v?.some(Boolean) ? "Devam et" : "Oyna";
     if (st.done) return id === "baglanti" ? (st.won ? "Çözüldü" : "Bitti") : id === "harf" ? st.words.length + " kelime" : "Çözüldü";
     return (id === "baglanti" && st.tries?.length) || (id === "harf" && st.words?.length) || (id === "sudoku" && st.start) ? "Devam et" : "Oyna";
   }
@@ -2589,6 +2613,89 @@ document.addEventListener("keydown", e => {
     else if (e.key === "Backspace"){ document.querySelector(".pk-acts .btn")?.click(); e.preventDefault(); }
     else if (k.length === 1 && h.sides.flat().includes(k)){ [...document.querySelectorAll(".hk-l")].find(b => trLow(b.textContent) === k)?.click(); }
   }
+});
+
+
+// ---- Mini Bulmaca (5×5 çengel) ----
+const MB = { sel: -1, dir: "y", timer: null };
+function renderMini(){
+  const top = $("#top"), wrap = el("section","gm"); top.appendChild(wrap);
+  const n = nytData(); wrap.appendChild(gHead("Mini Bulmaca", n ? dateTR(n.date) + " bulmacası" : ""));
+  if (!n?.mini) return gNoData(wrap);
+  const m = n.mini, sol = gDec(m.s).split(""), st = nyState("mini");
+  st.v = st.v || Array(25).fill(""); st.bad = st.bad || []; if (!st.start) st.start = Date.now(); nySave("mini", st);
+  const black = new Set(m.blacks), words = [...m.across.map(x => ({...x, d: "y"})), ...m.down.map(x => ({...x, d: "a"}))];
+  if (MB.sel < 0 || black.has(MB.sel)){ MB.sel = m.across[0].cells.find(c => !st.v[c]) ?? m.across[0].cells[0]; MB.dir = "y"; }
+  const wordOf = (cell, d) => words.find(w => w.d === d && w.cells.includes(cell)) || words.find(w => w.cells.includes(cell));
+  let cur = wordOf(MB.sel, MB.dir); MB.dir = cur.d;
+  const clk = el("p","sd-clock"); wrap.appendChild(clk);
+  const tick = () => { const sec = Math.floor(((st.end || Date.now()) - st.start) / 1000); clk.textContent = "⏱ " + String(Math.floor(sec / 60)).padStart(2,"0") + ":" + String(sec % 60).padStart(2,"0"); };
+  tick(); clearInterval(MB.timer); if (!st.done) MB.timer = setInterval(() => { if (view === "oyun-mini") tick(); else clearInterval(MB.timer); }, 1000);
+  const g = el("div","mb"); g.setAttribute("role","grid"); g.setAttribute("aria-label","Mini bulmaca");
+  for (let i = 0; i < 25; i++){
+    if (black.has(i)){ g.appendChild(el("div","mb-c blk")); continue; }
+    const c = el("button","mb-c" + (i === MB.sel ? " sel" : cur.cells.includes(i) ? " word" : "") + (st.bad.includes(i) ? " bad" : "") + (st.done ? " ok" : ""), st.v[i] ? trUp(st.v[i]) : "");
+    c.type = "button"; if (m.nums[i]) c.appendChild(el("small", null, String(m.nums[i])));
+    c.setAttribute("aria-label", (m.nums[i] ? m.nums[i] + " numaralı kare, " : "") + (st.v[i] ? trUp(st.v[i]) : "boş"));
+    c.onclick = () => { if (i === MB.sel) MB.dir = MB.dir === "y" ? "a" : "y"; MB.sel = i; render(); };
+    g.appendChild(c);
+  }
+  wrap.appendChild(g);
+  const solved = () => st.v.every((x, i) => black.has(i) || x === sol[i]);
+  const put = ch => {
+    if (st.done) return;
+    const w = wordOf(MB.sel, MB.dir), k = w.cells.indexOf(MB.sel);
+    if (ch === "⌫"){ if (!st.v[MB.sel] && k > 0) MB.sel = w.cells[k - 1]; st.v[MB.sel] = ""; }
+    else { st.v[MB.sel] = ch; st.bad = st.bad.filter(x => x !== MB.sel); const nx = w.cells.slice(k + 1).find(c => !st.v[c]) ?? w.cells[Math.min(k + 1, w.cells.length - 1)]; if (k < w.cells.length - 1) MB.sel = nx;
+      else { const idx = words.indexOf(w), nw = words.slice(idx + 1).concat(words.slice(0, idx)).find(x => x.cells.some(c => !st.v[c])); if (nw){ MB.sel = nw.cells.find(c => !st.v[c]); MB.dir = nw.d; } } }
+    if (solved()){ st.done = true; st.end = Date.now(); clearInterval(MB.timer); toast("Tebrikler, çözdün!"); }
+    else if (st.v.every((x, i) => black.has(i) || x)) toast("Bazı harfler yanlış");
+    nySave("mini", st); render();
+  };
+  MB.put = put;
+  const step = d => { const idx = words.indexOf(cur), nw = words[(idx + d + words.length) % words.length]; MB.sel = nw.cells.find(c => !st.v[c]) ?? nw.cells[0]; MB.dir = nw.d; render(); };
+  const bar = el("div","mb-clue");
+  const pb = el("button","icon-btn"); pb.type = "button"; pb.setAttribute("aria-label","Önceki ipucu"); pb.appendChild(svgIcon("m15 6-6 6 6 6", 20)); pb.onclick = () => step(-1);
+  const nb = el("button","icon-btn"); nb.type = "button"; nb.setAttribute("aria-label","Sonraki ipucu"); nb.appendChild(svgIcon("m9 6 6 6-6 6", 20)); nb.onclick = () => step(1);
+  const ct = el("button","mb-ct"); ct.type = "button"; ct.append(el("b", null, cur.n + (cur.d === "y" ? " Soldan" : " Aşağı")), " " + cur.c); ct.onclick = () => { MB.dir = MB.dir === "y" ? "a" : "y"; render(); };
+  bar.append(pb, ct, nb); wrap.appendChild(bar);
+  if (!st.done){
+    const kb = el("div","kb");
+    [["e","r","t","y","u","ı","o","p","ğ","ü"],["a","s","d","f","g","h","j","k","l","ş","i"],["z","c","v","b","n","m","ö","ç","⌫"]].forEach(row => {
+      const r = el("div","kr"); row.forEach(k => { const b = el("button","key" + (k === "⌫" ? " wide" : ""), k === "⌫" ? "⌫" : trUp(k)); b.type = "button"; b.onclick = () => { b.blur(); put(k); }; r.appendChild(b); }); kb.appendChild(r);
+    });
+    wrap.appendChild(kb);
+    const acts = el("div","pk-acts");
+    const chk = el("button","btn ghost","Kontrol et"); chk.type = "button"; chk.onclick = () => { st.bad = st.v.map((x, i) => x && x !== sol[i] ? i : -1).filter(i => i >= 0); nySave("mini", st); toast(st.bad.length ? st.bad.length + " yanlış harf" : "Şimdilik hepsi doğru"); render(); };
+    const rev = el("button","btn ghost","Harf göster"); rev.type = "button"; rev.onclick = () => { st.helped = true; put(sol[MB.sel]); };
+    const all = el("button","btn ghost","Çözümü göster"); all.type = "button"; all.onclick = () => { if (!confirm("Çözüm gösterilsin mi?")) return; st.v = sol.map(x => x === "#" ? "" : x); st.done = true; st.gaveUp = true; st.end = Date.now(); nySave("mini", st); render(); };
+    acts.append(chk, rev, all); wrap.appendChild(acts);
+  } else {
+    const sec = Math.floor((st.end - st.start) / 1000), t = Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+    const end = el("div","gm-end"); end.append(el("h3", null, st.gaveUp ? "Çözüm" : "Tebrikler!"), el("div","big", st.gaveUp ? "—" : t));
+    if (st.helped && !st.gaveUp) end.appendChild(el("p","hint","Harf yardımıyla çözdün."));
+    const f = el("div","wg-foot"), sh = el("button","btn","Sonucu paylaş"); sh.type = "button";
+    sh.onclick = () => shareOrCopy({ title: "Mini Bulmaca", text: `Harman Mini Bulmaca, ${dateTR(st.date)}: ${st.gaveUp ? "çözemedim" : t + (st.helped ? " (yardımla)" : "")} ✏️`, url: SITE + "#oyun-mini" });
+    f.append(el("span","next","Yarın yeni bulmaca"), sh); end.appendChild(f);
+    const nf = el("div","gm-next"); nf.appendChild(nextGameBtn("mini")); end.appendChild(nf);
+    wrap.appendChild(end);
+  }
+  // İpucu listeleri
+  const lists = el("div","mb-lists");
+  [["Soldan sağa", m.across, "y"], ["Yukarıdan aşağı", m.down, "a"]].forEach(([t, arr, d]) => {
+    const col = el("div"); col.appendChild(el("h4", null, t));
+    arr.forEach(x => { const b = el("button","mb-li" + (cur.d === d && cur.n === x.n ? " on" : "") + (x.cells.every(c => st.v[c]) ? " full" : "")); b.type = "button"; b.append(el("b", null, String(x.n)), " " + x.c); b.onclick = () => { MB.dir = d; MB.sel = x.cells.find(c => !st.v[c]) ?? x.cells[0]; render(); }; col.appendChild(b); });
+    lists.appendChild(col);
+  });
+  wrap.appendChild(lists);
+}
+document.addEventListener("keydown", e => {
+  if (view !== "oyun-mini" || e.ctrlKey || e.metaKey || e.altKey || document.querySelector("dialog[open]")) return;
+  const k = trLow(e.key);
+  if (e.key === "Backspace"){ MB.put?.("⌫"); e.preventDefault(); }
+  else if (e.key === " " || e.key === "Enter"){ MB.dir = MB.dir === "y" ? "a" : "y"; render(); e.preventDefault(); }
+  else if (/^Arrow/.test(e.key)){ const d = {ArrowUp:-5, ArrowDown:5, ArrowLeft:-1, ArrowRight:1}[e.key]; let i = MB.sel; do { i += d; } while (i >= 0 && i < 25 && (nytData()?.mini?.blacks || []).includes(i)); if (i >= 0 && i < 25){ MB.sel = i; MB.dir = /Up|Down/.test(e.key) ? "a" : "y"; render(); } e.preventDefault(); }
+  else if (k.length === 1 && TRL.includes(k)){ MB.put?.(k); e.preventDefault(); }
 });
 
 // ---- Konu sayfaları ----

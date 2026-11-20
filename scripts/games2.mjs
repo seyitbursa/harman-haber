@@ -1,6 +1,7 @@
 // NYT Games tarzı günlük bulmacalar: Sudoku, Harf Kutusu (Letter Boxed), Bağlantılar (Connections).
 // Sudoku ve Harf Kutusu tamamen algoritmayla, Bağlantılar Gemini ile üretilir ve kurallara göre doğrulanır.
 import { readFile } from "node:fs/promises";
+import { miniBulmaca } from "./mini.mjs";
 function rng(seed) { let h = 2166136261; for (const c of seed) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return (h >>> 0) / 4294967296; }; }
 const shuffle = (a, r) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const enc = o => Buffer.from(JSON.stringify(o), "utf8").toString("base64").split("").reverse().join("");
@@ -107,12 +108,14 @@ async function baglantilar(key, callGeminiRaw, usage, common, r) {
 }
 
 export async function dailyGames2({ prev, date, key, usage, callGeminiRaw, stories = [] }) {
-  if (prev?.date === date && prev.sudoku && prev.harf && (prev.bag || !key)) return prev;
+  if (prev?.date === date && prev.sudoku && prev.harf && ((prev.bag && prev.mini) || !key)) return prev;
   const words = JSON.parse(await readFile(new URL("../data/sozluk.json", import.meta.url), "utf8"));
   const r = rng("nyt-" + date);
   const out = { date };
   out.sudoku = prev?.date === date && prev.sudoku ? prev.sudoku : sudoku(r);
   out.harf = prev?.date === date && prev.harf ? prev.harf : harfKutusu(words, r);
+  if (prev?.date === date && prev.mini) out.mini = prev.mini;
+  else if (key && usage) out.mini = await miniBulmaca({ date, key, callGeminiRaw, usage }).catch(() => null);
   if (prev?.date === date && prev.bag) out.bag = prev.bag;
   else if (key && usage) {
     // Yaygınlık ölçüsü: son günlerin haberlerinde küçük harfle geçen sözlük kelimeleri

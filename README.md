@@ -60,6 +60,10 @@ Konu paylaşımları bu sabit sayfaların adresini kullanır.
 
 `scripts/social.mjs`, repo ayarlarında şu secret’lar tanımlıysa çalışır: `TELEGRAM_BOT_TOKEN` ve `TELEGRAM_CHAT_ID` (Telegram kanalı), `BSKY_HANDLE` ve `BSKY_APP_PASSWORD` (Bluesky). Her sabah 08.00’den sonra günün gündemini, gün içinde de 5 ve daha fazla kaynağın verdiği olayları (günde en fazla 4) paylaşır.
 
+## Kullanım istatistikleri
+
+`worker/sayac.js`, Cloudflare’de `harman-sayac` adlı Worker olarak çalışır ve `harman-sayac` D1 veritabanına yalnızca “gün + olay adı → sayı” yazar (IP, cihaz kimliği ya da kişisel veri tutulmaz). Site; günlük tekil cihaz (`ziyaret`), bölüm görüntülemeleri (`sayfa:…`), oyun açma/bitirme (`oyun:<oyun>:acildi|bitti`, Kelime Harmanı’nda kazanma ve deneme sayısı), paylaşımlar ve “Gündemi dinle” olaylarını gönderir. Yönetici özeti `https://harmanhaber.app/#istatistik` adresinde, Worker’daki `ADMIN_KEY` anahtarıyla görülür. Oyunlar sayfasındaki “Bugün N kişi oynadı” bilgisi `/public` uç noktasından gelir.
+
 ## Zamanlama
 
 GitHub’ın kendi zamanlayıcısı (`schedule`) yoğun saatlerde saatlerce gecikebildiği için asıl tetikleme Cloudflare’den yapılır: `harman-tetikleyici` adlı Cloudflare Worker her 15 dakikada bu iş akışını `workflow_dispatch` ile başlatır. GitHub token’ı Worker’da `GH_TOKEN` gizli değişkeni olarak durur. GitHub zamanlayıcısı yedek olarak açık kalır. Token’ın süresi dolarsa Cloudflare panelinde Workers → harman-tetikleyici → Settings → Variables bölümünden `GH_TOKEN` güncellenir.

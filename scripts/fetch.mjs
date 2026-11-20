@@ -174,6 +174,21 @@ if (merged){ stories.sort((a, b) => b.date.localeCompare(a.date)); console.log(`
 const neutralCache = await addNeutralTitles({ stories, sources: config.sources, prev: prevJson?.neutralCache, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const farkCache = await addContrasts({ stories, sources: config.sources, prevFark: prevJson?.farkCache, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const rg = await resmiGazete({ prev: prevJson?.rg, key: process.env.GEMINI_API_KEY, usage: sum.usage, callGeminiRaw });
+// Haberi Resmî Gazete’deki asıl metne bağla: düzenleme başlığındaki ayırt edici kelimelerin en az üçü haber başlığında geçmeli
+if (rg?.items?.length) {
+  const tk = t => new Set(t.toLocaleLowerCase("tr").replace(/['’‘`][\p{L}]+/gu, "").split(/[^\p{L}\p{N}]+/u).filter(w => w.length >= 4 && !/^(yönetmelik|değişiklik|yapılmasına|dair|hakkında|karar|kararı|ilişkin|esaslar|tebliğ|sayılı|cumhurbaşkanı)/.test(w)).map(w => w.slice(0, 5)));
+  for (const it of rg.items) {
+    const a = tk((it.sade || "") + " " + it.title);
+    for (const s of stories) {
+      if (Date.now() - new Date(s.date) > 48 * 3600e3) continue;
+      const b = tk(s.items.map(i => i.title).join(" "));
+      const hit = [...a].filter(w => b.has(w)).length;
+      // Haberin kendisi Resmî Gazete’den söz etmeli; yalnızca kelime benzerliği yetmez
+      const txt = s.items.map(i => i.title + " " + (i.gist || "")).join(" ");
+      if (hit >= 3 && /resm[iî] gazete/i.test(txt) && !(s.primary || []).some(p => p.url === it.url)) (s.primary = s.primary || []).push({ t: "Resmî Gazete’deki asıl metin", url: it.url });
+    }
+  }
+}
 
 // Gündemdeki konular ve her konunun haberleri (konu sayfaları için)
 const topics = trendingTopics(stories, { max: 10 });

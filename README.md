@@ -49,6 +49,17 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
 - Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.
 
+## Okur özellikleri (Kasım 2026)
+
+- **Son ziyaretimden beri:** Okurun tıkladığı haberlerin zamanı cihazda saklanır; o olaya sonradan yeni kaynak eklenirse kartta “Sen okuduktan sonra” satırı çıkar.
+- **Zaman çizelgesi:** Konu sayfasında en fazla 5 dönüm noktası (en eski, en yeni ve en çok kaynağın verdiği olaylar), tarih sırasıyla.
+- **Kaynaklar neyi öne çıkardı?:** 4+ kaynaklı olaylarda başlıklar arasındaki 2–3 somut fark, ilgili yayınlar ve özgün başlıklarıyla (Gemini; “Fark ne?” ile aynı istekte).
+- **Günün beş gelişmesi** (Keşfet): farklı konulardan beş olay; tek dokunuşla dinlenebilir.
+- **Birincil kaynak:** Resmî Gazete’den söz eden ve düzenleme başlığıyla en az üç ayırt edici kelimeyi paylaşan haberlere asıl metin bağlantısı.
+- **Konu takibi:** Konu sayfasındaki “Konuyu takip et” ile; Keşfet’te “Takip ettiklerim” altında yeni haber sayısıyla.
+- **Paylaşılabilir karşılaştırma:** Seçilen iki yayının başlıklarıyla 1080×1350 görsel; `#k-<olay>-<yayın>-<yayın>` bağlantısı aynı karşılaştırmayı açar.
+- **Yanlış eşleşme bildirimi:** Haber menüsünde “Bu haber bu konuya ait değil”; haber o cihazda konudan çıkarılır, bildirim ntfy geri bildirim konusuna gider.
+
 ## Performans
 
 - **Veri ayrımı:** `news.json` yalnızca sitenin kullandığı alanları içerir (gzip ~190 KB). İlk ekran için en yeni 40 hikâyeyi taşıyan `head.json` (gzip ~15 KB) paralel istenir ve önce çizilir. Sunucunun kendi hafızası (özet önbellekleri, arşivler, bildirim durumu) `state.json`’dadır; okuyucu bu dosyayı indirmez.

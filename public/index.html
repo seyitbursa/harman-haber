@@ -795,6 +795,45 @@ body.in-game footer{display:none}
 .hero .legend{margin-top:4px;font-size:11.5px}
 /* Telefonda akış içindeki piyasa şeridi */
 .ticker.in-feed{margin:12px -16px 0;border-radius:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface);position:static}
+
+/* Son ziyaretimden beri */
+.since{position:relative;z-index:2;grid-area:fark;margin:8px 0 0;font-size:13.5px;line-height:1.4;background:color-mix(in srgb,#F59E0B 14%,var(--surface));border-left:3px solid #F59E0B;border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--ink)}
+.since b{color:#B45309} .since span{color:var(--ink-3)}
+.rl.prim{color:var(--accent);text-decoration:none}
+/* Zaman çizelgesi */
+.tline{background:var(--surface);border-radius:16px;box-shadow:0 1px 0 var(--line);padding:14px 16px;margin-top:12px}
+.tline h3{margin:0 0 10px;font-family:var(--head);font-weight:800;font-stretch:85%;font-size:20px}
+.tline ol{list-style:none;margin:0;padding:0}
+.tline li{display:grid;grid-template-columns:78px 1fr;gap:10px;position:relative;padding:0 0 14px}
+.tline li::before{content:"";position:absolute;left:84px;top:6px;bottom:-6px;width:2px;background:var(--line)}
+.tline li.last::before{display:none}
+.tline li::after{content:"";position:absolute;left:79px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.tline time{font-size:12.5px;font-weight:700;color:var(--ink-3);padding-top:1px}
+.tline li > div{padding-left:18px}
+.tline a{font-weight:700;text-decoration:none;color:var(--ink)} .tline a:hover{color:var(--accent)}
+.tline p{margin:4px 0 0;font-size:14px;color:var(--ink-2)}
+.tline small{display:block;margin-top:4px;font-size:12.5px;color:var(--ink-3)}
+.tline .rl{margin-top:6px}
+/* Takip ve günün beşi */
+.fl-row{display:flex;align-items:center;gap:6px;border-top:1px solid var(--line);padding:6px 0}
+.fl-row:first-of-type{border-top:0}
+.fl-t{flex:1;border:0;background:none;text-align:left;padding:6px 0;cursor:pointer;color:var(--ink)}
+.fl-t b{display:block;font-size:15px} .fl-t small{color:var(--ink-3);font-size:12.5px}
+.fl-row.new .fl-t small{color:#B45309;font-weight:700}
+.d5 ol{margin:6px 0 0;padding-left:22px}
+.d5 li{margin:0 0 12px}
+.d5 li a{font-weight:700;text-decoration:none;color:var(--ink)}
+.d5 li p{margin:3px 0 0;font-size:14px;color:var(--ink-2)}
+.d5 li small{color:var(--ink-3);font-size:12.5px}
+/* Kaynaklar neyi öne çıkardı? */
+.cmp-obs{background:var(--paper);border-radius:12px;padding:12px;margin:8px 0}
+.cmp-obs h3{margin:0 0 8px;font-size:16px}
+.ob{border-top:1px solid var(--line);padding:8px 0}
+.ob:first-of-type{border-top:0}
+.ob p{margin:0 0 6px;font-weight:700;font-size:14.5px}
+.ob-src{display:flex;flex-direction:column;gap:4px}
+.ob-s{display:flex;gap:8px;align-items:flex-start;border:0;background:none;text-align:left;padding:2px 0;font-size:13.5px;color:var(--ink-2);cursor:pointer}
+.ob-s .mono{width:22px;height:22px;font-size:8px;flex:0 0 auto}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -1014,6 +1053,7 @@ function link(text, url, cardEl){
 }
 // Haber tıklaması: hangi kaynak ve hangi kesim
 function trackArticle(url){
+  const st0 = (data.stories || []).find(x => x.items.some(i => i.url === url)); if (st0) markSeen(st0);
   let srcId = null;
   for (const st of data.stories || []){ const i = st.items.find(x => x.url === url); if (i){ srcId = i.source; break; } }
   track("haber:tik");
@@ -1072,7 +1112,7 @@ function weightLabel(story){
 //  - İlk açılışta küçük head.json (ilk ekran) ve tam news.json birlikte istenir; hangisi önce gelirse o çizilir.
 //  - Adreslere zaman damgası eklenmez; "no-cache" ile tarayıcı sunucuya ETag ile sorar, değişmediyse gövde yeniden indirilmez.
 //  - Aynı ETag gelirse JSON yeniden işlenmez. Arka plan kontrolü yalnızca sekme görünürken yapılır.
-let lastEtag = null, lastCheck = 0, fullLoaded = false;
+let lastEtag = null, lastCheck = 0, fullLoaded = false, pendingCompare = null;
 async function getJSON(name){
   const r = await fetch(name, {cache: "no-cache"});
   if (!r.ok) throw new Error(r.status);
@@ -1088,6 +1128,7 @@ async function load(manual){
       const r = await fullP; lastEtag = r.headers.get("etag");
       const fresh = await r.json(); if (!fresh.stories) throw new Error("eski veri");
       const y = scrollY; data = fresh; fullLoaded = true; loaded = true; pending = null; render(); if (y) scrollTo(0, y);
+      if (pendingCompare){ const h = pendingCompare; pendingCompare = null; openCompareFromHash(h); }
       return;
     }
     const r = await getJSON("news.json");
@@ -1277,6 +1318,7 @@ function route(){
   if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); }
   else if (h === "oyunlar" || h.startsWith("oyun-")) view = h;
   else if (h === "yerel" || h === "saved") view = h;
+  else if (h.startsWith("k-")){ view = "feed"; cat = "all"; if (fullLoaded) setTimeout(() => openCompareFromHash(h), 0); else pendingCompare = h; }
   else if (h === "kesfet") view = "kesfet";
   else if (h === "istatistik") view = "istatistik";
   else { view = "feed"; cat = (CATS.some(c => c.id === h) || SPECIAL.some(c => c.id === h)) ? h : "all"; }
@@ -1449,6 +1491,7 @@ function heroCard(story){
   const h = el("h2"); h.appendChild(link(headline(story), i.url)); body.appendChild(h);
   const ld = lede(i); if (ld) body.appendChild(ld);
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb){ body.appendChild(bb); body.appendChild(legend()); }
+  const sl = sinceLine(story); if (sl) body.appendChild(sl);
   const cb = compareBtn(story, true); if (cb) body.appendChild(cb);
   const m = meta(i, story); m.appendChild(actions(i, story)); body.appendChild(m);
   c.appendChild(body);
@@ -1474,7 +1517,9 @@ function row(story, inTopic){
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb) r.appendChild(bb);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
+  const sl = sinceLine(story); if (sl) r.appendChild(sl);
   const links = el("div","rlinks");
+  (story.primary || []).slice(0, 1).forEach(pm => { const a = el("a","rl prim","📄 " + pm.t); a.href = pm.url; a.target = "_blank"; a.rel = "noopener"; a.onclick = () => track("birincil-kaynak"); links.appendChild(a); });
   if (story.yt?.length && data.youtube){
     const vids = data.youtube.items.filter(v => story.yt.includes(v.id) && !ytOff.has(v.ch));
     if (vids.length){ const b = el("button","rl yt"); b.type = "button"; b.append("▶ " + vids.length + " video"); b.setAttribute("aria-label", "Bu haberle ilgili " + vids.length + " YouTube videosu"); b.onclick = () => openVideo(vids[0], vids, "haber-satiri"); links.appendChild(b); }
@@ -1615,6 +1660,8 @@ function openActions(i, story){
     toast(src(i.source).name + " gizlendi. Ayarlar’dan geri açabilirsin.");
   }));
   if (i.gist && data.notify?.reportTopic) ul.appendChild(menuItem("Özette hata bildir", ICON.flag, () => openReport(i)));
+  const tpw = view === "topic" ? (data.topics || []).find(x => x.slug === topicSlug) : topicOfStory(story.id);
+  if (tpw) ul.appendChild(menuItem("Bu haber “" + (tpw.title || tpw.label) + "” konusuna ait değil", ICON.flag, () => openWrongMatch(story, tpw)));
   body.appendChild(ul);
   if (!$("#actSheet").open) $("#actSheet").showModal();
 }
@@ -2522,10 +2569,10 @@ function listenCard(){
   const t = el("div"); t.append(el("b", null, "Gündemi dinle"), el("span", null, "Günün en önemli 10 haberi, yaklaşık 3 dakika"));
   b.append(ic, t); b.onclick = startListen; return b;
 }
-function startListen(){
+function startListen(given){
   track("dinle:basladi");
   const since = Date.now() - 24 * 3600e3;
-  const top = data.stories.filter(s => new Date(s.date) > since).map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length)
+  const top = Array.isArray(given) ? given : data.stories.filter(s => new Date(s.date) > since).map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length)
     .sort((a, b) => b.items.length - a.items.length || b.date.localeCompare(a.date)).slice(0, 10);
   if (!top.length) return toast("Dinlenecek haber yok");
   const day = new Date().toLocaleDateString("tr-TR", {day:"numeric", month:"long", weekday:"long"});
@@ -2570,6 +2617,8 @@ function renderKesfet(){
   g.appendChild(card("RG", "#B91C1C", "Resmî Gazete", rgN ? "Bugün " + rgN + " düzenleme, sade dille" : "Günün düzenlemeleri, sade dille", go2("resmigazete")));
   g.appendChild(card("★", "#B7791F", "Kaydettiklerim", Object.keys(savedMap).length + " kayıtlı haber", go2("saved")));
   g.appendChild(card("📅", "#0F766E", "Gündem arşivi", "Son 30 günün gündemi", () => { location.href = "/gundem/"; }));
+  const fs = followsSection(); if (fs) top.appendChild(fs);
+  const d5 = dayFiveSection(); if (d5) top.appendChild(d5);
   top.appendChild(g);
   renderAside();
 }
@@ -3118,9 +3167,164 @@ function renderNetTab(){
   renderAside();
 }
 
+
+// ---- Son ziyaretimden beri: okunan olayda sonradan gelen gelişmeler ----
+// Bir habere tıklandığında o anın zamanı saklanır; olaya daha sonra yeni kaynaklar eklenirse kartta gösterilir.
+const seenAt = store.get("gk-seen", {});
+function markSeen(story){ const now = Date.now(); story.items.forEach(i => seenAt[i.url] = now); const keys = Object.keys(seenAt); if (keys.length > 1500) keys.sort((a, b) => seenAt[a] - seenAt[b]).slice(0, keys.length - 1500).forEach(k => delete seenAt[k]); store.set("gk-seen", seenAt); }
+function sinceLine(story){
+  const t = Math.max(0, ...story.items.map(i => seenAt[i.url] || 0)); if (!t) return null;
+  const nw = story.items.filter(i => !seenAt[i.url] && new Date(i.date).getTime() > t && !off.has(i.source)).sort((a, b) => b.date.localeCompare(a.date));
+  if (!nw.length) return null;
+  const n = nw[0], p = el("p","since");
+  p.append(el("b", null, "Sen okuduktan sonra: "), n.title, el("span", null, " · " + src(n.source).name + ", " + ago(n.date) + (nw.length > 1 ? " · " + (nw.length - 1) + " kaynak daha" : "")));
+  p.onclick = () => { window.open(n.url, "_blank", "noopener"); markSeen(story); };
+  return p;
+}
+
+// ---- Olayın zaman çizelgesi (konu sayfası) ----
+// Konudaki olaylardan en fazla 5 dönüm noktası: en eski, en yeni ve en çok kaynağın verdikleri; tarih sırasıyla.
+function timelineSection(list){
+  if (list.length < 3) return null;
+  const firstOf = s => s.first || s.items.map(i => i.date).sort()[0];
+  const byTime = [...list].sort((a, b) => firstOf(a).localeCompare(firstOf(b)));
+  const pick = new Set([byTime[0], byTime[byTime.length - 1]]);
+  [...list].sort((a, b) => uniqSrc(b).length - uniqSrc(a).length).forEach(s => { if (pick.size < 5) pick.add(s); });
+  const rows = byTime.filter(s => pick.has(s));
+  const sec = el("section","tline"); sec.appendChild(el("h3", null, "Olayın zaman çizelgesi"));
+  const ol = el("ol");
+  rows.forEach((s, k) => {
+    const li = el("li" , k === rows.length - 1 ? "last" : null), i = s.items[0];
+    const d = new Date(firstOf(s));
+    li.appendChild(el("time", null, d.toLocaleDateString("tr-TR", {day:"numeric", month:"short"}) + " " + d.toLocaleTimeString("tr-TR", {hour:"2-digit", minute:"2-digit"})));
+    const body = el("div"); body.appendChild(link(headline(s), i.url));
+    if (i.gist) body.appendChild(el("p", null, i.gist));
+    const n = uniqSrc(s).length; const meta = el("small", null, n > 1 ? n + " kaynak · " + uniqSrc(s).slice(0, 3).map(x => src(x).name).join(", ") + (n > 3 ? "…" : "") : src(i.source).name);
+    body.appendChild(meta);
+    if (n > 1){ const c = el("button","rl","Başlıkları karşılaştır"); c.type = "button"; c.onclick = () => biasOf(s) ? openBias(s) : openSources(s); body.appendChild(c); }
+    li.appendChild(body); ol.appendChild(li);
+  });
+  sec.appendChild(ol);
+  sec.appendChild(el("p","hint","Dönüm noktaları, konudaki olayların ilk yayın zamanına ve kaç kaynağın verdiğine göre seçilir."));
+  return sec;
+}
+
+// ---- Yanlış eşleşme bildirimi ----
+const wrongTopic = store.get("gk-wrongtopic", {});      // bu cihazda konudan çıkarılan haberler
+function openWrongMatch(story, tp){
+  const i = story.items[0], body = $("#actBody"); body.textContent = "";
+  $("#actTitle").textContent = "Bu haber bu konuya ait değil mi?";
+  body.appendChild(el("p","menu-title", i.title));
+  body.appendChild(el("p","hint", "Konu: " + (tp.title || tp.label) + ". Bildirdiğinde haber bu cihazda konudan çıkarılır ve eşleştirmeyi düzeltmemiz için bize iletilir."));
+  const row = el("div","sheet-f");
+  const cancel = el("button","btn ghost","Vazgeç"); cancel.type = "button"; cancel.onclick = () => $("#actSheet").close();
+  const send = el("button","btn","Bildir"); send.type = "button";
+  send.onclick = async () => {
+    send.disabled = true;
+    (wrongTopic[tp.slug] = wrongTopic[tp.slug] || []).push(i.url); store.set("gk-wrongtopic", wrongTopic);
+    track("hata:konu-eslesmesi");
+    try { if (data.notify?.reportTopic) await fetch("https://ntfy.sh/", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ topic: data.notify.reportTopic, title: "Yanlış konu eşleşmesi", message: `Konu: ${tp.title || tp.label} (${tp.slug}, anahtar: ${tp.label})\nHaber: ${i.title}\nKaynak: ${src(i.source).name}\nKategori: ${story.category}`, click: i.url, tags: ["link"] })}); } catch(e){}
+    $("#actSheet").close(); toast("Bildirildi, teşekkürler. Haber bu konudan çıkarıldı."); render();
+  };
+  row.append(cancel, send); body.appendChild(row);
+  if (!$("#actSheet").open) $("#actSheet").showModal();
+}
+const inTopicOk = (t, s) => !(wrongTopic[t.slug] || []).some(u => s.items.some(i => i.url === u));
+
+// ---- Konu takibi ----
+let follows = store.get("gk-follow", []);            // [{label, title, at}]
+const isFollowed = t => follows.some(f => f.label === t.label);
+function toggleFollow(t){
+  if (isFollowed(t)) follows = follows.filter(f => f.label !== t.label);
+  else { follows.push({ label: t.label, title: t.title || t.label, at: Date.now() }); track("takip:ekle"); }
+  store.set("gk-follow", follows); render();
+}
+// Takip edilen anahtar kelimenin geçtiği haberler (kelimelerin hepsi başlıkta)
+function followStories(f){
+  const ws = f.label.toLocaleLowerCase("tr").split(/\s+/).filter(Boolean).map(w => w.slice(0, Math.min(6, w.length)));
+  return data.stories.filter(s => s.items.some(i => { const tw = i.title.toLocaleLowerCase("tr").split(/[^\p{L}\p{N}]+/u); return ws.every(p => tw.some(x => x.startsWith(p))); })).sort((a, b) => b.date.localeCompare(a.date));
+}
+function followsSection(){
+  if (!follows.length) return null;
+  const sec = el("section","mod"); sec.style.marginTop = "12px";
+  const h = el("div","mod-h"); h.appendChild(el("h3", null, "Takip ettiklerim")); sec.appendChild(h);
+  follows.forEach(f => {
+    const ss = followStories(f), nw = ss.filter(s => new Date(s.date).getTime() > (f.seen || f.at));
+    const row = el("div","fl-row");
+    const b = el("button","fl-t"); b.type = "button"; b.append(el("b", null, f.title), el("small", null, ss.length + " haber" + (nw.length ? " · " + nw.length + " yeni" : "")));
+    b.onclick = () => { f.seen = Date.now(); store.set("gk-follow", follows); const t = (data.topics || []).find(x => x.label === f.label); if (t) goTopic(t); else { activeTopic = f.label; view = "feed"; cat = "all"; location.hash = ""; render(); } };
+    const x = el("button","icon-btn"); x.type = "button"; x.setAttribute("aria-label", f.title + " takibini bırak"); x.appendChild(svgIcon("M6 6l12 12M18 6 6 18", 16));
+    x.onclick = () => { follows = follows.filter(y => y !== f); store.set("gk-follow", follows); render(); };
+    if (nw.length) row.classList.add("new");
+    row.append(b, x); sec.appendChild(row);
+  });
+  return sec;
+}
+
+// ---- Günün beş gelişmesi ----
+function dayFive(){
+  const since = Date.now() - 24 * 3600e3, used = new Set(), out = [];
+  const cand = data.stories.filter(s => new Date(s.date) > since).map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length)
+    .sort((a, b) => uniqSrc(b).length - uniqSrc(a).length || b.date.localeCompare(a.date));
+  for (const s of cand){ const tp = topicOfStory(s.id); const key = tp ? tp.slug : s.id; if (used.has(key)) continue; used.add(key); out.push(s); if (out.length === 5) break; }
+  return out;
+}
+function dayFiveSection(){
+  const five = dayFive(); if (five.length < 3) return null;
+  const sec = el("section","mod d5"); sec.style.marginTop = "12px";
+  const h = el("div","mod-h"); h.appendChild(el("h3", null, "Günün beş gelişmesi"));
+  if ("speechSynthesis" in window){ const lb = el("button","xt-more","▶ Dinle"); lb.type = "button"; lb.style.margin = "0"; lb.onclick = () => startListen(five); h.appendChild(lb); }
+  sec.appendChild(h);
+  const ol = el("ol");
+  five.forEach(s => { const i = s.items[0], li = el("li"); li.appendChild(link(headline(s), i.url)); if (i.gist) li.appendChild(el("p", null, i.gist)); const tl = timeLine(s); li.appendChild(el("small", null, uniqSrc(s).length + " kaynak · " + (tl ? tl.textContent : ago(s.date)))); ol.appendChild(li); });
+  sec.appendChild(ol);
+  return sec;
+}
+
+// ---- Paylaşılabilir karşılaştırma kartı ----
+// Bağlantı (#k-<olay>-<yayın>-<yayın>) alıcıyı aynı karşılaştırmaya götürür; görsel tarayıcıda çizilir.
+const urlKey = u => { let h = 5381; for (const c of u) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0; return h.toString(36); };
+function compareLink(story, a, b){ return location.origin + "/#k-" + urlKey(story.items[0].url) + "-" + a + "-" + b; }
+async function shareCompare(story, a, b){
+  track("paylas:karsilastirma");
+  const ia = story.items.find(i => i.source === a), ib = story.items.find(i => i.source === b);
+  const W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const g = cv.getContext("2d");
+  g.fillStyle = "#F4F6F9"; g.fillRect(0, 0, W, H);
+  const wrap = (text, x, y, maxW, lh, font, color, maxLines = 6) => { g.font = font; g.fillStyle = color; const words = text.split(" "); let line = "", n = 0; for (const w of words){ const t = line ? line + " " + w : w; if (g.measureText(t).width > maxW && line){ g.fillText(line, x, y); y += lh; line = w; if (++n >= maxLines - 1){ line += "…"; break; } } else line = t; } g.fillText(line, x, y); return y + lh; };
+  g.fillStyle = "#2350E6"; g.font = "800 44px system-ui, sans-serif"; g.fillText("harman", 72, 110); g.fillStyle = "#14213D"; g.fillText("haber", 72 + g.measureText("harman").width, 110);
+  g.fillStyle = "#667085"; g.font = "500 30px system-ui, sans-serif"; g.fillText("Aynı olay, iki başlık · " + new Date().toLocaleDateString("tr-TR", {day:"numeric", month:"long", year:"numeric"}), 72, 165);
+  let y = wrap(headline(story), 72, 250, W - 144, 60, "800 50px system-ui, sans-serif", "#14213D", 3) + 20;
+  for (const [it, col] of [[ia, "#6D28D9"], [ib, "#0F766E"]]){
+    const lg = leanOf(it.source), boxY = y;
+    g.fillStyle = "#FFFFFF"; g.beginPath(); g.roundRect(56, boxY, W - 112, 400, 28); g.fill();
+    g.fillStyle = lg ? getComputedStyle(document.documentElement).getPropertyValue("--g-" + lg).trim() || col : "#667085";
+    g.beginPath(); g.roundRect(56, boxY, 14, 400, 7); g.fill();
+    g.fillStyle = "#14213D"; g.font = "800 36px system-ui, sans-serif"; g.fillText(src(it.source).name + (lg ? "  ·  " + GL[lg] : ""), 100, boxY + 70);
+    wrap("“" + it.title + "”", 100, boxY + 140, W - 220, 52, "600 42px Georgia, serif", "#14213D", 5);
+    y = boxY + 430;
+  }
+  g.fillStyle = "#667085"; g.font = "500 30px system-ui, sans-serif"; g.fillText("Tüm kaynakları karşılaştır: harmanhaber.app", 72, H - 70);
+  const url = compareLink(story, a, b), text = "“" + headline(story) + "”: " + src(a).name + " ve " + src(b).name + " başlıkları";
+  try {
+    const blob = await new Promise(r => cv.toBlob(r, "image/png"));
+    const file = new File([blob], "harman-karsilastirma.png", {type: "image/png"});
+    if (navigator.canShare?.({files: [file]})) { await navigator.share({files: [file], title: "Harman Haber", text: text + "\n" + url}); return; }
+    const a2 = document.createElement("a"); a2.href = URL.createObjectURL(blob); a2.download = "harman-karsilastirma.png"; a2.click();
+    try { await navigator.clipboard.writeText(url); toast("Görsel indirildi, bağlantı kopyalandı"); } catch(e){ toast("Görsel indirildi"); }
+  } catch(e){ if (e?.name !== "AbortError") shareOrCopy({title: "Harman Haber", text, url}); }
+}
+// #k-… bağlantısıyla gelindiğinde karşılaştırmayı aç
+function openCompareFromHash(h){
+  const [, key, a, b] = h.split("-");
+  const s = data.stories.find(x => urlKey(x.items[0].url) === key);
+  if (!s){ toast("Bu karşılaştırma artık güncel değil; olay akıştan düşmüş olabilir."); return; }
+  if (a && b && s.items.some(i => i.source === a) && s.items.some(i => i.source === b)) cmpPick = [a, b];
+  openBias(s, true);
+}
+
 // ---- Konu sayfaları ----
 let topicSlug = null;
-function topicOfStory(id){ return (data.topics || []).find(t => (t.storyIds || []).includes(id)); }
+function topicOfStory(id){ const s = (data.stories || []).find(x => x.id === id); return (data.topics || []).find(t => (t.storyIds || []).includes(id) && (!s || inTopicOk(t, s))); }
 function goTopic(t){ location.hash = "konu-" + t.slug; window.scrollTo({top:0}); }
 function renderTopic(){
   const t = (data.topics || []).find(x => x.slug === topicSlug);
@@ -3132,7 +3336,7 @@ function renderTopic(){
     feed.appendChild(e); $("#feedHead").hidden = true; renderAside(); return;
   }
   const byId = Object.fromEntries(data.stories.map(s => [s.id, s]));
-  const list = t.storyIds.map(id => byId[id]).filter(Boolean)
+  const list = t.storyIds.map(id => byId[id]).filter(Boolean).filter(s => inTopicOk(t, s))
     .map(s => ({...s, items: s.items.filter(i => !off.has(i.source))})).filter(s => s.items.length)
     .sort((a,b) => b.date.localeCompare(a.date));
   const all = {id:"topic-" + t.slug, items: list.flatMap(s => s.items)};
@@ -3145,8 +3349,11 @@ function renderTopic(){
     p.append(el("b", null, "Özet:"), document.createTextNode(t.summary)); head.appendChild(p);
   }
   const bb = biasBar(all); if (bb) head.appendChild(bb);
-  const sr = el("div","share-row"), sb = el("button","btn ghost","Konuyu paylaş"); sb.type = "button"; sb.onclick = () => shareTopic(t); sr.appendChild(sb); head.appendChild(sr);
+  const sr = el("div","share-row"), sb = el("button","btn ghost","Konuyu paylaş"); sb.type = "button"; sb.onclick = () => shareTopic(t);
+  const fb = el("button", isFollowed(t) ? "btn" : "btn ghost", isFollowed(t) ? "✓ Takip ediliyor" : "☆ Konuyu takip et"); fb.type = "button"; fb.onclick = () => toggleFollow(t);
+  sr.append(fb, sb); head.appendChild(sr);
   top.appendChild(head);
+  const tl = timelineSection(list); if (tl) top.appendChild(tl);
   // Kesimlere göre başlıklar
   const sec = el("div","sec"); sec.appendChild(el("h3", null, "Kim nasıl verdi?")); top.appendChild(sec);
   const grid = el("div","persp");
@@ -3230,6 +3437,12 @@ function openBias(story, keepPick){
     const byG = g => its.find(i => leanOf(i.source) === g)?.source;
     cmpPick = [byG("hukumet") || its[0].source, byG("muhalefet") || byG("bagimsiz") || its.find(i => i.source !== (byG("hukumet") || its[0].source))?.source].filter(Boolean).slice(0, 2);
   }
+  if (story.obs?.length){
+    const ob = el("div","cmp-obs"); ob.appendChild(el("h3", null, "Kaynaklar neyi öne çıkardı?"));
+    story.obs.forEach(o => { const r = el("div","ob"); r.appendChild(el("p", null, o.g)); const cs = el("div","ob-src"); o.k.forEach(id => { const it = its.find(x => x.source === id); if (!it) return; const c = el("button","ob-s"); c.type = "button"; c.append(mono(id), el("span", null, src(id).name + ": “" + it.title + "”")); c.onclick = () => { if (!cmpPick.includes(id)){ cmpPick.push(id); if (cmpPick.length > 2) cmpPick.shift(); } openBias(story, true); }; cs.appendChild(c); }); r.appendChild(cs); ob.appendChild(r); });
+    ob.appendChild(el("p","hint","Gözlemler yalnızca başlıklardan yapay zekâyla çıkarılmıştır; haberlerin tam metni farklı ayrıntılar içerebilir."));
+    body.appendChild(ob);
+  }
   const pick = el("div","cmp-pick"); pick.appendChild(el("p","cmp-l","Karşılaştırmak için iki yayın seç:"));
   const chips = el("div","cmp-chips");
   its.forEach(i => { const on = cmpPick.includes(i.source); const c = el("button","cmp-chip" + (on ? " on" : "")); c.type = "button"; c.setAttribute("aria-pressed", on ? "true" : "false"); c.append(mono(i.source), src(i.source).name);
@@ -3239,6 +3452,7 @@ function openBias(story, keepPick){
     const pair = el("div","cmp-pair");
     cmpPick.forEach(id => { const i = its.find(x => x.source === id); const card = el("div","cmp-card"); const hd = el("div","cmp-h"); hd.append(mono(id), el("b", null, src(id).name)); const lg = leanOf(id); hd.appendChild(el("span","cmp-g " + (lg || "none"), lg ? GL[lg] : "Sınıflandırma dışı")); card.appendChild(hd); card.appendChild(link(i.title, i.url)); if (i.gist) card.appendChild(el("small", null, "Özü: " + i.gist)); card.appendChild(el("span","cmp-t", ago(i.date))); pair.appendChild(card); });
     body.appendChild(pair);
+    const shb = el("button","btn ghost","Bu karşılaştırmayı paylaş"); shb.type = "button"; shb.style.marginTop = "6px"; shb.onclick = () => shareCompare(story, cmpPick[0], cmpPick[1]); body.appendChild(shb);
   }
   body.appendChild(el("h3","cmp-all","Bütün kaynaklar, kesimlere göre"));
   if (b.unrated) body.appendChild(el("p","hint", b.total + " kaynağın " + b.rated + " tanesi bağımsız kuruluşların değerlendirmesine göre sınıflandırılmış; " + b.unrated + " kaynak sınıflandırma dışında (en altta)."));
@@ -3461,7 +3675,7 @@ $("#install").onclick = async () => { if (!installEvt) return; installEvt.prompt
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
 // ---- Başlat ----
-{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h === "yerel" || h === "saved" || h === "kesfet" || h === "istatistik") view = h; else if (CATS.some(c => c.id === h) || SPECIAL.some(c => c.id === h)) cat = h; }
+{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h.startsWith("k-")) pendingCompare = h; else if (h === "yerel" || h === "saved" || h === "kesfet" || h === "istatistik") view = h; else if (CATS.some(c => c.id === h) || SPECIAL.some(c => c.id === h)) cat = h; }
 renderNav(); renderTicker();
 load(true);
 track("ziyaret", true); trackView();

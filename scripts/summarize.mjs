@@ -164,34 +164,41 @@ export async function addTopicSummaries({ topics, stories, sources, prevTopicSum
   return cache;
 }
 
-// ---- "Fark ne?": aynı olayı farklı kesimlerden kaynakların neyi farklı vurguladığı ----
-const FARK_PROMPT = `Sen tarafsız bir medya analistisin. Aşağıda aynı olayı veren haber başlıkları, kaynakların bağımsız kuruluşlarca yapılmış eğilim gruplarına göre ayrılmış olarak var.
-Her olay için gruplar arasındaki vurgu farkını tek cümleyle yaz:
-- En fazla 30 kelime. Grupları adıyla an ("Hükümete yakın kaynaklar ..., muhalefete yakın kaynaklar ...").
-- Sadece başlıklarda görünen farkı anlat: hangi bilgiyi, kişiyi ya da yönü öne çıkardıkları. Hangisinin doğru olduğunu söyleme, yorum ve değerlendirme katma.
-- Başlıklar aynı şeyi söylüyorsa ya da belirgin bir fark yoksa "" döndür.
-Yalnızca şu biçimde JSON dizi döndür: [{"i":1,"fark":"..."}, ...]`;
+// ---- "Fark ne?" ve "Kaynaklar neyi öne çıkardı?" ----
+// Yalnızca başlıklara bakılır; tam metin farklı ayrıntılar içerebilir.
+const FARK_PROMPT = `Sen tarafsız bir medya analistisin. Aşağıda aynı olayı veren haber başlıkları, kaynak adlarıyla var. Bazı kaynakların yanında bağımsız kuruluşların eğilim grubu yazıyor.
+Her olay için:
+1) "gozlemler": başlıklar arasındaki 2 ya da 3 somut farkı yaz. Her gözlem en fazla 12 kelime ve o farkı taşıyan kaynakların adlarını listele. Örnek: {"g":"Yakalanma anını öne çıkardı","k":["NTV","Diken"]}, {"g":"Açıklamanın İçişleri Bakanlığından geldiğini başlığa taşıdı","k":["BirGün"]}.
+2) "fark": gruplar (Hükümete yakın / Bağımsız / Muhalefete yakın) arasında belirgin bir vurgu farkı varsa tek cümle, en fazla 30 kelime; yoksa "".
+Kurallar: Yalnızca başlıklarda görünen farkı anlat. Hangi kaynağın doğru olduğunu söyleme, yorum ve değerlendirme katma. Başlıklar aynı şeyi söylüyorsa "gozlemler": [] döndür.
+Yalnızca şu biçimde JSON dizi döndür: [{"i":1,"fark":"...","gozlemler":[{"g":"...","k":["..."]}]}, ...]`;
 const GLN = { hukumet: "Hükümete yakın", bagimsiz: "Bağımsız", muhalefet: "Muhalefete yakın" };
 export async function addContrasts({ stories, sources, prevFark, usage, key, log = console.log }) {
   const now = Date.now(), cache = {};
-  for (const [k, v] of Object.entries(prevFark || {})) if (now - new Date(v.at) < 48 * 3600e3) cache[k] = v;
+  for (const [k, v] of Object.entries(prevFark || {})) if (now - new Date(v.at) < 48 * 3600e3 && v.v === 2) cache[k] = v;
   const keyOf = s => s.items.map(i => i.url).sort().slice(0, 6).join("|");
-  const cands = stories.filter(s => now - new Date(s.date) < 36 * 3600e3 && s.items.length >= 3).map(s => {
+  const uniq = s => new Set(s.items.map(i => i.source)).size;
+  const cands = stories.filter(s => now - new Date(s.date) < 36 * 3600e3 && uniq(s) >= 4).map(s => {
     const g = {}; s.items.forEach(i => { const l = sources[i.source]?.lean; if (l) (g[l] = g[l] || []).push(i); });
-    return { s, g };
-  }).filter(x => x.g.hukumet && (x.g.muhalefet || x.g.bagimsiz));
-  const todo = cands.filter(x => !(keyOf(x.s) in cache)).sort((a, b) => b.s.items.length - a.s.items.length).slice(0, 8);
+    return { s, g, cross: !!(g.hukumet && (g.muhalefet || g.bagimsiz)) };
+  });
+  const todo = cands.filter(x => !(keyOf(x.s) in cache)).sort((a, b) => uniq(b.s) - uniq(a.s)).slice(0, 6);
   const turn = Math.floor(Date.now() / (15 * 60000)) % 2 === 0;      // kotayı korumak için iki turda bir
   if (key && turn && todo.length && usage.requests < MAX_REQ_PER_DAY) {
-    const body = todo.map((x, n) => `#${n + 1}\n` + Object.entries(x.g).map(([l, its]) => `${GLN[l]}:\n` + its.slice(0, 4).map(i => `- ${sources[i.source]?.name}: ${i.title}`).join("\n")).join("\n")).join("\n\n");
+    const body = todo.map((x, n) => `#${n + 1}\n` + x.s.items.slice(0, 10).map(i => `- ${sources[i.source]?.name || i.source}${sources[i.source]?.lean ? " (" + GLN[sources[i.source].lean] + ")" : ""}: ${i.title}`).join("\n")).join("\n\n");
     try {
       usage.requests++;
       const { out } = await callGeminiRaw(key, FARK_PROMPT + "\n\n" + body);
-      todo.forEach((x, n) => { const o = out.find(r => r.i === n + 1); const f = (o?.fark || "").replace(/\s+/g, " ").trim();
-        cache[keyOf(x.s)] = { f: f.length > 15 && !/[\u0400-\u04FF\u4E00-\u9FFF]/.test(f) ? f : "", at: new Date().toISOString() }; });
+      todo.forEach((x, n) => {
+        const o = out.find(r => r.i === n + 1) || {};
+        const f = (o.fark || "").replace(/\s+/g, " ").trim();
+        const nameToId = Object.fromEntries(x.s.items.map(i => [(sources[i.source]?.name || i.source).toLocaleLowerCase("tr"), i.source]));
+        const obs = (o.gozlemler || []).slice(0, 3).map(g => ({ g: String(g.g || "").trim(), k: [...new Set((g.k || []).map(n => nameToId[String(n).toLocaleLowerCase("tr")]).filter(Boolean))] })).filter(g => g.g && g.k.length && !/[\u0400-\u04FF\u4E00-\u9FFF]/.test(g.g));
+        cache[keyOf(x.s)] = { v: 2, f: x.cross && f.length > 15 && !/[\u0400-\u04FF\u4E00-\u9FFF]/.test(f) ? f : "", obs, at: new Date().toISOString() };
+      });
     } catch (e) { log("  ✗ fark özeti → " + e.message); }
   }
-  for (const x of cands) { const c = cache[keyOf(x.s)]; if (c?.f) x.s.fark = c.f; }
+  for (const x of cands) { const c = cache[keyOf(x.s)]; if (c?.f) x.s.fark = c.f; if (c?.obs?.length) x.s.obs = c.obs; }
   return cache;
 }
 

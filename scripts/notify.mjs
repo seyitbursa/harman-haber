@@ -7,9 +7,11 @@ export async function previousJson() {
   if (!repo) return null;
   const [owner, name] = repo.split("/");
   try {
-    const r = await fetch(`https://${owner.toLowerCase()}.github.io/${name}/news.json?t=${Date.now()}`, { headers: { "Cache-Control": "no-cache" } });
-    if (!r.ok) return null;
-    return await r.json();
+    // Sunucunun kendi durumu (özet önbellekleri, arşivler) state.json’da; geçiş döneminde eski news.json’a da bakılır
+    const base = `https://${owner.toLowerCase()}.github.io/${name}/`;
+    const get = async f => { const r = await fetch(base + f + "?t=" + Date.now(), { headers: { "Cache-Control": "no-cache" } }); return r.ok ? r.json() : null; };
+    const [state, news] = await Promise.all([get("state.json").catch(() => null), get("news.json").catch(() => null)]);
+    return state ? { ...(news || {}), ...state } : news;
   } catch { return null; }
 }
 

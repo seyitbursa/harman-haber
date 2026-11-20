@@ -967,6 +967,14 @@ const query = () => activeTopic || $("#q").value.trim() || $("#qDesk").value.tri
 const isDesk = () => matchMedia("(min-width:900px)").matches;
 
 // ---- Yardımcılar ----
+const todayISO = () => new Intl.DateTimeFormat("en-CA", {timeZone: "Europe/Istanbul"}).format(new Date());
+// Oyun kodu yayında ayrı dosyadadır (games.<sürüm>.js); yalnızca Oyunlar açılınca yüklenir
+let gamesLoading = null;
+function loadGames(){
+  if (typeof renderGames === "function") return Promise.resolve();
+  if (typeof GAMES_SRC === "undefined") return Promise.resolve();
+  return gamesLoading ||= new Promise((ok, fail) => { const sc = document.createElement("script"); sc.src = GAMES_SRC; sc.onload = ok; sc.onerror = () => { gamesLoading = null; fail(); }; document.head.appendChild(sc); });
+}
 const words = t => norm(t).replace(/['’‘`]/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 function matches(text, q){
   const tw = words(text);
@@ -1060,13 +1068,35 @@ function weightLabel(story){
 }
 
 // ---- Veri ----
+// Veri yükleme:
+//  - İlk açılışta küçük head.json (ilk ekran) ve tam news.json birlikte istenir; hangisi önce gelirse o çizilir.
+//  - Adreslere zaman damgası eklenmez; "no-cache" ile tarayıcı sunucuya ETag ile sorar, değişmediyse gövde yeniden indirilmez.
+//  - Aynı ETag gelirse JSON yeniden işlenmez. Arka plan kontrolü yalnızca sekme görünürken yapılır.
+let lastEtag = null, lastCheck = 0, fullLoaded = false;
+async function getJSON(name){
+  const r = await fetch(name, {cache: "no-cache"});
+  if (!r.ok) throw new Error(r.status);
+  return r;
+}
 async function load(manual){
+  lastCheck = Date.now();
   try{
-    const r = await fetch("news.json?t=" + Date.now(), {cache:"no-store"});
-    if (!r.ok) throw new Error(r.status);
+    if (!loaded){
+      // İlk ekran: küçük dosya hemen çizilir, tam dosya gelince yerine geçer
+      const fullP = getJSON("news.json");
+      getJSON("head.json").then(r => r.json()).then(h => { if (!fullLoaded && h?.stories?.length){ data = h; loaded = true; render(); } }).catch(() => {});
+      const r = await fullP; lastEtag = r.headers.get("etag");
+      const fresh = await r.json(); if (!fresh.stories) throw new Error("eski veri");
+      const y = scrollY; data = fresh; fullLoaded = true; loaded = true; pending = null; render(); if (y) scrollTo(0, y);
+      return;
+    }
+    const r = await getJSON("news.json");
+    const et = r.headers.get("etag");
+    if (et && et === lastEtag && !manual){ r.body?.cancel?.(); renderStatus(); return; }      // değişiklik yok
+    lastEtag = et;
     const fresh = await r.json();
     if (!fresh.stories) throw new Error("eski veri");
-    if (!loaded || manual){ data = fresh; pending = null; loaded = true; $("#newbar").classList.remove("show"); render(); }
+    if (manual){ data = fresh; pending = null; $("#newbar").classList.remove("show"); render(); }
     else if (fresh.updatedAt !== data.updatedAt){
       const known = new Set(data.stories.flatMap(s => s.items.map(i => i.url)));
       const n = fresh.stories.filter(s => s.items.some(i => !known.has(i.url) && !off.has(i.source))).length;
@@ -1282,7 +1312,10 @@ function render(){
   renderNav(); renderStatus(); renderTicker(); $("#ticker").hidden = false;
   document.body.classList.toggle("in-game", view === "oyunlar" || view.startsWith("oyun-"));
   if (view === "topic"){ renderTopic(); return; }
-  if (view === "oyunlar" || view.startsWith("oyun-")){ renderGames(); if (view.startsWith("oyun-")) trackGameEnd(view.slice(5)); return; }
+  if (view === "oyunlar" || view.startsWith("oyun-")){
+    if (typeof renderGames !== "function"){ const t = $("#top"); t.textContent = ""; $("#feed").textContent = ""; $("#feedHead").hidden = true; t.appendChild(el("p","hint","Oyunlar yükleniyor…")); loadGames().then(render).catch(() => { t.textContent = ""; t.appendChild(el("p","hint","Oyunlar yüklenemedi. Bağlantını kontrol et.")); }); return; }
+    renderGames(); if (view.startsWith("oyun-")) trackGameEnd(view.slice(5)); return;
+  }
   if (view === "kesfet"){ renderKesfet(); return; }
   if (view === "istatistik"){ renderStats(); return; }
   if (view === "feed" && cat === "xgundem"){ $("#top").textContent = ""; renderNetTab(); return; }
@@ -1614,6 +1647,7 @@ $("#actClose").onclick = () => $("#actSheet").close();
 $("#actSheet").addEventListener("click", e => { if (e.target === $("#actSheet")) $("#actSheet").close(); });
 
 
+// @@OYUN{
 // ---- Oyunlar: Kelime Harmanı ----
 const TRL = "abcçdefgğhıijklmnoöprsştuüvyz";
 const trLow = s => s.replace(/I/g, "ı").replace(/İ/g, "i").toLocaleLowerCase("tr");
@@ -2149,9 +2183,10 @@ document.addEventListener("keydown", e => {
   else if (e.key === "Backspace"){ e.preventDefault(); PK.cur = [...PK.cur].slice(0, -1).join(""); PK.draw?.(); }
   else { const k = trLow(e.key); if (k.length === 1 && (k === p.center || p.outer.includes(k))){ PK.cur += k; PK.draw?.(); } }
 });
-const todayISO = () => new Intl.DateTimeFormat("en-CA", {timeZone: "Europe/Istanbul"}).format(new Date());
 
 
+
+// @@OYUN}
 // ---- X gündemi sekmesi ----
 // Etiketlerdeki birleşik kelimeleri ayır ve Türkçe karakterleri sadeleştirerek haberlerle eşleştir (#TümMagdurlar → tüm mağdurlar)
 const fold = s => norm(s).replace(/ç/g,"c").replace(/ğ/g,"g").replace(/ı/g,"i").replace(/ö/g,"o").replace(/ş/g,"s").replace(/ü/g,"u").replace(/â/g,"a").replace(/î/g,"i").replace(/û/g,"u");
@@ -2549,6 +2584,7 @@ function openSources(story){
 }
 
 
+// @@OYUN{
 // ---- NYT Games tarzı oyunlar: Bağlantılar, Harf Kutusu, Sudoku ----
 const nytData = () => data.game?.nyt || null;
 const nyState = id => { const d = nytData()?.date, st = store.get("g-" + id, null); return st && st.date === d ? st : { date: d }; };
@@ -2815,6 +2851,7 @@ document.addEventListener("keydown", e => {
 });
 
 
+// @@OYUN}
 // ---- Anonim kullanım sayacı (Cloudflare Worker + D1; kişisel veri yok) ----
 const SAYAC = "https://harman-sayac.harmanhaber.workers.dev";
 const EVQ = [];
@@ -2868,6 +2905,7 @@ function trackPrefs(){
 
 // ---- Yönetici istatistik sayfası (#istatistik) ----
 async function renderStats(){
+  if (typeof GAMES === "undefined"){ await loadGames().catch(() => {}); }
   const top = $("#top"), feed = $("#feed"); top.textContent = ""; feed.textContent = ""; feed.classList.remove("skel"); $("#feedHead").hidden = true;
   const box = el("section","mod"); box.style.marginTop = "12px"; top.appendChild(box);
   box.appendChild(el("h2", null, "İstatistikler"));
@@ -3413,7 +3451,7 @@ let typing;
 }));
 $("#newbar").onclick = () => { if (pending){ data = pending; pending = null; } $("#newbar").classList.remove("show"); render(); window.scrollTo({top:0}); };
 window.addEventListener("hashchange", route);
-document.addEventListener("visibilitychange", () => { if (!document.hidden){ load(false); renderStatus(); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden){ if (Date.now() - lastCheck > 5 * 60000) load(false); renderStatus(); } });
 
 // ---- Uygulama olarak kurma ----
 let installEvt = null;
@@ -3431,7 +3469,7 @@ setTimeout(trackPrefs, 4000);
 Promise.all([loadWeather(), loadPrayer()]).then(() => { if (loaded) render(); else renderTicker(); });
 // Her dakika sıradaki vakit sayacını güncelle (gece yarısı geçince yeni günün vakitlerini al)
 setInterval(async () => { const before = prayer; await loadPrayer(); renderTicker(); if (view === "yerel" && !document.querySelector("dialog[open]") && !document.activeElement?.matches("input,select")) render(); }, 60 * 1000);
-setInterval(() => load(false), 5 * 60 * 1000);
+setInterval(() => { if (!document.hidden) load(false); }, 5 * 60 * 1000);
 setInterval(renderStatus, 60 * 1000);
 setInterval(() => loadWeather().then(renderTicker), 30 * 60 * 1000);
 </script>

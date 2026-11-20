@@ -212,10 +212,19 @@ const note = cfg.ntfyTopic
 await mkdir(new URL("../public/", import.meta.url), { recursive: true });
 const soc = await socialPost({ stories, topics, sources: config.sources, prev: prevJson?.social, dry: !process.env.GITHUB_ACTIONS || !prevJson }).catch(e => ({ state: prevJson?.social || {}, sent: ["HATA " + e.message] }));
 const stat = await buildStatic({ stories, topics, sources: config.sources, prev: prevJson, rg }).catch(e => { console.log("  ✗ sabit sayfalar → " + e.message); return { topicPages: prevJson?.topicPages || {}, archive: prevJson?.archive || [], rgArchive: prevJson?.rgArchive || [], count: 0 }; });
-await writeFile(new URL("../public/news.json", import.meta.url),
-  JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
-    notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, gtrends, wtop, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, neutralCache, rg, stories, errors }));
+// Okuyucuya giden veri: yalnızca sitenin kullandığı alanlar; özet kısaltılır (Özü varsa RSS özeti gönderilmez)
+const slim = stories.map(s => ({ ...s, items: s.items.map(i => { const o = { ...i }; if (o.gist) delete o.summary; else if (o.summary && o.summary.length > 240) o.summary = o.summary.slice(0, 237).replace(/\s+\S*$/, "") + "…"; return o; }) }));
+const updatedAt = new Date().toISOString();
+const client = { version: 4, leanInfo: config.leanInfo || null, updatedAt, sources: config.sources, markets, topics, xtrends, quakes,
+  notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
+  game, youtube, sports, gtrends, wtop, rg: rg ? { ...rg, items: rg.items } : null, stories: slim, errors };
+await writeFile(new URL("../public/news.json", import.meta.url), JSON.stringify(client));
+// İlk ekran: en yeni 40 hikâye ve temel alanlar (tam veri arkadan gelir)
+const headStories = slim.slice(0, 40);
+await writeFile(new URL("../public/head.json", import.meta.url), JSON.stringify({ version: 4, partial: true, leanInfo: client.leanInfo, updatedAt, sources: config.sources, markets, topics: topics.map(t => ({ ...t, storyIds: t.storyIds.filter(id => headStories.some(s => s.id === id)) })), xtrends, quakes, stories: headStories }));
+// Sunucunun bir sonraki tur için hatırladıkları (okuyucu bu dosyayı indirmez)
+await writeFile(new URL("../public/state.json", import.meta.url),
+  JSON.stringify({ updatedAt, notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, wtop, rg, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, neutralCache }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);

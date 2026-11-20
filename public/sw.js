@@ -1,5 +1,5 @@
 // Harman Haber servis çalışanı: sayfa çevrimdışı açılır, son indirilen haberler gösterilir.
-const VERSION = "hh-v29";
+const VERSION = "hh-v30";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -20,6 +20,11 @@ self.addEventListener("fetch", e => {
       caches.open(VERSION).then(c => c.put(new Request("news.json"), copy));
       return r;
     }).catch(() => caches.match("news.json")));
+    return;
+  }
+  // İçerik sürümlü uygulama dosyaları (app.<sürüm>.js/css, games.<sürüm>.js) hiç değişmez: önce önbellek
+  if (url.origin === location.origin && /\.[0-9a-f]{10}\.(js|css)$/.test(url.pathname)) {
+    e.respondWith(caches.open(VERSION + "-assets").then(async c => (await c.match(e.request)) || fetch(e.request).then(r => { if (r.ok) c.put(e.request, r.clone()); return r; })));
     return;
   }
   // Sayfa iskeleti: önce ağ (güncel sürüm), olmazsa önbellek

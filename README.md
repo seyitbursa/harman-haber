@@ -49,6 +49,12 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - Hata veren akışlar 3 saniye sonra bir kez daha denenir; bozuk XML (tırnaksız öznitelik, kapanmamış etiket) otomatik düzeltilir.
 - Kaynak aç/kapa, kategoriler, arama, kaydetme, okundu işareti, açık/koyu tema.
 
+## Performans
+
+- **Veri ayrımı:** `news.json` yalnızca sitenin kullandığı alanları içerir (gzip ~190 KB). İlk ekran için en yeni 40 hikâyeyi taşıyan `head.json` (gzip ~15 KB) paralel istenir ve önce çizilir. Sunucunun kendi hafızası (özet önbellekleri, arşivler, bildirim durumu) `state.json`’dadır; okuyucu bu dosyayı indirmez.
+- **Önbellek:** Veri adreslerine zaman damgası eklenmez; tarayıcı ETag ile sorar, değişmediyse gövde yeniden indirilmez ve JSON yeniden işlenmez. Arka plan kontrolü yalnızca sekme görünürken yapılır.
+- **Kod ayrımı:** `scripts/build.mjs` yayından önce stil ve betiği içerik sürümlü dosyalara (`app.<sürüm>.css/js`) taşır, oyun kodunu (`// @@OYUN{ … }` bölgeleri) `games.<sürüm>.js` olarak ayırır; oyunlar yalnızca Oyunlar açılınca yüklenir. Servis çalışanı sürümlü dosyaları önce önbellekten verir.
+
 ## Doğruluk güvenceleri
 
 - **Konu eşleştirme** (`scripts/topics.mjs`): kısa kelimeler yalnızca ekli biçimleriyle eşleşir (fon ≠ fonksiyon); suç, soruşturma ve dava konularında ve konunun baskın kategorisinden farklı kategorideki haberlerde konu kelimelerinin hepsi başlıkta geçmelidir. Birden çok kişiyi kapsayan tek ad (ör. "Serdar") konu olamaz.

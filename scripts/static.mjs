@@ -47,6 +47,7 @@ footer{color:var(--ink-3);font-size:13px;padding:30px 0}
 <main class="w">${body}</main>
 <footer class="w"><p><b>Harman Haber</b>: haberin özü, her kaynaktan. 40’a yakın Türk haber kaynağını tek yerde toplar, bir olayı kimin nasıl verdiğini yan yana gösterir.</p>
 <p><a href="/">Ana sayfa</a> · <a href="/gundem/">Gündem arşivi</a> · <a href="/resmi-gazete/">Resmî Gazete özeti</a> · <a href="/rss.xml">RSS</a></p></footer>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3eae1e480b86457fa28243ab3d96bec2"}'></script>
 </body></html>`;
   const dir = new URL("../public" + path, import.meta.url);
   await mkdir(dir, { recursive: true });

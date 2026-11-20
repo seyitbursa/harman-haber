@@ -5,7 +5,7 @@
 const MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
 const BATCH = 10;                 // istek başına haber
 const MAX_REQ_PER_RUN = 2;        // tur başına en fazla istek
-const MAX_REQ_PER_DAY = +(process.env.GEMINI_DAILY_CAP || 400);      // ücretsiz sınırın altında kalmak için günlük tavan (UTC günü)
+const MAX_REQ_PER_DAY = +(process.env.GEMINI_DAILY_CAP || (process.env.GEMINI_API_KEY_2 ? 800 : 400));   // yedek anahtar varsa tavan iki katı      // ücretsiz sınırın altında kalmak için günlük tavan (UTC günü)
 const TEXT_LEN = 1400;            // haber başına gönderilen metin (karakter)
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
@@ -52,23 +52,29 @@ async function callGemini(key, items) {
 }
 export async function callGeminiRaw(key, text, models = MODELS) {
   let lastErr;
+  // Yedek anahtar (GEMINI_API_KEY_2): ilk anahtar kota sınırına (429) takılırsa aynı model onunla denenir
+  const keys = [...new Set([key, process.env.GEMINI_API_KEY_2].filter(Boolean))];
   for (const model of models) {
-    try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1500, responseMimeType: "application/json" }
-        })
-      });
-      if (r.status === 429 || r.status === 404 || r.status >= 500) { lastErr = new Error(model + " " + r.status); continue; }
-      if (!r.ok) throw new Error(model + " " + r.status + " " + (await r.text()).slice(0, 200));
-      const d = await r.json();
-      const txt = d.candidates?.[0]?.content?.parts?.map(p => p.text).join("") || "[]";
-      const arr = JSON.parse(txt.replace(/^```(json)?|```$/g, "").trim());
-      return { model, out: Array.isArray(arr) ? arr : [] };
-    } catch (e) { lastErr = e; }
+    for (const k of keys) {
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": k },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 1500, responseMimeType: "application/json" }
+          })
+        });
+        if (r.status === 429 || r.status === 401 || r.status === 403) { lastErr = new Error(model + " " + r.status + " (anahtar " + (keys.indexOf(k) + 1) + ")"); continue; }      // kota ya da anahtar sorunu: sıradaki anahtar
+        if (r.status === 400) { const t = await r.text(); if (/api key|API_KEY/i.test(t)) { lastErr = new Error(model + " geçersiz anahtar " + (keys.indexOf(k) + 1)); continue; } throw new Error(model + " 400 " + t.slice(0, 200)); }
+        if (r.status === 404 || r.status >= 500) { lastErr = new Error(model + " " + r.status); break; }          // sıradaki model
+        if (!r.ok) throw new Error(model + " " + r.status + " " + (await r.text()).slice(0, 200));
+        const d = await r.json();
+        const txt = d.candidates?.[0]?.content?.parts?.map(p => p.text).join("") || "[]";
+        const arr = JSON.parse(txt.replace(/^```(json)?|```$/g, "").trim());
+        return { model: model + (keys.indexOf(k) ? " (yedek anahtar)" : ""), out: Array.isArray(arr) ? arr : [] };
+      } catch (e) { lastErr = e; break; }
+    }
   }
   throw lastErr || new Error("model yok");
 }

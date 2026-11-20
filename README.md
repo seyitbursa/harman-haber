@@ -60,6 +60,10 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - **Paylaşılabilir karşılaştırma:** Seçilen iki yayının başlıklarıyla 1080×1350 görsel; `#k-<olay>-<yayın>-<yayın>` bağlantısı aynı karşılaştırmayı açar.
 - **Yanlış eşleşme bildirimi:** Haber menüsünde “Bu haber bu konuya ait değil”; haber o cihazda konudan çıkarılır, bildirim ntfy geri bildirim konusuna gider.
 
+## Gemini anahtarları
+
+`GEMINI_API_KEY` asıl, `GEMINI_API_KEY_2` yedek anahtardır (ikisi de repo secret). İlk anahtar kota sınırına (429) takılırsa ya da geçersizse aynı istek yedekle yapılır. Yedek tanımlıyken günlük istek tavanı 400’den 800’e çıkar (`GEMINI_DAILY_CAP` ile değiştirilebilir). Google’ın kotası proje başınadır; yedek anahtar ancak farklı bir Google Cloud projesinden alındıysa ek kota sağlar.
+
 ## Performans
 
 - **Veri ayrımı:** `news.json` yalnızca sitenin kullandığı alanları içerir (gzip ~190 KB). İlk ekran için en yeni 40 hikâyeyi taşıyan `head.json` (gzip ~15 KB) paralel istenir ve önce çizilir. Sunucunun kendi hafızası (özet önbellekleri, arşivler, bildirim durumu) `state.json`’dadır; okuyucu bu dosyayı indirmez.

@@ -955,8 +955,15 @@ function mono(id){ const s = src(id), m = el("span","mono", s.mono); m.style.bac
 function stack(ids, big){ const st = el("span","stack" + (big ? " big" : "")); ids.slice(0, big ? 6 : 4).forEach(id => st.appendChild(mono(id))); return st; }
 function link(text, url, cardEl){
   const a = el("a", null, text); a.href = url; a.target = "_blank"; a.rel = "noopener";
-  a.onclick = () => { read.add(url); store.set("gk-read",[...read].slice(-800)); if (cardEl) cardEl.classList.add("read"); };
+  a.onclick = () => { read.add(url); store.set("gk-read",[...read].slice(-800)); if (cardEl) cardEl.classList.add("read"); trackArticle(url); };
   return a;
+}
+// Haber tıklaması: hangi kaynak ve hangi kesim
+function trackArticle(url){
+  let srcId = null;
+  for (const st of data.stories || []){ const i = st.items.find(x => x.url === url); if (i){ srcId = i.source; break; } }
+  track("haber:tik");
+  if (srcId){ track("haber:kaynak:" + srcId); track("haber:grup:" + (leanOf(srcId) || "etiketsiz")); }
 }
 function img(url, cls, eager){
   const i = el("img", cls); i.src = url; i.alt = ""; i.loading = eager ? "eager" : "lazy"; i.decoding = "async"; i.referrerPolicy = "no-referrer";
@@ -1377,7 +1384,7 @@ function row(story, inTopic){
   const links = el("div","rlinks");
   if (story.yt?.length && data.youtube){
     const vids = data.youtube.items.filter(v => story.yt.includes(v.id) && !ytOff.has(v.ch));
-    if (vids.length){ const b = el("button","rl yt"); b.type = "button"; b.append("▶ " + vids.length + " video"); b.setAttribute("aria-label", "Bu haberle ilgili " + vids.length + " YouTube videosu"); b.onclick = () => openVideo(vids[0], vids); links.appendChild(b); }
+    if (vids.length){ const b = el("button","rl yt"); b.type = "button"; b.append("▶ " + vids.length + " video"); b.setAttribute("aria-label", "Bu haberle ilgili " + vids.length + " YouTube videosu"); b.onclick = () => openVideo(vids[0], vids, "haber-satiri"); links.appendChild(b); }
   }
   const tp = !inTopic && topicOfStory(story.id);
   if (tp){ const b = el("button","rl", "Konu: " + (tp.title || tp.label)); b.type = "button"; b.setAttribute("aria-label", (tp.title || tp.label) + " konusundaki " + tp.storyIds.length + " haberi aç"); b.onclick = () => goTopic(tp); links.appendChild(b); }
@@ -1422,14 +1429,15 @@ function xModule(inFeed){
   const h = el("div","mod-h"); h.append(el("h3",null,"X’te gündem"), el("small",null, new Date(x.at).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}) + " itibarıyla"));
   m.appendChild(h);
   const ol = el("ol","xlist"), lim = xOpen ? x.items.length : (inFeed ? 5 : 10);
-  x.items.slice(0, lim).forEach(t => {
+  x.items.slice(0, lim).forEach((t, i) => {
     const li = el("li"), a = el("a", null, t.name);
     a.href = "https://x.com/search?q=" + encodeURIComponent(t.name); a.target = "_blank"; a.rel = "noopener";
+    a.onclick = () => { track("x:tik"); track("x:yer:" + (inFeed ? "akis" : "yan-sutun")); track("x:sira" + (i + 1)); };
     li.appendChild(a);
     if (!t.name.startsWith("#")){
       const n = data.stories.filter(s => s.items.some(i => !off.has(i.source) && matches(i.title + " " + i.summary, t.name))).length;
       if (n){ const b = el("button","xnews", n + " haber"); b.type = "button"; b.setAttribute("aria-label", t.name + " ile ilgili " + n + " haberi göster");
-        b.onclick = () => { activeTopic = t.name; view = "feed"; shown = PAGE; render(); $("#feedHead").scrollIntoView({block:"start"}); }; li.appendChild(b); }
+        b.onclick = () => { track("x:haber"); activeTopic = t.name; view = "feed"; shown = PAGE; render(); $("#feedHead").scrollIntoView({block:"start"}); }; li.appendChild(b); }
     }
     ol.appendChild(li);
   });
@@ -2125,6 +2133,7 @@ function renderXTab(){
   x.items.forEach((t, i) => {
     const row = el("div","xt-row"), h = el("div","xt-h");
     const a = el("a","tn", t.name); a.href = "https://x.com/search?q=" + encodeURIComponent(t.name); a.target = "_blank"; a.rel = "noopener";
+    a.onclick = () => { track("x:tik"); track("x:yer:sekme"); track("x:sira" + (i + 1)); };
     a.setAttribute("aria-label", (i + 1) + ". sıra: " + t.name + ", X’te aç");
     h.append(el("span","xt-n", String(i + 1)), a);
     if (t.count) h.appendChild(el("span","cnt", t.count.toLocaleString("tr-TR") + " gönderi"));
@@ -2157,23 +2166,24 @@ function ytMeta(v){
   m.append(el("b", null, c.name), el("span", null, ago(v.date) + ", " + ytViews(v.views) + " izlenme"));
   return m;
 }
-function openVideo(v, list){
+function openVideo(v, list, yer = "diger"){
+  track("yt:izle"); track("yt:izle:" + v.ch); track("yt:yer:" + yer);
   const body = $("#actBody"); body.textContent = ""; $("#actTitle").textContent = ytChan(v.ch).name;
   const pl = el("div","player"), fr = el("iframe");
   fr.src = `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0`; fr.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; fr.title = v.title; fr.allowFullscreen = true;
   pl.appendChild(fr); body.appendChild(pl);
   body.appendChild(el("p","menu-title", v.title));
   const acts = el("div","sheet-f");
-  const yt = el("a","btn ghost","YouTube’da aç"); yt.href = "https://www.youtube.com/watch?v=" + v.id; yt.target = "_blank"; yt.rel = "noopener";
+  const yt = el("a","btn ghost","YouTube’da aç"); yt.href = "https://www.youtube.com/watch?v=" + v.id; yt.target = "_blank"; yt.rel = "noopener"; yt.onclick = () => track("yt:youtubeda-ac");
   acts.appendChild(yt);
   const st = v.story && data.stories.find(s => s.id === v.story);
-  if (st){ const a = el("a","btn","İlgili haberi oku"); a.href = st.items[0].url; a.target = "_blank"; a.rel = "noopener"; acts.appendChild(a); }
+  if (st){ const a = el("a","btn","İlgili haberi oku"); a.href = st.items[0].url; a.target = "_blank"; a.rel = "noopener"; a.onclick = () => { track("yt:ilgili-haber"); trackArticle(st.items[0].url); }; acts.appendChild(a); }
   body.appendChild(acts);
   const others = (list || []).filter(x => x.id !== v.id);
   if (others.length){
     body.appendChild(el("h3", null, "Aynı konuda diğer videolar"));
     const ul = el("ul","vlist");
-    others.forEach(o => { const li = el("li"), b = el("button"); b.type = "button"; const im = img(ytThumb(o.id)); const t = el("span"); t.append(el("b", null, o.title), el("small", null, ytChan(o.ch).name + ", " + ytViews(o.views) + " izlenme")); b.append(im, t); b.onclick = () => openVideo(o, list); li.appendChild(b); ul.appendChild(li); });
+    others.forEach(o => { const li = el("li"), b = el("button"); b.type = "button"; const im = img(ytThumb(o.id)); const t = el("span"); t.append(el("b", null, o.title), el("small", null, ytChan(o.ch).name + ", " + ytViews(o.views) + " izlenme")); b.append(im, t); b.onclick = () => openVideo(o, list, "ayni-konu"); li.appendChild(b); ul.appendChild(li); });
     body.appendChild(ul);
   }
   if (!$("#actSheet").open) $("#actSheet").showModal();
@@ -2188,7 +2198,7 @@ function ytCard(v){
   if (st) b.appendChild(el("span","story", "İlgili haber: " + st.items[0].title));
   c.append(th, b);
   c.setAttribute("aria-label", v.title + ", " + ytChan(v.ch).name + ", videoyu oynat");
-  c.onclick = () => openVideo(v, st ? data.youtube.items.filter(x => x.story === v.story) : []);
+  c.onclick = () => openVideo(v, st ? data.youtube.items.filter(x => x.story === v.story) : [], view === "topic" ? "konu" : "sekme");
   return c;
 }
 function renderYTTab(){
@@ -2208,7 +2218,7 @@ function renderYTTab(){
   if (shorts.length){
     const sec = el("div","sec"); sec.appendChild(el("h3", null, "Kısa videolar")); top.appendChild(sec);
     const rail = el("div","sh-rail");
-    shorts.slice(0, 16).forEach(v => { const b = el("button","sh"); b.type = "button"; b.append(img(`https://i.ytimg.com/vi/${v.id}/oar2.jpg`), el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ytViews(v.views))); b.onclick = () => openVideo(v, []); rail.appendChild(b); });
+    shorts.slice(0, 16).forEach(v => { const b = el("button","sh"); b.type = "button"; b.append(img(`https://i.ytimg.com/vi/${v.id}/oar2.jpg`), el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ytViews(v.views))); b.onclick = () => openVideo(v, [], "kisa-video"); rail.appendChild(b); });
     top.appendChild(rail);
     const sec2 = el("div","sec"); sec2.appendChild(el("h3", null, "Videolar")); top.appendChild(sec2);
   }
@@ -2829,6 +2839,26 @@ async function renderStats(){
   box.appendChild(el("h3", null, "En çok açılan bölümler (son 7 gün)"));
   const pages = {}; rows.filter(r => last7.includes(r.gun) && r.olay.startsWith("sayfa:")).forEach(r => pages[r.olay.slice(6)] = (pages[r.olay.slice(6)] || 0) + r.n);
   const ul = el("ul","notes"); Object.entries(pages).sort((a, b) => b[1] - a[1]).slice(0, 15).forEach(([k, v]) => ul.appendChild(el("li", null, k + ": " + v.toLocaleString("tr-TR")))); box.appendChild(ul);
+  // X ve YouTube
+  const sum7 = pred => rows.filter(r => last7.includes(r.gun) && pred(r.olay)).reduce((a, r) => a + r.n, 0);
+  const group = prefix => { const o = {}; rows.filter(r => last7.includes(r.gun) && r.olay.startsWith(prefix)).forEach(r => o[r.olay.slice(prefix.length)] = (o[r.olay.slice(prefix.length)] || 0) + r.n); return Object.entries(o).sort((a, b) => b[1] - a[1]); };
+  const listOf = (title, entries, fmt = k => k) => { if (!entries.length) return; box.appendChild(el("h4", null, title)); const u = el("ul","notes"); entries.slice(0, 12).forEach(([k, v]) => u.appendChild(el("li", null, fmt(k) + ": " + v.toLocaleString("tr-TR")))); box.appendChild(u); };
+  box.appendChild(el("h3", null, "X ve YouTube (son 7 gün)"));
+  const xk = el("div","stat-kpi");
+  [["X başlık tıklaması", sum7(o => o === "x:tik")], ["X’ten habere geçiş", sum7(o => o === "x:haber")], ["YouTube video açma", sum7(o => o === "yt:izle")], ["YouTube’da açma", sum7(o => o === "yt:youtubeda-ac")]]
+    .forEach(([l, v]) => { const d0 = el("div"); d0.append(el("b", null, v.toLocaleString("tr-TR")), el("span", null, l)); xk.appendChild(d0); });
+  box.appendChild(xk);
+  const YER = {"akis":"Ana akış","yan-sutun":"Yan sütun","sekme":"Kendi bölümü","haber-satiri":"Haber altındaki düğme","akis-seridi":"Akıştaki video şeridi","konu":"Konu sayfası","kisa-video":"Kısa videolar","ayni-konu":"Aynı konudaki diğer video","diger":"Diğer"};
+  listOf("X tıklamaları: nereden?", group("x:yer:"), k => YER[k] || k);
+  listOf("X tıklamaları: kaçıncı sıradaki başlık?", group("x:sira"), k => k + ". sıra");
+  listOf("YouTube: nereden açıldı?", group("yt:yer:"), k => YER[k] || k);
+  listOf("YouTube: en çok izlenen kanallar", group("yt:izle:"), k => ytChan(k).name || k);
+  listOf("Kısa yollar şeridi", group("kisayol:"), k => ({xgundem:"X gündemi", youtube:"YouTube", kornokta:"Kör nokta", resmigazete:"Resmî Gazete"}[k] || k));
+  // Haber tıklamaları
+  box.appendChild(el("h3", null, "Haber tıklamaları (son 7 gün)"));
+  box.appendChild(el("p", null, "Toplam: " + sum7(o => o === "haber:tik").toLocaleString("tr-TR") + " tıklama"));
+  listOf("Kesime göre", group("haber:grup:"), k => GL[k] || "Etiketsiz");
+  listOf("En çok tıklanan kaynaklar", group("haber:kaynak:"), k => src(k).name);
   // Diğer
   const other = {}; rows.filter(r => last7.includes(r.gun) && /^(paylas|dinle):/.test(r.olay)).forEach(r => other[r.olay] = (other[r.olay] || 0) + r.n);
   if (Object.keys(other).length){ box.appendChild(el("h3", null, "Paylaşım ve dinleme (son 7 gün)")); const u2 = el("ul","notes"); Object.entries(other).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => u2.appendChild(el("li", null, k + ": " + v))); box.appendChild(u2); }
@@ -2851,7 +2881,7 @@ function quickStrip(){
     const b = el("button","qs-i"); b.type = "button";
     const i = el("span","qs-ic", ic); i.style.background = color;
     const t = el("span"); t.append(el("b", null, name), el("small", null, sub));
-    b.append(i, t); b.onclick = () => { location.hash = h; window.scrollTo({top:0}); };
+    b.append(i, t); b.onclick = () => { track("kisayol:" + h); location.hash = h; window.scrollTo({top:0}); };
     row.appendChild(b);
   });
   return row;
@@ -2870,7 +2900,7 @@ function ytFeedModule(){
     const c = el("button","yt-mini"); c.type = "button";
     const th = el("span","th"); th.appendChild(img(ytThumb(v.id))); th.appendChild(el("i", null, "▶ " + ytViews(v.views)));
     c.append(th, el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ago(v.date)));
-    c.onclick = () => { const st = v.story && data.stories.find(s => s.id === v.story); openVideo(v, st ? y.items.filter(x => x.story === v.story) : []); };
+    c.onclick = () => { const st = v.story && data.stories.find(s => s.id === v.story); openVideo(v, st ? y.items.filter(x => x.story === v.story) : [], "akis-seridi"); };
     rail.appendChild(c);
   });
   m.appendChild(rail);
@@ -2884,7 +2914,7 @@ function ytAsideModule(){
   const m = el("section","mod"), h = el("div","mod-h"); h.append(el("h3", null, "YouTube"));
   const all = el("button","xt-more","Tümü"); all.type = "button"; all.style.margin = "0"; all.onclick = () => { location.hash = "youtube"; window.scrollTo({top:0}); }; h.appendChild(all); m.appendChild(h);
   const ul = el("ul","vlist");
-  vids.forEach(v => { const li = el("li"), b = el("button"); b.type = "button"; const t = el("span"); t.append(el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ytViews(v.views) + " izlenme")); b.append(img(ytThumb(v.id)), t); b.onclick = () => openVideo(v, []); li.appendChild(b); ul.appendChild(li); });
+  vids.forEach(v => { const li = el("li"), b = el("button"); b.type = "button"; const t = el("span"); t.append(el("b", null, v.title), el("small", null, ytChan(v.ch).name + ", " + ytViews(v.views) + " izlenme")); b.append(img(ytThumb(v.id)), t); b.onclick = () => openVideo(v, [], "yan-sutun"); li.appendChild(b); ul.appendChild(li); });
   m.appendChild(ul); return m;
 }
 

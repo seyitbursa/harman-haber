@@ -14,6 +14,7 @@ import { dailyGames } from "./games.mjs";
 import { dailyGames2 } from "./games2.mjs";
 import { getYoutube } from "./youtube.mjs";
 import { getSports } from "./sports.mjs";
+import { googleTrends, wikiTop } from "./trends.mjs";
 import { buildStatic } from "./static.mjs";
 import { socialPost } from "./social.mjs";
 
@@ -187,6 +188,8 @@ for (let i = topics.length - 1; i > 0; i--) {
 }
 const youtube = config.youtube ? await getYoutube({ channels: config.youtube, stories }) : null;
 const sports = await getSports({ stories }).catch(e => ({ errors: [String(e)] }));
+const gtrends = await googleTrends();
+const wtop = await wikiTop({ prev: prevJson?.wtop });
 const game = { kelime: await dailyWord({ stories, prevGame: prevJson?.game?.kelime }), gunluk: await dailyGames({ stories, sources: config.sources, prev: prevJson?.game?.gunluk }) };
 game.nyt = await dailyGames2({ prev: prevJson?.game?.nyt, date: game.gunluk.date, key: process.env.GEMINI_API_KEY, usage: sum.usage, callGeminiRaw, stories }).catch(e => { console.log("  ✗ NYT tarzı oyunlar → " + e.message); return prevJson?.game?.nyt || null; });
 const topicSums = await addTopicSummaries({ topics, stories, sources: config.sources, prevTopicSums: prevJson?.topicSums, usage: sum.usage, key: process.env.GEMINI_API_KEY });
@@ -202,7 +205,7 @@ const stat = await buildStatic({ stories, topics, sources: config.sources, prev:
 await writeFile(new URL("../public/news.json", import.meta.url),
   JSON.stringify({ version: 3, leanInfo: config.leanInfo || null, updatedAt: new Date().toISOString(), sources: config.sources, markets, topics, xtrends, quakes,
     notify: cfg.ntfyTopic ? { topic: cfg.ntfyTopic, minSources: cfg.minSources, minQuake: cfg.minQuake, reportTopic: cfg.reportTopic || null } : null,
-    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, rg, stories, errors }));
+    notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, youtube, sports, gtrends, wtop, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, rg, stories, errors }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);
@@ -213,6 +216,7 @@ console.log(`Özet: bu turda ${sum.made} yeni, bekleyen ${sum.pending}, bugün $
 if (soc.sent.length) console.log("Sosyal medya: " + soc.sent.join(", "));
 console.log(`Fark özeti: ${stories.filter(s => s.fark).length} olay. Resmî Gazete: ${rg ? rg.date + ", " + rg.items.length + " madde" + (rg.done ? ", özetlendi" : ", özet bekliyor") : "alınamadı"}.`);
 console.log(`Sabit sayfalar: ${stat.count} sayfa (konu ve günlük gündem), site haritası ve RSS.`);
+console.log(`İnternet gündemi: Google ${gtrends?.items?.length || 0} arama, Vikipedi ${wtop?.items?.length || 0} madde (${wtop?.date || "-"}).`);
 console.log(`Spor: ${sports.standings?.length || 0} takım, ${sports.matches?.length || 0} lig maçı, ${sports.europe?.length || 0} Avrupa maçı${sports.errors?.length ? "; hatalar: " + sports.errors.join(", ") : ""}.`);
 if (youtube) console.log(`YouTube: ${youtube.items.length} video, ${youtube.items.filter(v => v.story).length} tanesi haberlerle eşleşti${youtube.errors.length ? "; hatalar: " + youtube.errors.join(", ") : ""}.`);
 console.log(`Depremler: ${quakes.items.length}${quakes.error ? " (hata: " + quakes.error + ")" : ""}. Bildirim: ${note.first ? "ilk çalıştırma, yalnızca işaretlendi" : note.sent.length ? note.sent.join(" | ") : "yok"}`);

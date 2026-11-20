@@ -752,6 +752,18 @@ body.in-game footer{display:none}
 
 .xt-sub{margin:4px 0 0 38px;font-size:12.5px;color:var(--ink-3)}
 .xt-cross{display:inline-block;font-weight:700;color:#C2410C;background:color-mix(in srgb,#F97316 12%,transparent);border-radius:6px;padding:0 6px}
+
+/* İnternet gündemi kaynak sekmeleri */
+.net-tabs{position:sticky;top:var(--hdr,64px);z-index:5;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 0;padding:8px 0;background:var(--paper)}
+.net-tab{display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:9px 10px;cursor:pointer;text-align:left;color:var(--ink);min-width:0}
+.net-tab .ic{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:16px;background:var(--line);color:var(--ink-2)}
+.net-tab b{display:block;font-size:15px;line-height:1.15}
+.net-tab small{display:block;font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.net-tab.on{border-color:var(--tc);background:var(--tc);color:#fff}
+.net-tab.on .ic{background:rgba(255,255,255,.2);color:#fff}
+.net-tab.on small{color:rgba(255,255,255,.8)}
+@media (prefers-color-scheme:dark){.net-tab.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 30%,var(--surface))}}
+@media (max-width:360px){.net-tab .ic{display:none}}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -2979,13 +2991,22 @@ function renderNetTab(){
   const lists = netLists();
   const intro = el("div","blind-intro"); intro.appendChild(backToKesfet()); intro.appendChild(el("h2", null, "İnternet gündemi"));
   intro.appendChild(el("p", null, "Türkiye’de X’te konuşulanlar, Google’da arananlar ve Vikipedi’de okunanlar; her başlığın altında sitedeki ilgili haberler. Birden çok listede geçen başlıklar işaretlenir."));
-  const seg = el("div","seg"); seg.setAttribute("role","group"); seg.setAttribute("aria-label","Kaynak"); seg.style.marginTop = "10px";
-  [["x","X"],["g","Google"],["w","Vikipedi"]].forEach(([k, l]) => { if (!lists[k].length) return; const b = el("button", null, l); b.type = "button"; b.setAttribute("aria-pressed", netSrc === k ? "true" : "false"); b.onclick = () => { netSrc = k; track("itr:sekme:" + k); render(); }; seg.appendChild(b); });
-  intro.appendChild(seg);
   if (!lists[netSrc].length) netSrc = lists.x.length ? "x" : lists.g.length ? "g" : "w";
+  // Büyük, renkli kaynak sekmeleri
+  const tabs = el("div","net-tabs"); tabs.setAttribute("role","tablist"); tabs.setAttribute("aria-label","Kaynak seç");
+  [["x","X","başlık", "𝕏", "#0F172A"],["g","Google","arama", "G", "#1A73E8"],["w","Vikipedi","madde", "W", "#4B5563"]].forEach(([k, l, verb, ic, color]) => {
+    if (!lists[k].length) return;
+    const on = netSrc === k, b = el("button","net-tab" + (on ? " on" : "")); b.type = "button"; b.setAttribute("role","tab"); b.setAttribute("aria-selected", on ? "true" : "false");
+    b.style.setProperty("--tc", color);
+    const i = el("span","ic", ic); const t = el("span"); t.append(el("b", null, l), el("small", null, lists[k].length + " " + verb));
+    b.append(i, t); b.onclick = () => { netSrc = k; track("itr:sekme:" + k); render(); };
+    tabs.appendChild(b);
+  });
   const meta = netSrc === "x" ? (data.xtrends && ["trends24.in", data.xtrends.sourceUrl, data.xtrends.at]) : netSrc === "g" ? (data.gtrends && ["Google Trends", data.gtrends.sourceUrl, data.gtrends.at]) : (data.wtop && ["Vikipedi (dünün verisi)", data.wtop.sourceUrl, null]);
   if (meta){ const p = el("p","hint"); p.append(meta[2] ? new Date(meta[2]).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}) + " itibarıyla · " : "", "Kaynak: "); const a = el("a", null, meta[0]); a.href = meta[1]; a.target = "_blank"; a.rel = "noopener"; p.appendChild(a); intro.appendChild(p); }
   top.appendChild(intro);
+  top.appendChild(tabs);
+  const hdr = document.querySelector("header"); if (hdr) document.documentElement.style.setProperty("--hdr", hdr.getBoundingClientRect().height + "px");
   const box = el("div","xt"); let withNews = 0;
   lists[netSrc].forEach((t, i) => {
     const row = el("div","xt-row"), h = el("div","xt-h");
@@ -2994,7 +3015,8 @@ function renderNetTab(){
     h.append(el("span","xt-n", String(i + 1)), a);
     row.appendChild(h);
     const sub = el("p","xt-sub", t.sub || ""); const cross = crossHits(t.name, lists, netSrc);
-    if (cross.length) sub.prepend(el("span","xt-cross", "🔥 " + cross.join(" ve ") + "’da da"), t.sub ? " · " : "");
+    const EK = {"X":"’te de", "Google":"’da da", "Vikipedi":"’de de"};
+    if (cross.length) sub.prepend(el("span","xt-cross", "🔥 " + cross.join(" ve ") + EK[cross[cross.length - 1]]), t.sub ? " · " : "");
     if (t.sub || cross.length) row.appendChild(sub);
     const news = trendNews(t.name);
     if (news.length){

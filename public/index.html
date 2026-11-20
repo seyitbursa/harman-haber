@@ -1071,7 +1071,7 @@ function weatherModule(){
     const row = el("label","city"); row.appendChild(el("span","sr","Şehir seç"));
     const sel = el("select"); const ph = el("option", null, "Şehrini seç"); ph.value = ""; sel.appendChild(ph);
     [...ILLER].sort((a,b) => a[0].localeCompare(b[0],"tr")).forEach(([n]) => { const o = el("option", null, n); o.value = n; if (city && city[3] === "TR" && city[0] === n) o.selected = true; sel.appendChild(o); });
-    sel.onchange = async () => { const f = ILLER.find(x => x[0] === sel.value); city = f ? [f[0], f[1], f[2], "TR", null] : null; store.set("gk-city", city); weather = null; prayer = null; render(); await Promise.all([loadWeather(), loadPrayer()]); render(); };
+    sel.onchange = async () => { const f = ILLER.find(x => x[0] === sel.value); city = f ? [f[0], f[1], f[2], "TR", null] : null; store.set("gk-city", city); weather = null; prayer = null; trackPrefs(); render(); await Promise.all([loadWeather(), loadPrayer()]); render(); };
     row.appendChild(sel); m.appendChild(row);
   } else {
     const box = el("div","city-search");
@@ -1085,7 +1085,7 @@ function weatherModule(){
         (d.results || []).forEach(x => {
           const b = el("button","city-opt"); b.type = "button"; b.setAttribute("role","option");
           b.append(el("b", null, x.name), el("span", null, [x.admin1, x.admin2].filter(Boolean).join(", ")));
-          b.onclick = async () => { city = [x.name, +x.latitude.toFixed(3), +x.longitude.toFixed(3), country, x.admin1 || null]; store.set("gk-city", city); weather = null; prayer = null; render(); await Promise.all([loadWeather(), loadPrayer()]); render(); };
+          b.onclick = async () => { city = [x.name, +x.latitude.toFixed(3), +x.longitude.toFixed(3), country, x.admin1 || null]; store.set("gk-city", city); weather = null; prayer = null; trackPrefs(); render(); await Promise.all([loadWeather(), loadPrayer()]); render(); };
           res.appendChild(b);
         });
         if (!(d.results || []).length) res.appendChild(el("p","hint","Sonuç bulunamadı."));
@@ -2370,7 +2370,7 @@ function renderTeamSettings(){
   const sel = el("select"); sel.setAttribute("aria-label","Takımım"); sel.style.cssText = "width:100%;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:0 10px;font-weight:600";
   const o0 = el("option", null, "Takım seçilmedi"); o0.value = ""; sel.appendChild(o0);
   [...sp.standings].sort((a, b) => a.n.localeCompare(b.n, "tr")).forEach(t => { const o = el("option", null, t.n); o.value = t.id; if (t.id === myTeam) o.selected = true; sel.appendChild(o); });
-  sel.onchange = () => { myTeam = sel.value || null; store.set("gk-team", myTeam); renderTicker(); };
+  sel.onchange = () => { myTeam = sel.value || null; store.set("gk-team", myTeam); renderTicker(); trackPrefs(); };
   box.appendChild(sel);
 }
 
@@ -2793,6 +2793,14 @@ async function loadPublic(){
   return pubStats;
 }
 
+
+// Seçili şehir ve takım: her cihaz günde bir kez sayılır (yalnızca il/ülke ve takım adı; başka bilgi yok)
+const slugTR = t => t.toLocaleLowerCase("tr").replace(/[^a-zçğıöşü0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30);
+function trackPrefs(){
+  if (city) track(city[3] === "TR" ? "sehir:" + slugTR(city[0]) : "ulke:" + String(city[3]).toLowerCase(), true);
+  if (myTeam){ const t = data.sports?.standings?.find(x => x.id === myTeam); if (t) track("takim:" + slugTR(t.n), true); }
+}
+
 // ---- Yönetici istatistik sayfası (#istatistik) ----
 async function renderStats(){
   const top = $("#top"), feed = $("#feed"); top.textContent = ""; feed.textContent = ""; feed.classList.remove("skel"); $("#feedHead").hidden = true;
@@ -2854,6 +2862,17 @@ async function renderStats(){
   listOf("YouTube: nereden açıldı?", group("yt:yer:"), k => YER[k] || k);
   listOf("YouTube: en çok izlenen kanallar", group("yt:izle:"), k => ytChan(k).name || k);
   listOf("Kısa yollar şeridi", group("kisayol:"), k => ({xgundem:"X gündemi", youtube:"YouTube", kornokta:"Kör nokta", resmigazete:"Resmî Gazete"}[k] || k));
+  // Şehirler ve takımlar
+  box.appendChild(el("h3", null, "Şehirler ve takımlar"));
+  box.appendChild(el("p","hint","Sayılar son 7 günde, o şehri ya da takımı seçmiş cihazların günlük toplamıdır (aynı cihaz her gün bir kez sayılır). Ortalama günlük kullanıcı için 7’ye böl."));
+  const ILN = Object.fromEntries(ILLER.map(x => [slugTR(x[0]), x[0]]));
+  const cityRows = group("sehir:"), cityTotal = cityRows.reduce((a, [, v]) => a + v, 0);
+  listOf("Şehir seçenler" + (cityTotal ? " (toplam " + cityTotal.toLocaleString("tr-TR") + ")" : ""), cityRows, k => ILN[k] || k);
+  listOf("Yurtdışından şehir seçenler", group("ulke:"), k => countryName(k.toUpperCase()));
+  const teamNames = Object.fromEntries((data.sports?.standings || []).map(t => [slugTR(t.n), t.n]));
+  listOf("Takım takip edenler", group("takim:"), k => teamNames[k] || k);
+  const noSel = sum7(o => o === "ziyaret") - cityTotal - group("ulke:").reduce((a, [, v]) => a + v, 0);
+  if (sum7(o => o === "ziyaret")) box.appendChild(el("p","hint", "Ziyaretçilerin yaklaşık %" + Math.max(0, Math.round((1 - noSel / sum7(o => o === "ziyaret")) * 100)) + "’i bir şehir seçmiş."));
   // Haber tıklamaları
   box.appendChild(el("h3", null, "Haber tıklamaları (son 7 gün)"));
   box.appendChild(el("p", null, "Toplam: " + sum7(o => o === "haber:tik").toLocaleString("tr-TR") + " tıklama"));
@@ -3218,6 +3237,7 @@ if ("serviceWorker" in navigator) window.addEventListener("load", () => navigato
 renderNav(); renderTicker();
 load(true);
 track("ziyaret", true); trackView();
+setTimeout(trackPrefs, 4000);
 Promise.all([loadWeather(), loadPrayer()]).then(() => { if (loaded) render(); else renderTicker(); });
 // Her dakika sıradaki vakit sayacını güncelle (gece yarısı geçince yeni günün vakitlerini al)
 setInterval(async () => { const before = prayer; await loadPrayer(); renderTicker(); if (view === "yerel" && !document.querySelector("dialog[open]") && !document.activeElement?.matches("input,select")) render(); }, 60 * 1000);

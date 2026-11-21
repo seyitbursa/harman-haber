@@ -2957,7 +2957,7 @@ document.addEventListener("keydown", e => {
 // ---- Anonim kullanım sayacı (Cloudflare Worker + D1; kişisel veri yok) ----
 const SAYAC = "https://harman-sayac.harmanhaber.workers.dev";
 const EVQ = [];
-const noTrack = () => store.get("gk-nosay", false) || view === "istatistik";
+const noTrack = () => store.get("gk-nosay", false) || view === "istatistik" || navigator.webdriver === true;
 // Yönetici anahtarı daha önce girilmiş cihazlar varsayılan olarak sayılmaz
 if (store.get("gk-admin", "") && store.get("gk-nosay", null) === null) store.set("gk-nosay", true);
 function track(e, oncePerDay){
@@ -3030,6 +3030,7 @@ async function renderStats(){
     .forEach(([l, v]) => { const x = el("div"); x.append(el("b", null, v.toLocaleString("tr-TR")), el("span", null, l)); kpi.appendChild(x); });
   box.appendChild(kpi);
   box.appendChild(el("p","hint","Ziyaretçi sayısı, her cihazın günde bir kez sayılmasıyla bulunur; reklam engelleyici kullananlar sayılmayabilir. “Oyun oynayan”, en az bir oyunu açan cihaz sayısıdır; bugün Oyunlar sayfasına giren " + sum(o => o === "ziyaret:oyunlar", today) + " cihaz."));
+  box.appendChild(el("p","hint","Cloudflare’deki sayılarla neden farklı? Burada “bugün” Türkiye saatiyle gece yarısından beri sayılır (Cloudflare’de son 24 saat, UTC); ziyaretçi her cihaz için günde bir kez sayılır (Cloudflare her sayfa yüklemesini sayar); sitedeki bölüm geçişleri burada sayfa görüntülemesi sayılır, Cloudflare’de sayılmaz; senin cihazların ve otomatik tarayıcılar burada sayılmaz."));
   // Günlük ziyaretçi grafiği
   box.appendChild(el("h3", null, "Son 30 gün: günlük ziyaretçi"));
   const ch = el("div","stat-bars"), maxV = Math.max(1, ...days.map(g => sum(o => o === "ziyaret", g)));
@@ -3951,6 +3952,9 @@ setInterval(renderStatus, 60 * 1000);
 setInterval(() => loadWeather().then(renderTicker), 30 * 60 * 1000);
 </script>
 <!-- Cloudflare Web Analytics: çerezsiz ziyaretçi istatistiği -->
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "3eae1e480b86457fa28243ab3d96bec2", "spa": true}'></script>
+<script>
+// Otomatik tarayıcılar (test araçları, yapay zekâ ajanları) istatistiklere katılmasın
+if (!navigator.webdriver) { const b = document.createElement("script"); b.defer = true; b.src = "https://static.cloudflareinsights.com/beacon.min.js"; b.setAttribute("data-cf-beacon", '{"token": "3eae1e480b86457fa28243ab3d96bec2", "spa": true}'); document.body.appendChild(b); }
+</script>
 </body>
 </html>

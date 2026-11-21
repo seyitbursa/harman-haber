@@ -108,6 +108,36 @@ ${a.topics.length ? `<h2>Günün konuları</h2>${a.topics.map(t => `<div class="
     body: `<h1>Gündem arşivi</h1><div class="card"><ul class="l">${archive.map(a => `<li><a href="/gundem/${a.date}/">${trDate(a.date)}</a><small>${esc(a.top.slice(0, 2).map(x => x.t).join(" · "))}</small></li>`).join("")}</ul></div>`,
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: "Gündem arşivi", url: `${SITE}/gundem/` } });
 
+  // Haber detay sayfaları: 3+ kaynaklı olaylar, 7 gün saklanır (adres uygulamadaki #h-<olay> ile aynı anahtarı kullanır)
+  const urlKey = u => { let h = 5381; for (const c of u) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0; return h.toString(36); };
+  const detailPages = Object.fromEntries(Object.entries(prev?.detailPages || {}).filter(([, v]) => Date.now() - new Date(v.at) < 7 * 864e5));
+  for (const st of stories) {
+    const srcs = [...new Set(st.items.map(i => i.source))];
+    if (srcs.length < 3) continue;
+    const k = urlKey(st.items[0].url), seen = new Set();
+    detailPages[k] = { t: (st.neutral || st.items[0].title).replace(/\.$/, ""), g: st.items[0].gist || null, hl: st.hl || [], img: st.items[0].image || null, first: st.first || st.date, at: st.date,
+      origin: st.origin || null, items: st.items.filter(i => !seen.has(i.source) && seen.add(i.source)).map(i => ({ t: i.title, u: i.url, s: i.source, d: i.date })) };
+  }
+  for (const [k, d] of Object.entries(detailPages)) {
+    const groups = ["hukumet", "bagimsiz", "muhalefet"].map(g => [g, d.items.filter(i => sources[i.s]?.lean === g)]).filter(([, l]) => l.length);
+    const un = d.items.filter(i => !sources[i.s]?.lean);
+    const desc = d.g || (d.t + ": " + d.items.length + " kaynağın başlıkları yan yana.");
+    const when = new Date(d.at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul", dateStyle: "long", timeStyle: "short" });
+    const body = `<p class="muted">${d.items.length} kaynak verdi · ${esc(when)}</p>
+<h1>${esc(d.t)}</h1>
+${d.g ? `<div class="card sum"><b>Özü:</b> ${esc(d.g)}</div>` : ""}
+${d.hl.length ? `<div class="card"><b>Öne çıkanlar</b><ul>${d.hl.map(x => `<li>${esc(x)}</li>`).join("")}</ul><p class="muted">Haber metninden yapay zekâyla çıkarılmıştır; ayrıntılar için haberin tamamını kaynağında okuyun.</p></div>` : ""}
+${d.origin ? `<p class="muted">${d.items.length} yayın · ${d.origin.n} tanesi ${esc(d.origin.ag)} imzası taşıyor</p>` : ""}
+<p><a class="cta" href="/#h-${k}">Harman Haber’de karşılaştır</a></p>
+<h2>Kim nasıl verdi?</h2>
+${groups.map(([g, l]) => `<div class="card"><b>${GL[g]}</b>${itemList(l.map(i => ({ t: i.t, u: i.u, s: i.s })), sources, true)}</div>`).join("")}
+${un.length ? `<div class="card"><b>Sınıflandırma dışı</b>${itemList(un.map(i => ({ t: i.t, u: i.u, s: i.s })), sources, true)}</div>` : ""}`;
+    await page({ path: `/haber/${k}/`, title: `${d.t} | ${d.items.length} kaynak karşılaştırması | Harman Haber`, desc, body, appLink: `/#h-${k}`,
+      jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: d.t, description: desc, url: `${SITE}/haber/${k}/`, datePublished: d.first, dateModified: d.at,
+        isPartOf: { "@type": "WebSite", name: "Harman Haber", url: SITE }, ...(d.img ? { image: d.img } : {}),
+        mainEntity: { "@type": "ItemList", itemListElement: d.items.map((i, n) => ({ "@type": "ListItem", position: n + 1, url: i.u, name: i.t })) } } });
+  }
+
   // Resmî Gazete: günün sayısı ve 30 günlük arşiv (sade özetlerle)
   const rgArchive = (prev?.rgArchive || []).filter(x => x.date !== rg?.date && Date.now() - new Date(x.date) < 31 * 864e5);
   if (rg?.items?.length) rgArchive.unshift({ date: rg.date, pdf: rg.pdf, items: rg.items.map(i => ({ sec: i.sec, title: i.title, url: i.url, sade: i.sade || null, ozet: i.ozet || null, etki: i.etki || null, onem: i.onem || 1 })) });
@@ -130,6 +160,7 @@ ${rgArchive.length > 1 ? `<h2>Önceki sayılar</h2><div class="card"><ul class="
   const urls = [[`${SITE}/`, new Date().toISOString(), "always"], [`${SITE}/gundem/`, new Date().toISOString(), "daily"],
     ...archive.map(a => [`${SITE}/gundem/${a.date}/`, a.date, a.date === today ? "hourly" : "never"]),
     ...Object.entries(topicPages).map(([slug, p]) => [`${SITE}/konu/${slug}/`, p.at, "hourly"]),
+    ...Object.entries(detailPages).map(([k, d]) => [`${SITE}/haber/${k}/`, d.at, "hourly"]),
     ...(rgArchive.length ? [[`${SITE}/resmi-gazete/`, rgArchive[0].date, "daily"]] : []),
     ...rgArchive.map(x => [`${SITE}/resmi-gazete/${x.date}/`, x.date, "never"])];
   await writeFile(new URL("../public/sitemap.xml", import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d, f]) => `<url><loc>${u}</loc><lastmod>${new Date(d).toISOString()}</lastmod><changefreq>${f}</changefreq></url>`).join("\n")}\n</urlset>\n`);
@@ -138,5 +169,5 @@ ${rgArchive.length > 1 ? `<h2>Önceki sayılar</h2><div class="card"><ul class="
     ...Object.entries(topicPages).map(([slug, p]) => ({ t: p.title, u: `${SITE}/konu/${slug}/`, d: p.at, s: p.summary || "" })),
     ...rgArchive.slice(0, 10).map(x => ({ t: `${trDate(x.date)} Resmî Gazete özeti`, u: `${SITE}/resmi-gazete/${x.date}/`, d: x.date + "T07:00:00+03:00", s: x.items.slice(0, 4).map(i => i.sade || i.title).join(" · ") }))].sort((a, b) => new Date(b.d) - new Date(a.d)).slice(0, 40);
   await writeFile(new URL("../public/rss.xml", import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Harman Haber</title><link>${SITE}/</link><description>Haberin özü, her kaynaktan.</description><language>tr</language>\n${rssItems.map(i => `<item><title>${esc(i.t)}</title><link>${i.u}</link><guid>${i.u}</guid><pubDate>${new Date(i.d).toUTCString()}</pubDate><description>${esc(i.s)}</description></item>`).join("\n")}\n</channel></rss>\n`);
-  return { topicPages, archive, rgArchive, count: Object.keys(topicPages).length + archive.length + rgArchive.length };
+  return { topicPages, archive, rgArchive, detailPages, count: Object.keys(topicPages).length + archive.length + rgArchive.length + Object.keys(detailPages).length };
 }

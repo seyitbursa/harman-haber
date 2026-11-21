@@ -3552,7 +3552,7 @@ function renderDetail(){
   if (ctx.childNodes.length) body.appendChild(ctx);
   const og = originLine(st); if (og) body.appendChild(og);
   // Paylaş
-  const sh = el("button","btn ghost","Paylaş"); sh.type = "button"; sh.style.marginTop = "10px"; sh.onclick = () => shareOrCopy({ title: headline(st), text: headline(st) + (i.gist ? "\n" + i.gist : "") + "\nHarman Haber’de tüm kaynaklarıyla:", url: location.origin + "/#h-" + urlKey(story.items[0].url) });
+  const sh = el("button","btn ghost","Paylaş"); sh.type = "button"; sh.style.marginTop = "10px"; sh.onclick = () => shareOrCopy({ title: headline(st), text: headline(st) + (i.gist ? "\n" + i.gist : "") + "\nHarman Haber’de tüm kaynaklarıyla:", url: location.origin + (uniqSrc(story).length >= 3 ? "/haber/" + urlKey(story.items[0].url) + "/" : "/#h-" + urlKey(story.items[0].url)) });
   body.appendChild(sh);
   art.appendChild(body); top.appendChild(art);
 

@@ -74,7 +74,7 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 
 ## Haber detay sayfası
 
-Başlığa dokununca haber önce sitede (`#h-<olay>`) açılır: ortak başlık, görsel, “Özü”, 3+ kaynaklı olaylarda haber metninden çıkarılan 3–4 maddelik “Öne çıkanlar” (Gemini, `addHighlights`), kaynak dağılımı, gözlemler ve bütün kaynakların özgün başlıkları, ilk kaynak, başlık değişikliği, doğrulama, birincil belge, zaman çizelgesi, sırada ne var, YouTube videoları. Tam metin için belirgin “Haberin tamamını …’de oku” düğmesi kaynağa götürür; haber metni sitede yeniden yayımlanmaz.
+Başlığa dokununca haber önce sitede (`#h-<olay>`) açılır: ortak başlık, görsel, “Özü”, 3+ kaynaklı olaylarda haber metninden çıkarılan 3–4 maddelik “Öne çıkanlar” (Gemini, `addHighlights`), kaynak dağılımı, gözlemler ve bütün kaynakların özgün başlıkları, ilk kaynak, başlık değişikliği, doğrulama, birincil belge, zaman çizelgesi, sırada ne var, YouTube videoları. Tam metin için belirgin “Haberin tamamını …’de oku” düğmesi kaynağa götürür; haber metni sitede yeniden yayımlanmaz. 3+ kaynaklı olayların detay sayfaları arama motorları için `/haber/<olay>/` adresinde sabit sayfa olarak da üretilir (7 gün saklanır, site haritasında); bu olayların paylaşım bağlantısı sabit sayfadır.
 
 ## Performans
 

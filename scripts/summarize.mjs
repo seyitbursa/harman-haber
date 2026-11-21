@@ -235,3 +235,31 @@ export async function addNeutralTitles({ stories, sources, prev, usage, key, log
   for (const s of cands) { const c = cache[keyOf(s)]; if (c?.b) s.neutral = c.b; }
   return cache;
 }
+
+// ---- Haber detay sayfası: "Öne çıkanlar" (3–4 kısa madde) ----
+// Yalnızca 3+ kaynaklı olaylar için; haber metnini yeniden yazmaz, okumaya teşvik edecek kadar kısa olgular çıkarır.
+const HL_PROMPT = `Sen bir haber editörüsün. Aşağıdaki her haber için metinden 3 ya da 4 kısa "öne çıkan" madde çıkar:
+- Her madde en fazla 15 kelime; kim, ne, nerede, ne zaman, rakamlar gibi somut olgular.
+- Kendi cümlelerinle yaz; metinden uzun alıntı yapma (en fazla 3–4 kelimelik tırnak).
+- Yalnızca metinde geçen bilgiyi kullan; yorum, değerlendirme ve tahmin ekleme.
+- Metin yoksa ya da yetersizse boş dizi döndür.
+Yalnızca şu biçimde JSON dizi döndür: [{"i":1,"m":["...","..."]}, ...]`;
+export async function addHighlights({ stories, prev, usage, key, log = console.log }) {
+  const now = Date.now(), cache = {};
+  for (const [k, v] of Object.entries(prev || {})) if (now - new Date(v.at) < 72 * 3600e3) cache[k] = v;
+  const uniq = s => new Set(s.items.map(i => i.source)).size;
+  const cands = stories.filter(s => uniq(s) >= 3 && now - new Date(s.date) < 36 * 3600e3);
+  const todo = cands.filter(s => !cache[s.items[0].url]).sort((a, b) => uniq(b) - uniq(a)).slice(0, 5);
+  if (key && todo.length && usage.requests < MAX_REQ_PER_DAY) {
+    const texts = await Promise.all(todo.map(async s => { for (const i of s.items.slice(0, 3)) { if (/news\.google\.com/.test(i.url)) continue; const t = await articleText(i.url).catch(() => ""); if (t && t.length > 400) return t.slice(0, 3500); } return ""; }));
+    const body = todo.map((s, n) => `#${n + 1}\nBaşlık: ${s.items[0].title}\nMetin: ${texts[n] || "(metin yok)"}`).join("\n\n");
+    try {
+      usage.requests++;
+      const { out } = await callGeminiRaw(key, HL_PROMPT + "\n\n" + body);
+      todo.forEach((s, n) => { const o = out.find(r => r.i === n + 1); const m = (o?.m || []).map(x => String(x).replace(/\s+/g, " ").trim()).filter(x => x.length > 8 && x.length < 160 && !/[\u0400-\u04FF\u4E00-\u9FFF]/.test(x)).slice(0, 4);
+        cache[s.items[0].url] = { m, at: new Date().toISOString() }; });
+    } catch (e) { log("  ✗ öne çıkanlar → " + e.message); }
+  }
+  for (const s of cands) { const c = cache[s.items[0].url]; if (c?.m?.length) s.hl = c.m; }
+  return cache;
+}

@@ -72,6 +72,10 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 - **Başlık değişim geçmişi:** Aynı adreste başlık değişirse (noktalama/harf büyüklüğü hariç) ilk ve son sürüm gözlem saatleriyle; “düzeltme” etiketi kullanılmaz.
 - **Bu iddia incelendi mi?** (`scripts/factcheck.mjs`): Teyit analizleri haberlerle otomatik eşleştirilir ama yalnızca ADAY olur; yönetici sayfasında editör iddiayı ve sonucu yazıp onaylarsa (Worker `/onay`, D1 `onay` tablosu) haberin altında “🔎 Teyit” olarak görünür.
 
+## Haber detay sayfası
+
+Başlığa dokununca haber önce sitede (`#h-<olay>`) açılır: ortak başlık, görsel, “Özü”, 3+ kaynaklı olaylarda haber metninden çıkarılan 3–4 maddelik “Öne çıkanlar” (Gemini, `addHighlights`), kaynak dağılımı, gözlemler ve bütün kaynakların özgün başlıkları, ilk kaynak, başlık değişikliği, doğrulama, birincil belge, zaman çizelgesi, sırada ne var, YouTube videoları. Tam metin için belirgin “Haberin tamamını …’de oku” düğmesi kaynağa götürür; haber metni sitede yeniden yayımlanmaz.
+
 ## Performans
 
 - **Veri ayrımı:** `news.json` yalnızca sitenin kullandığı alanları içerir (gzip ~190 KB). İlk ekran için en yeni 40 hikâyeyi taşıyan `head.json` (gzip ~15 KB) paralel istenir ve önce çizilir. Sunucunun kendi hafızası (özet önbellekleri, arşivler, bildirim durumu) `state.json`’dadır; okuyucu bu dosyayı indirmez.

@@ -7,7 +7,7 @@ import { trendingTopics, matchTopic, SENSITIVE } from "./topics.mjs";
 import { getXTrends } from "./xtrends.mjs";
 import { getQuakes } from "./quakes.mjs";
 import { notify, previousJson } from "./notify.mjs";
-import { addGists, addTopicSummaries, addContrasts, addNeutralTitles, callGeminiRaw } from "./summarize.mjs";
+import { addGists, addTopicSummaries, addContrasts, addNeutralTitles, addHighlights, callGeminiRaw } from "./summarize.mjs";
 import { resmiGazete } from "./resmigazete.mjs";
 import { addOrigins } from "./origin.mjs";
 import { factChecks } from "./factcheck.mjs";
@@ -177,6 +177,7 @@ const sum = await addGists({ stories, prevGists: prevJson?.gists, prevUsage: pre
 // Özetler eklendikten sonra: başlıkları farklı yazılmış ama aynı olayı anlatan haberleri birleştir
 const merged = mergeByGist(stories);
 if (merged){ stories.sort((a, b) => b.date.localeCompare(a.date)); console.log(`Özete göre birleştirilen haber: ${merged}.`); }
+const hlCache = await addHighlights({ stories, prev: prevJson?.hlCache, usage: sum.usage, key: process.env.GEMINI_API_KEY });
 const originCache = await addOrigins({ stories, prev: prevJson?.originCache });
 const checkCands = await factChecks({ stories });
 // Başlık değişim geçmişi: aynı adreste başlık değişirse ilk ve son sürüm (noktalama ve büyük/küçük harf farkları sayılmaz)
@@ -262,7 +263,7 @@ const headStories = slim.slice(0, 40);
 await writeFile(new URL("../public/head.json", import.meta.url), JSON.stringify({ version: 4, partial: true, leanInfo: client.leanInfo, updatedAt, sources: config.sources, markets, topics: topics.map(t => ({ ...t, storyIds: t.storyIds.filter(id => headStories.some(s => s.id === id)) })), xtrends, quakes, stories: headStories }));
 // Sunucunun bir sonraki tur için hatırladıkları (okuyucu bu dosyayı indirmez)
 await writeFile(new URL("../public/state.json", import.meta.url),
-  JSON.stringify({ updatedAt, notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, wtop, rg, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, neutralCache, originCache, titles }));
+  JSON.stringify({ updatedAt, notified: note.state, gists: sum.gists, gistUsage: sum.usage, topicSums, game, wtop, rg, topicPages: stat.topicPages, archive: stat.archive, rgArchive: stat.rgArchive, social: soc.state, farkCache, neutralCache, originCache, titles, hlCache }));
 
 const multi = stories.filter(s => s.items.length > 1).length;
 console.log(`${items.length} haber, ${stories.length} hikâye (${multi} tanesi birden çok kaynaktan), piyasa: ${markets.source || "yok"}, ${topics.length} gündem konusu, X gündeminde ${xtrends.items.length} başlık; ${errors.length} akış hata verdi.`);

@@ -857,6 +857,27 @@ body.in-game footer{display:none}
 .cand{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0}
 .cand a{font-size:14px;color:var(--accent)}
 .cand input,.cand select{height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:var(--paper);color:var(--ink)}
+
+/* Haber detay sayfası */
+.detail{background:var(--surface);border-radius:18px;overflow:hidden;box-shadow:0 1px 0 var(--line);margin-top:8px}
+.detail .d-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--line)}
+.d-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px}
+.detail h1{font-family:var(--head);font-weight:800;font-stretch:85%;font-size:clamp(26px,6.5vw,38px);line-height:1.08;margin:4px 0 0;letter-spacing:-.01em}
+.d-meta{margin:0;font-size:13.5px;color:var(--ink-3)}
+.d-ozu{margin:4px 0 0;font-size:17px;line-height:1.5}
+.d-ozu b{color:var(--accent)}
+.d-hl{background:var(--paper);border-radius:12px;padding:12px 14px;margin-top:4px}
+.d-hl h3{margin:0 0 6px;font-size:16px}
+.d-hl ul{margin:0;padding-left:20px} .d-hl li{margin:4px 0;font-size:15px;line-height:1.45}
+.d-cta{align-self:stretch;text-align:center;text-decoration:none;margin-top:6px;font-size:16px;padding:12px 16px}
+.d-sec{background:var(--surface);border-radius:16px;box-shadow:0 1px 0 var(--line);padding:14px 16px;margin-top:12px}
+.d-sec h3{margin:0 0 10px;font-family:var(--head);font-weight:800;font-stretch:85%;font-size:20px}
+.d-obs{margin:8px 0;padding-left:20px;font-size:14px} .d-obs li{margin:4px 0}
+.d-src{list-style:none;margin:12px 0 0;padding:0}
+.d-src li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+.d-src li:first-child{border-top:0}
+.d-src small{display:block;font-size:12px;color:var(--ink-3);margin-bottom:2px}
+.d-src a{font-weight:600;text-decoration:none;color:var(--ink)} .d-src a:hover{color:var(--accent)}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -1341,6 +1362,7 @@ function route(){
   if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); }
   else if (h === "oyunlar" || h.startsWith("oyun-")) view = h;
   else if (h === "yerel" || h === "saved") view = h;
+  else if (h.startsWith("h-")){ view = "haber"; detailKey = h.slice(2); }
   else if (h.startsWith("k-")){ view = "feed"; cat = "all"; if (fullLoaded) setTimeout(() => openCompareFromHash(h), 0); else pendingCompare = h; }
   else if (h === "kesfet") view = "kesfet";
   else if (h === "istatistik") view = "istatistik";
@@ -1382,6 +1404,7 @@ function render(){
     renderGames(); if (view.startsWith("oyun-")) trackGameEnd(view.slice(5)); return;
   }
   if (view === "kesfet"){ renderKesfet(); return; }
+  if (view === "haber"){ renderDetail(); window.scrollTo({top:0}); return; }
   if (view === "istatistik"){ renderStats(); return; }
   if (view === "feed" && cat === "xgundem"){ $("#top").textContent = ""; renderNetTab(); return; }
   if (view === "feed" && cat === "youtube"){ $("#top").textContent = ""; renderYTTab(); $(".blind-intro")?.prepend(backToKesfet()); return; }
@@ -1515,7 +1538,7 @@ function heroCard(story){
   if (i.image){ const im = img(i.image, "img", true); im.onerror = () => { im.remove(); c.classList.add("noimg"); }; c.appendChild(im); }
   const body = el("div","body");
   if (story.items.length >= 2){ const wl = weightLabel(story); wl.style.cursor = "pointer"; wl.setAttribute("role","button"); wl.tabIndex = 0; wl.setAttribute("aria-label", story.items.length + " kaynak verdi. Kaynakları göster"); wl.onclick = () => biasOf(story) ? openBias(story) : openSources(story); wl.onkeydown = e => { if (e.key === "Enter") wl.click(); }; body.appendChild(wl); }
-  const h = el("h2"); h.appendChild(link(headline(story), i.url)); body.appendChild(h);
+  const h = el("h2"); h.appendChild(storyLink(story)); body.appendChild(h);
   const ld = lede(i); if (ld) body.appendChild(ld);
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb){ body.appendChild(bb); body.appendChild(legend()); }
   const og = originLine(story); if (og) body.appendChild(og);
@@ -1530,7 +1553,7 @@ function talkCard(story){
   const w = el("div","weight"); w.appendChild(stack(story.items.map(x => x.source)));
   w.appendChild(el("strong", null, uniqSrc(story).length + " kaynak"));
   c.appendChild(w);
-  const h = el("h4"); h.appendChild(link(headline(story), i.url)); c.appendChild(h);
+  const h = el("h4"); h.appendChild(storyLink(story)); c.appendChild(h);
   if (i.gist) c.appendChild(lede(i));
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb){ bb.style.marginTop = "0"; c.appendChild(bb); }
   c.appendChild(el("div","meta", ago(story.date)));
@@ -1540,7 +1563,7 @@ function row(story, inTopic){
   const i = story.items[0];
   const r = el("article","row" + (i.image ? "" : " noimg") + (read.has(i.url) ? " read" : ""));
   const m = meta(i, story); m.appendChild(actions(i, story)); r.appendChild(m);
-  const h = el("h4"); h.appendChild(link(headline(story), i.url, r)); r.appendChild(h);
+  const h = el("h4"); h.appendChild(storyLink(story, r)); r.appendChild(h);
   const ld = lede(i); if (ld) r.appendChild(ld);
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb) r.appendChild(bb);
   if (i.image){ const im = img(i.image, "thumb"); im.onerror = () => { im.remove(); r.classList.add("noimg"); }; r.appendChild(im); }
@@ -3244,7 +3267,7 @@ function timelineSection(list){
     const li = el("li" , k === rows.length - 1 ? "last" : null), i = s.items[0];
     const d = new Date(firstOf(s));
     li.appendChild(el("time", null, d.toLocaleDateString("tr-TR", {day:"numeric", month:"short"}) + " " + d.toLocaleTimeString("tr-TR", {hour:"2-digit", minute:"2-digit"})));
-    const body = el("div"); body.appendChild(link(headline(s), i.url));
+    const body = el("div"); body.appendChild(storyLink(s));
     if (i.gist) body.appendChild(el("p", null, i.gist));
     const n = uniqSrc(s).length; const meta = el("small", null, n > 1 ? n + " kaynak · " + uniqSrc(s).slice(0, 3).map(x => src(x).name).join(", ") + (n > 3 ? "…" : "") : src(i.source).name);
     body.appendChild(meta);
@@ -3323,7 +3346,7 @@ function dayFiveSection(){
   if ("speechSynthesis" in window){ const lb = el("button","xt-more","▶ Dinle"); lb.type = "button"; lb.style.margin = "0"; lb.onclick = () => startListen(five); h.appendChild(lb); }
   sec.appendChild(h);
   const ol = el("ol");
-  five.forEach(s => { const i = s.items[0], li = el("li"); li.appendChild(link(headline(s), i.url)); if (i.gist) li.appendChild(el("p", null, i.gist)); const tl = timeLine(s); li.appendChild(el("small", null, uniqSrc(s).length + " kaynak · " + (tl ? tl.textContent : ago(s.date)))); ol.appendChild(li); });
+  five.forEach(s => { const i = s.items[0], li = el("li"); li.appendChild(storyLink(s)); if (i.gist) li.appendChild(el("p", null, i.gist)); const tl = timeLine(s); li.appendChild(el("small", null, uniqSrc(s).length + " kaynak · " + (tl ? tl.textContent : ago(s.date)))); ol.appendChild(li); });
   sec.appendChild(ol);
   return sec;
 }
@@ -3471,6 +3494,93 @@ function nextSection(list, title){
     r.append(dd, tx); sec.appendChild(r);
   });
   return sec;
+}
+
+
+// ---- Haber detay sayfası (#h-<olay>) ----
+// Başlığa dokununca önce burada açılır: özet, öne çıkanlar, kim nasıl verdi, bağlam; tam metin için kaynağa gidilir.
+let detailKey = null;
+// Türkçe bulunma eki: Bianet’te, Sözcü’de, NTV’de, Habertürk’te, AA’da
+const LOC_EXC = {"Medyascope":"Medyascope’ta","ShiftDelete":"ShiftDelete’ta","Euronews":"Euronews’te","Independent Türkçe":"Independent Türkçe’de","BBC Türkçe":"BBC Türkçe’de","DW Türkçe":"DW Türkçe’de"};
+function locative(name){
+  if (LOC_EXC[name]) return LOC_EXC[name];
+  const full = name.trim(), n = full.split(/\s+/).pop(), low = n.toLocaleLowerCase("tr");
+  const LETTER = {a:"a",e:"e",ı:"ı",i:"i",o:"o",ö:"ö",u:"u",ü:"ü"};
+  let lastVowel, endsVoiceless = false;
+  if (/^[A-ZÇĞİÖŞÜ]{2,}$/.test(n)){ const l = low.at(-1); lastVowel = LETTER[l] || "e"; }      // kısaltma: harf adıyla okunur (NTV → ve)
+  else if (/\d$/.test(n)) { lastVowel = "e"; endsVoiceless = true; }                               // T24 → yirmi dört
+  else { const v = [...low].reverse().find(c => "aeıioöuü".includes(c)) || "e"; lastVowel = v; endsVoiceless = /[çfhkpsşt]$/.test(low); }
+  const back = "aıou".includes(lastVowel);
+  return full + "’" + (endsVoiceless ? "t" : "d") + (back ? "a" : "e");
+}
+function storyLink(story, cardEl){
+  const a = el("a", null, headline(story));
+  a.href = "#h-" + urlKey(story.items[0].url);
+  a.onclick = () => { if (cardEl) cardEl.classList.add("read"); track("detay:acildi"); };
+  return a;
+}
+function findStoryByKey(k){ return data.stories.find(s => s.items.some(i => urlKey(i.url) === k)); }
+function renderDetail(){
+  const top = $("#top"), feed = $("#feed"); top.textContent = ""; feed.textContent = ""; feed.classList.remove("skel"); $("#feedHead").hidden = true;
+  const story = findStoryByKey(detailKey);
+  const back = el("button","back-link","← Geri"); back.type = "button"; back.onclick = () => { if (history.length > 1) history.back(); else location.hash = ""; };
+  top.appendChild(back);
+  if (!story){
+    const e = el("div","empty"); e.append(el("h4", null, fullLoaded ? "Bu haber artık akışta değil" : "Yükleniyor…"), el("p", null, fullLoaded ? "Haberler iki gün sonra akıştan düşer. Gündem arşivinde bulabilirsin." : ""));
+    if (fullLoaded){ const a = el("a","btn","Gündem arşivi"); a.href = "/gundem/"; e.appendChild(a); }
+    top.appendChild(e); renderAside(); return;
+  }
+  const vis = story.items.filter(i => !off.has(i.source)); const st = {...story, items: vis.length ? vis : story.items};
+  const i = st.items[0], art = el("article","detail");
+  if (i.image){ const im = img(i.image, "d-img", true); art.appendChild(im); }
+  const body = el("div","d-body");
+  if (uniqSrc(st).length >= 2) body.appendChild(weightLabel(st));
+  body.appendChild(el("h1", null, headline(st)));
+  const tl = timeLine(st); const meta = el("p","d-meta"); meta.append(src(i.source).name + " · ", tl ? tl.textContent : ago(i.date)); body.appendChild(meta);
+  if (i.gist){ const q = el("p","d-ozu"); q.append(el("b", null, "Özü: "), i.gist); body.appendChild(q); }
+  else if (i.summary) body.appendChild(el("p","d-ozu", i.summary));
+  if (st.hl?.length){ const h = el("div","d-hl"); h.appendChild(el("h3", null, "Öne çıkanlar")); const ul = el("ul"); st.hl.forEach(x => ul.appendChild(el("li", null, x))); h.appendChild(ul); h.appendChild(el("p","hint","Haber metninden yapay zekâyla çıkarılmıştır; ayrıntılar ve bağlam için haberin tamamını oku.")); body.appendChild(h); }
+  const sl = sinceLine(st); if (sl) body.appendChild(sl);
+  // Kaynağa git
+  const cta = el("a","btn d-cta", "Haberin tamamını " + locative(src(i.source).name) + " oku ↗"); cta.href = i.url; cta.target = "_blank"; cta.rel = "noopener"; cta.onclick = () => trackArticle(i.url);
+  body.appendChild(cta);
+  // Bağlam
+  const ctx = el("div","rlinks"); ctx.style.marginTop = "10px";
+  const ck = checkChip(st); if (ck) ctx.appendChild(ck);
+  const th = titleHistory(i); if (th) ctx.appendChild(th);
+  (st.primary || []).slice(0, 2).forEach(pm => { const a = el("a","rl prim","📄 " + pm.t); a.href = pm.url; a.target = "_blank"; a.rel = "noopener"; ctx.appendChild(a); });
+  if (ctx.childNodes.length) body.appendChild(ctx);
+  const og = originLine(st); if (og) body.appendChild(og);
+  // Paylaş
+  const sh = el("button","btn ghost","Paylaş"); sh.type = "button"; sh.style.marginTop = "10px"; sh.onclick = () => shareOrCopy({ title: headline(st), text: headline(st) + (i.gist ? "\n" + i.gist : "") + "\nHarman Haber’de tüm kaynaklarıyla:", url: location.origin + "/#h-" + urlKey(story.items[0].url) });
+  body.appendChild(sh);
+  art.appendChild(body); top.appendChild(art);
+
+  // Kim nasıl verdi?
+  if (uniqSrc(st).length >= 2){
+    const sec = el("section","d-sec"); sec.appendChild(el("h3", null, "Kim nasıl verdi?"));
+    const bb = biasBar(st); if (bb){ sec.appendChild(bb); sec.appendChild(legend()); }
+    if (st.fark){ const f = el("p","fark"); f.append(el("b", null, "Fark: "), st.fark); sec.appendChild(f); }
+    if (st.obs?.length){ const ul = el("ul","d-obs"); st.obs.forEach(o => { const li = el("li"); li.append(el("b", null, o.g), " · " + o.k.map(k => src(k).name).join(", ")); ul.appendChild(li); }); sec.appendChild(ul); }
+    const cb = compareBtn(st, true); if (cb) sec.appendChild(cb);
+    // Bütün kaynakların başlıkları (kaynağa gider)
+    const ul = el("ul","d-src"); const seen = new Set();
+    st.items.forEach(x => { if (seen.has(x.source)) return; seen.add(x.source); const li = el("li"); li.appendChild(mono(x.source)); const t = el("div"); const lg = leanOf(x.source); t.append(el("small", null, src(x.source).name + (lg ? " · " + GL[lg] : "") + " · " + ago(x.date))); const a = link(x.title, x.url); t.appendChild(a); li.appendChild(t); ul.appendChild(li); });
+    sec.appendChild(ul);
+    top.appendChild(sec);
+  }
+  // Konu: sırada ne var, zaman çizelgesi
+  const tp = topicOfStory(story.id);
+  if (tp){
+    const list = (tp.storyIds || []).map(id => data.stories.find(s => s.id === id)).filter(Boolean);
+    const ne = nextSection(nextEvents((tp.title || "") + " " + tp.label + " " + headline(st))); if (ne) top.appendChild(ne);
+    const tln = timelineSection(list); if (tln) top.appendChild(tln);
+    const go = el("button","cmp","Konunun bütün haberleri: " + (tp.title || tp.label) + " →"); go.type = "button"; go.onclick = () => goTopic(tp); top.appendChild(go);
+  }
+  // YouTube
+  const vids = (data.youtube?.items || []).filter(v => (story.yt || []).includes(v.id) && !ytOff.has(v.ch));
+  if (vids.length){ const sec = el("section","d-sec"); sec.appendChild(el("h3", null, "YouTube’da")); const g = el("div","yt-rail"); vids.forEach(v => { const c = el("button","yt-mini"); c.type = "button"; const thb = el("span","th"); thb.appendChild(img(ytThumb(v.id))); c.append(thb, el("b", null, v.title), el("small", null, ytChan(v.ch).name)); c.onclick = () => openVideo(v, vids, "detay"); g.appendChild(c); }); sec.appendChild(g); top.appendChild(sec); }
+  renderAside();
 }
 
 // ---- Konu sayfaları ----
@@ -3828,7 +3938,7 @@ $("#install").onclick = async () => { if (!installEvt) return; installEvt.prompt
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
 // ---- Başlat ----
-{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h.startsWith("k-")) pendingCompare = h; else if (h === "yerel" || h === "saved" || h === "kesfet" || h === "istatistik") view = h; else if (CATS.some(c => c.id === h) || SPECIAL.some(c => c.id === h)) cat = h; }
+{ const h = location.hash.slice(1); if (h.startsWith("konu-")){ view = "topic"; topicSlug = h.slice(5); } else if (h === "oyunlar" || h.startsWith("oyun-")) view = h; else if (h.startsWith("h-")){ view = "haber"; detailKey = h.slice(2); } else if (h.startsWith("k-")) pendingCompare = h; else if (h === "yerel" || h === "saved" || h === "kesfet" || h === "istatistik") view = h; else if (CATS.some(c => c.id === h) || SPECIAL.some(c => c.id === h)) cat = h; }
 renderNav(); renderTicker();
 load(true);
 track("ziyaret", true); trackView();

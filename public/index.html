@@ -957,7 +957,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     <footer>
       <p><b>Harman Haber</b>: haberin özü, her kaynaktan.</p>
       <p>Ziyaret istatistikleri çerez kullanmayan ve kişisel veri toplamayan Cloudflare Web Analytics ile tutulur; oyun ve bölüm kullanımı da yalnızca “bugün kaç kez” şeklinde anonim olarak sayılır. Kaydettiğin haberler ve ayarların yalnızca kendi cihazında saklanır.</p>
-      <p><a href="/gundem/">Gündem arşivi</a> · <a href="/rss.xml">RSS</a></p>
+      <p><a href="/gundem/">Gündem arşivi</a> · <a href="/karsilastir/">Bir olay, iki manşet</a> · <a href="/rss.xml">RSS</a></p>
       <p>Başlık ve özetler yayıncıların RSS akışlarından alınır; habere dokununca orijinal sitede açılır. Haberler, X gündemi ve piyasa verileri yaklaşık 15 dakikada bir yenilenir.</p>
       <p>Kaynak dağılımı çubuğu, haberi hangi kesimden kaynakların verdiğini gösterir; etiketler Reuters Enstitüsü ve Medya Sahipliği İzleme (MOM) değerlendirmelerine dayanır ve Ayarlar’dan değiştirilebilir.</p>
       <p>“Özü” satırları haber metninden Google Gemini ile otomatik çıkarılır ve hata içerebilir; ayrıntı için habere dokun.</p>
@@ -1532,6 +1532,25 @@ function emptyState(q, total){
   return e;
 }
 
+const seenComparisonCards = new Set();
+const comparisonObserver = typeof IntersectionObserver === "function" ? new IntersectionObserver(entries => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    comparisonObserver.unobserve(entry.target);
+    const path = entry.target.pathname;
+    if (!seenComparisonCards.has(path)) {
+      seenComparisonCards.add(path);
+      track("pilot:gosterim:kart");
+    }
+  }
+}) : null;
+function appendComparison(parent, story){
+  if (!story.comparison) return;
+  const a = el("a", "rl", story.comparison.label);
+  a.href = story.comparison.path + "?utm_source=kart";
+  parent.appendChild(a);
+  if (!seenComparisonCards.has(story.comparison.path)) comparisonObserver?.observe(a);
+}
 function heroCard(story){
   const i = story.items[0];
   const c = el("article","hero" + (i.image ? "" : " noimg"));
@@ -1539,6 +1558,7 @@ function heroCard(story){
   const body = el("div","body");
   if (story.items.length >= 2){ const wl = weightLabel(story); wl.style.cursor = "pointer"; wl.setAttribute("role","button"); wl.tabIndex = 0; wl.setAttribute("aria-label", story.items.length + " kaynak verdi. Kaynakları göster"); wl.onclick = () => biasOf(story) ? openBias(story) : openSources(story); wl.onkeydown = e => { if (e.key === "Enter") wl.click(); }; body.appendChild(wl); }
   const h = el("h2"); h.appendChild(storyLink(story)); body.appendChild(h);
+  appendComparison(body, story);
   const ld = lede(i); if (ld) body.appendChild(ld);
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb){ body.appendChild(bb); body.appendChild(legend()); }
   const og = originLine(story); if (og) body.appendChild(og);
@@ -1554,6 +1574,7 @@ function talkCard(story){
   w.appendChild(el("strong", null, uniqSrc(story).length + " kaynak"));
   c.appendChild(w);
   const h = el("h4"); h.appendChild(storyLink(story)); c.appendChild(h);
+  appendComparison(c, story);
   if (i.gist) c.appendChild(lede(i));
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb){ bb.style.marginTop = "0"; c.appendChild(bb); }
   c.appendChild(el("div","meta", ago(story.date)));
@@ -1570,6 +1591,7 @@ function row(story, inTopic){
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
   const sl = sinceLine(story); if (sl) r.appendChild(sl);
   const links = el("div","rlinks");
+  appendComparison(links, story);
   const ck = checkChip(story); if (ck) links.appendChild(ck);
   const th = titleHistory(i); if (th) links.appendChild(th);
   (story.primary || []).slice(0, 1).forEach(pm => { const a = el("a","rl prim","📄 " + pm.t); a.href = pm.url; a.target = "_blank"; a.rel = "noopener"; a.onclick = () => track("birincil-kaynak"); links.appendChild(a); });

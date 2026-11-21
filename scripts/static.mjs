@@ -8,7 +8,7 @@ const trDate = d => new Date(d + "T12:00:00+03:00").toLocaleDateString("tr-TR", 
 const todayTR = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date());
 const GL = { hukumet: "Hükümete yakın", bagimsiz: "Bağımsız", muhalefet: "Muhalefete yakın" };
 
-async function page({ path, title, desc, body, jsonld, appLink }) {
+async function page({ path, title, desc, body, jsonld, appLink, image = SITE + "/icons/og.png", comparison = false }) {
   const logo = await readFile(new URL("./logo-inline.svg", import.meta.url), "utf8");
   const url = SITE + path;
   const html = `<!DOCTYPE html>
@@ -19,7 +19,7 @@ async function page({ path, title, desc, body, jsonld, appLink }) {
 <link rel="canonical" href="${url}">
 <meta property="og:type" content="article"><meta property="og:site_name" content="Harman Haber">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
-<meta property="og:url" content="${url}"><meta property="og:image" content="${SITE}/icons/og.png">
+<meta property="og:url" content="${url}"><meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
 <link rel="alternate" type="application/rss+xml" title="Harman Haber" href="/rss.xml">
@@ -45,8 +45,9 @@ footer{color:var(--ink-3);font-size:13px;padding:30px 0}
 </style></head><body>
 <header><div class="w"><a href="/" aria-label="Harman Haber ana sayfa">${logo}</a><a class="cta" href="${esc(appLink || "/")}">Canlı gündemi aç</a></div></header>
 <main class="w">${body}</main>
+${comparison ? '<script src="/karsilastir/pilot.js"></script>' : ""}
 <footer class="w"><p><b>Harman Haber</b>: haberin özü, her kaynaktan. 40’a yakın Türk haber kaynağını tek yerde toplar, bir olayı kimin nasıl verdiğini yan yana gösterir.</p>
-<p><a href="/">Ana sayfa</a> · <a href="/gundem/">Gündem arşivi</a> · <a href="/resmi-gazete/">Resmî Gazete özeti</a> · <a href="/rss.xml">RSS</a></p></footer>
+<p><a href="/">Ana sayfa</a> · <a href="/gundem/">Gündem arşivi</a> · <a href="/resmi-gazete/">Resmî Gazete özeti</a> · <a href="/karsilastir/">Bir olay, iki manşet</a> · <a href="/rss.xml">RSS</a></p></footer>
 <script>if (!navigator.webdriver) { const b = document.createElement("script"); b.defer = true; b.src = "https://static.cloudflareinsights.com/beacon.min.js"; b.setAttribute("data-cf-beacon", '{"token": "3eae1e480b86457fa28243ab3d96bec2"}'); document.body.appendChild(b); }</script>
 </body></html>`;
   const dir = new URL("../public" + path, import.meta.url);
@@ -63,6 +64,36 @@ function itemList(items, sources, noTag) {
 
 export async function buildStatic({ stories, topics, sources, prev, rg }) {
   const today = todayTR();
+  const editions = JSON.parse(await readFile(new URL("../data/comparisons.json", import.meta.url), "utf8"))
+    .sort((a, b) => Date.parse(b.published) - Date.parse(a.published));
+  const comparisonPath = e => "/karsilastir/" + e.slug + "/";
+  const editionList = (list, channel) => `<ul class="l">${list.map(e => `<li><a href="${comparisonPath(e)}?utm_source=${channel}">${esc(e.title)}</a><small>${trDate(e.day)}</small></li>`).join("")}</ul>`;
+  const bySourceUrl = new Map();
+  const sourceKey = raw => {
+    try {
+      const u = new URL(raw);
+      u.hash = "";
+      for (const k of [...u.searchParams.keys()]) if (k.startsWith("utm_")) u.searchParams.delete(k);
+      return u.href;
+    } catch { return raw; }
+  };
+  for (const e of editions) {
+    if (!/^[a-z0-9-]+$/.test(e.slug) || e.headlines.length !== 2) throw new Error("Geçersiz karşılaştırma: " + e.slug);
+    const path = comparisonPath(e);
+    for (const h of e.headlines) if (!bySourceUrl.has(sourceKey(h.url))) bySourceUrl.set(sourceKey(h.url), e);
+    const desc = e.headlines.map(h => h.name + ": " + h.title).join(" · ");
+    await page({ path, title: e.title + " | Harman Haber", desc, comparison: true,
+      image: e.image ? SITE + path + e.image : undefined,
+      body: `<p><a href="/karsilastir/">Bir olay, iki manşet</a></p><h1>${esc(e.title)}</h1><p class="muted">${trDate(e.day)}</p>${e.headlines.map(h => `<article class="card"><b>${esc(h.name)}</b><h2>${esc(h.title)}</h2><a href="${esc(h.url)}" rel="nofollow noopener">Haberi yayıncıda oku ↗</a></article>`).join("")}`,
+      jsonld: { "@context":"https://schema.org", "@type":"WebPage", name:e.title, url:SITE + path, datePublished:e.published } });
+  }
+  for (const story of stories) {
+    const edition = story.items.map(i => bySourceUrl.get(sourceKey(i.url))).find(Boolean);
+    if (edition) story.comparison = { path: comparisonPath(edition), label: edition.title };
+  }
+  await page({ path:"/karsilastir/", title:"Bir olay, iki manşet | Harman Haber", desc:"Aynı olay için iki yayının özgün başlıkları.",
+    body:`<h1>Bir olay, iki manşet</h1><div class="card">${editionList(editions, "arsiv")}</div>`,
+    jsonld:{ "@context":"https://schema.org", "@type":"CollectionPage", name:"Bir olay, iki manşet", url:SITE + "/karsilastir/" } });
   const byId = Object.fromEntries(stories.map(s => [s.id, s]));
   const pick = s => ({ t: s.items[0].title, u: s.items[0].url, s: s.items[0].source, g: s.items[0].gist || null, n: s.items.length });
 
@@ -99,13 +130,14 @@ ${groups.filter(([, l]) => l.length).map(([g, l]) => `<div class="card"><b>${GL[
     const desc = `${trDate(a.date)} gündeminde en çok kaynağın verdiği haberler: ${a.top.slice(0, 3).map(x => x.t).join("; ")}.`;
     const body = `<p class="muted">Günlük gündem</p><h1>${trDate(a.date)} gündemi</h1>
 ${a.topics.length ? `<h2>Günün konuları</h2>${a.topics.map(t => `<div class="card"><a href="/konu/${esc(t.slug)}/"><b>${esc(t.title)}</b></a>${t.summary ? `<p>${esc(t.summary)}</p>` : ""}</div>`).join("")}` : ""}
+${editions.some(e => e.day === a.date) ? "<h2>Bir olay, iki manşet</h2>" + editionList(editions.filter(e => e.day === a.date), "arsiv") : ""}
 <h2>En çok kaynağın verdiği haberler</h2><div class="card"><ul class="l">${a.top.map(x => `<li><a href="${esc(x.u)}" rel="nofollow noopener" target="_blank">${esc(x.t)}</a><small>${x.n} kaynak verdi · ${esc(sources[x.s]?.name || x.s)}${x.g ? " · Özü: " + esc(x.g) : ""}</small></li>`).join("")}</ul></div>
 <p><a class="cta" href="/">Canlı gündemi aç</a></p>`;
     await page({ path: `/gundem/${a.date}/`, title, desc, body,
       jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: `${trDate(a.date)} gündemi`, description: desc, url: `${SITE}/gundem/${a.date}/`, datePublished: a.date } });
   }
   await page({ path: "/gundem/", title: "Gündem arşivi | Harman Haber", desc: "Son 30 günün gündemi: her gün en çok kaynağın verdiği haberler ve günün konuları.",
-    body: `<h1>Gündem arşivi</h1><div class="card"><ul class="l">${archive.map(a => `<li><a href="/gundem/${a.date}/">${trDate(a.date)}</a><small>${esc(a.top.slice(0, 2).map(x => x.t).join(" · "))}</small></li>`).join("")}</ul></div>`,
+    body: `<h1>Gündem arşivi</h1><a href="/karsilastir/">Bir olay, iki manşet arşivi</a><div class="card"><ul class="l">${archive.map(a => `<li><a href="/gundem/${a.date}/">${trDate(a.date)}</a><small>${esc(a.top.slice(0, 2).map(x => x.t).join(" · "))}</small></li>`).join("")}</ul></div>`,
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: "Gündem arşivi", url: `${SITE}/gundem/` } });
 
   // Haber detay sayfaları: 3+ kaynaklı olaylar, 7 gün saklanır (adres uygulamadaki #h-<olay> ile aynı anahtarı kullanır)
@@ -158,6 +190,8 @@ ${rgArchive.length > 1 ? `<h2>Önceki sayılar</h2><div class="card"><ul class="
 
   // Site haritası, robots.txt, RSS
   const urls = [[`${SITE}/`, new Date().toISOString(), "always"], [`${SITE}/gundem/`, new Date().toISOString(), "daily"],
+    [SITE + "/karsilastir/", editions[0]?.published || today, "daily"],
+    ...editions.map(e => [SITE + comparisonPath(e), e.published, "monthly"]),
     ...archive.map(a => [`${SITE}/gundem/${a.date}/`, a.date, a.date === today ? "hourly" : "never"]),
     ...Object.entries(topicPages).map(([slug, p]) => [`${SITE}/konu/${slug}/`, p.at, "hourly"]),
     ...Object.entries(detailPages).map(([k, d]) => [`${SITE}/haber/${k}/`, d.at, "hourly"]),
@@ -168,6 +202,11 @@ ${rgArchive.length > 1 ? `<h2>Önceki sayılar</h2><div class="card"><ul class="
   const rssItems = [...archive.slice(0, 10).map(a => ({ t: `${trDate(a.date)} gündemi`, u: `${SITE}/gundem/${a.date}/`, d: a.date + "T08:00:00+03:00", s: a.top.slice(0, 5).map(x => x.t).join(" · ") })),
     ...Object.entries(topicPages).map(([slug, p]) => ({ t: p.title, u: `${SITE}/konu/${slug}/`, d: p.at, s: p.summary || "" })),
     ...rgArchive.slice(0, 10).map(x => ({ t: `${trDate(x.date)} Resmî Gazete özeti`, u: `${SITE}/resmi-gazete/${x.date}/`, d: x.date + "T07:00:00+03:00", s: x.items.slice(0, 4).map(i => i.sade || i.title).join(" · ") }))].sort((a, b) => new Date(b.d) - new Date(a.d)).slice(0, 40);
-  await writeFile(new URL("../public/rss.xml", import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Harman Haber</title><link>${SITE}/</link><description>Haberin özü, her kaynaktan.</description><language>tr</language>\n${rssItems.map(i => `<item><title>${esc(i.t)}</title><link>${i.u}</link><guid>${i.u}</guid><pubDate>${new Date(i.d).toUTCString()}</pubDate><description>${esc(i.s)}</description></item>`).join("\n")}\n</channel></rss>\n`);
+  for (const e of editions.slice(0, 10)) {
+    const u = SITE + comparisonPath(e);
+    rssItems.push({ t:e.title, u:u + "?utm_source=rss", guid:u, d:e.published, s:e.headlines.map(h => h.name + ": " + h.title).join(" · ") });
+  }
+  rssItems.sort((a,b) => Date.parse(b.d) - Date.parse(a.d));
+  await writeFile(new URL("../public/rss.xml", import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Harman Haber</title><link>${SITE}/</link><description>Haberin özü, her kaynaktan.</description><language>tr</language>\n${rssItems.map(i => `<item><title>${esc(i.t)}</title><link>${i.u}</link><guid>${i.guid || i.u}</guid><pubDate>${new Date(i.d).toUTCString()}</pubDate><description>${esc(i.s)}</description></item>`).join("\n")}\n</channel></rss>\n`);
   return { topicPages, archive, rgArchive, detailPages, count: Object.keys(topicPages).length + archive.length + rgArchive.length + Object.keys(detailPages).length };
 }

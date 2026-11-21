@@ -40,6 +40,22 @@ export default {
       const { results } = await env.DB.prepare("SELECT gun, olay, n FROM sayac WHERE gun >= ?1 ORDER BY gun").bind(trDay(-days + 1)).all();
       return json(req, { bugun: trDay(), satirlar: results }, 200, { "Cache-Control": "no-store" });
     }
+    // ---- Doğrulama onayları (editör): Teyit analizi ↔ haber ----
+    if (req.method === "GET" && url.pathname === "/onaylar") {
+      const { results } = await env.DB.prepare("SELECT teyit, haber, iddia, sonuc, baslik, at FROM onay ORDER BY at DESC LIMIT 200").all();
+      return json(req, { onaylar: results }, 200, { "Cache-Control": "public, max-age=120" });
+    }
+    if (req.method === "POST" && (url.pathname === "/onay" || url.pathname === "/onay-sil")) {
+      let b; try { b = JSON.parse(await req.text()); } catch { return json(req, { hata: "geçersiz" }, 400); }
+      if (!env.ADMIN_KEY || b.key !== env.ADMIN_KEY) return json(req, { hata: "yetkisiz" }, 401);
+      const ok = u => typeof u === "string" && /^https:\/\//.test(u) && u.length < 600;
+      if (!ok(b.teyit) || !ok(b.haber)) return json(req, { hata: "adres" }, 400);
+      if (url.pathname === "/onay-sil") { await env.DB.prepare("DELETE FROM onay WHERE teyit = ?1 AND haber = ?2").bind(b.teyit, b.haber).run(); return json(req, { tamam: true }); }
+      const clip = (x, n) => String(x || "").slice(0, n);
+      await env.DB.prepare("INSERT OR REPLACE INTO onay (teyit, haber, iddia, sonuc, baslik, at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
+        .bind(b.teyit, b.haber, clip(b.iddia, 200), clip(b.sonuc, 40), clip(b.baslik, 200), new Date().toISOString()).run();
+      return json(req, { tamam: true });
+    }
     return new Response("Harman Haber sayaç", { status: 404 });
   }
 };

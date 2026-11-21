@@ -1,0 +1,11 @@
+{
+  "_aciklama": "Sırada ne var? Yalnızca resmî kurumun yayımladığı takvimden doğrulanmış tarihler. 'kontrol' son doğrulama günü; tarih değişirse eskisi 'eski' alanına yazılır.",
+  "olaylar": [
+    { "id": "tcmb-fir-2026-11", "tarih": "2026-11-27", "saat": null, "baslik": "TCMB Finansal İstikrar Raporu", "kaynak": "TCMB takvimi", "url": "https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/duyurular/takvim", "anahtar": ["finansal istikrar", "tcmb", "merkez bankası"], "kontrol": "2026-11-21" },
+    { "id": "tuik-tufe-2026-11", "tarih": "2026-12-03", "saat": "10:00", "baslik": "TÜİK kasım ayı enflasyonu (TÜFE)", "kaynak": "TÜİK veri yayımlama takvimi", "url": "https://www.tuik.gov.tr", "anahtar": ["enflasyon", "tüfe", "kira artış", "memur zammı", "emekli zammı", "asgari ücret", "tüik"], "kontrol": "2026-11-21" },
+    { "id": "tcmb-ppk-2026-12", "tarih": "2026-12-10", "saat": "14:00", "baslik": "TCMB faiz kararı (Para Politikası Kurulu)", "kaynak": "TCMB takvimi", "url": "https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/duyurular/takvim", "anahtar": ["faiz", "politika faizi", "merkez bankası", "tcmb", "ppk", "karahan"], "kontrol": "2026-11-21" },
+    { "id": "tcmb-ozet-2026-12", "tarih": "2026-12-17", "saat": null, "baslik": "TCMB Para Politikası Kurulu toplantı özeti", "kaynak": "TCMB takvimi", "url": "https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/duyurular/takvim", "anahtar": ["faiz", "merkez bankası", "tcmb", "ppk"], "kontrol": "2026-11-21" },
+    { "id": "tcmb-ppm-2027", "tarih": "2026-12-18", "saat": null, "baslik": "TCMB 2027 Para Politikası Metni", "kaynak": "TCMB duyurusu", "url": "https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/duyurular/takvim", "anahtar": ["merkez bankası", "tcmb", "para politikası"], "kontrol": "2026-11-21" },
+    { "id": "tcmb-ppk-2027-01", "tarih": "2027-01-21", "saat": "14:00", "baslik": "TCMB faiz kararı (Para Politikası Kurulu)", "kaynak": "TCMB takvimi", "url": "https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/duyurular/takvim", "anahtar": ["faiz", "politika faizi", "merkez bankası", "tcmb", "ppk"], "kontrol": "2026-11-21" }
+  ]
+}

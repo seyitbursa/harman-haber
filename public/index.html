@@ -834,6 +834,29 @@ body.in-game footer{display:none}
 .ob-src{display:flex;flex-direction:column;gap:4px}
 .ob-s{display:flex;gap:8px;align-items:flex-start;border:0;background:none;text-align:left;padding:2px 0;font-size:13.5px;color:var(--ink-2);cursor:pointer}
 .ob-s .mono{width:22px;height:22px;font-size:8px;flex:0 0 auto}
+
+/* Köken, başlık geçmişi, doğrulama, sırada ne var */
+.origin{margin:8px 0 0;font-size:13.5px;color:var(--ink-2)}
+.origin b{color:var(--ink)}
+.rl.hist{color:#7C3AED} .rl.chk{color:#047857;background:color-mix(in srgb,#10B981 14%,var(--surface))}
+.hv{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--paper)}
+.hv small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
+.hv p{margin:4px 0 8px;font-size:15px}
+.hv .sonuc{font-weight:800;font-size:17px}
+.next-ev{background:var(--surface);border-radius:16px;box-shadow:0 1px 0 var(--line);padding:14px 16px;margin-top:12px}
+.next-ev h3{margin:0 0 8px;font-family:var(--head);font-weight:800;font-stretch:85%;font-size:20px}
+.ev{display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.ev:first-of-type{border-top:0}
+.ev-d{flex:0 0 auto;width:48px;height:52px;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--accent)}
+.ev-d b{font-family:var(--head);font-size:22px;line-height:1} .ev-d span{font-size:12px;font-weight:700}
+.ev-t b{display:block;font-size:15px}
+.ev-t small{display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.ev-t small a{color:var(--accent)}
+.ev-old{text-decoration:line-through}
+.ev-t .rl{display:inline-block;margin-top:6px;text-decoration:none}
+.cand{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0}
+.cand a{font-size:14px;color:var(--accent)}
+.cand input,.cand select{height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:var(--paper);color:var(--ink)}
 footer{color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
 footer p{margin:0 0 6px;max-width:70ch}
 footer button{border:0;background:none;color:var(--accent);font-weight:600;padding:0;cursor:pointer;font-size:12.5px}
@@ -891,7 +914,7 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
     <div class="search-row" id="searchRow">
       <label class="search-field">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Haberlerde ara" aria-label="Haberlerde ara" autocomplete="off">
+        <input id="q" type="search" placeholder="Haberlerde ara ya da haber bağlantısı yapıştır" aria-label="Haberlerde ara" autocomplete="off">
       </label>
     </div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="Kategoriler"></nav>
@@ -1364,6 +1387,7 @@ function render(){
   if (view === "feed" && cat === "youtube"){ $("#top").textContent = ""; renderYTTab(); $(".blind-intro")?.prepend(backToKesfet()); return; }
   if (view === "feed" && cat === "resmigazete"){ $("#top").textContent = ""; renderRGTab(); $(".blind-intro")?.prepend(backToKesfet()); return; }
   const q = query();
+  if (view === "feed" && /^https?:\/\//i.test(q)){ $("#top").textContent = ""; $("#feed").textContent = ""; $("#feed").classList.remove("skel"); $("#feedHead").hidden = true; $("#top").appendChild(linkResult(q)); renderAside(); return; }
   let list = storiesFor();
   if (q) list = list.filter(s => s.items.some(i => matches(i.title + " " + i.summary + " " + src(i.source).name, q)));
 
@@ -1374,6 +1398,7 @@ function render(){
 
   if (view === "feed" && !q){ const al = quakeAlert(); if (al) top.appendChild(al); }
   if (view === "feed" && cat === "spor" && !q){ const spm = sportsModule(); if (spm) top.appendChild(spm); }
+  if (view === "feed" && cat === "ekonomi" && !q){ const ne = nextSection(nextEvents(), "Yaklaşan kararlar ve veriler"); if (ne) top.appendChild(ne); }
   const narrow = matchMedia("(max-width:899px)").matches;
   if (view === "feed" && cat === "all" && !q && !narrow){ const qs = quickStrip(); if (qs) top.appendChild(qs); }
   if (front && list.length){
@@ -1493,6 +1518,7 @@ function heroCard(story){
   const h = el("h2"); h.appendChild(link(headline(story), i.url)); body.appendChild(h);
   const ld = lede(i); if (ld) body.appendChild(ld);
   const bb = !NONPOL.has(story.category) && biasBar(story); if (bb){ body.appendChild(bb); body.appendChild(legend()); }
+  const og = originLine(story); if (og) body.appendChild(og);
   const sl = sinceLine(story); if (sl) body.appendChild(sl);
   const cb = compareBtn(story, true); if (cb) body.appendChild(cb);
   const m = meta(i, story); m.appendChild(actions(i, story)); body.appendChild(m);
@@ -1521,6 +1547,8 @@ function row(story, inTopic){
   if (story.items.length > 1) r.appendChild(clusterBlock(story, story.items.slice(1)));
   const sl = sinceLine(story); if (sl) r.appendChild(sl);
   const links = el("div","rlinks");
+  const ck = checkChip(story); if (ck) links.appendChild(ck);
+  const th = titleHistory(i); if (th) links.appendChild(th);
   (story.primary || []).slice(0, 1).forEach(pm => { const a = el("a","rl prim","📄 " + pm.t); a.href = pm.url; a.target = "_blank"; a.rel = "noopener"; a.onclick = () => track("birincil-kaynak"); links.appendChild(a); });
   if (story.yt?.length && data.youtube){
     const vids = data.youtube.items.filter(v => story.yt.includes(v.id) && !ytOff.has(v.ch));
@@ -3035,6 +3063,23 @@ async function renderStats(){
   // Diğer
   const other = {}; rows.filter(r => last7.includes(r.gun) && /^(paylas|dinle):/.test(r.olay)).forEach(r => other[r.olay] = (other[r.olay] || 0) + r.n);
   if (Object.keys(other).length){ box.appendChild(el("h3", null, "Paylaşım ve dinleme (son 7 gün)")); const u2 = el("ul","notes"); Object.entries(other).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => u2.appendChild(el("li", null, k + ": " + v))); box.appendChild(u2); }
+  // Doğrulama eşleşmeleri: otomatik adaylar editör onayıyla sitede görünür
+  box.appendChild(el("h3", null, "Doğrulama eşleşmeleri (Teyit)"));
+  box.appendChild(el("p","hint","Teyit analizleriyle haberler arasında otomatik bulunan adaylar. Onayladığın eşleşme, haberin altında “🔎 Teyit” olarak görünür. İddiayı ve sonucu kendi sözlerinle, kısa yaz; sonucu Teyit’in incelemesinden al."));
+  let onaylar = []; try { onaylar = (await (await fetch(SAYAC + "/onaylar", {cache:"no-store"})).json()).onaylar || []; } catch(e){}
+  const approvedKey = new Set(onaylar.map(o => o.teyit + "|" + o.haber));
+  (data.checkCands || []).filter(c => !approvedKey.has(c.teyit + "|" + c.haber)).slice(0, 8).forEach(c => {
+    const d = el("div","cand");
+    const a1 = el("a", null, "Teyit: " + c.teyitBaslik); a1.href = c.teyit; a1.target = "_blank"; a1.rel = "noopener";
+    const a2 = el("a", null, "Haber: " + c.haberBaslik); a2.href = c.haber; a2.target = "_blank"; a2.rel = "noopener";
+    const iddia = el("input"); iddia.placeholder = "İddia (ör. Xi’nin Putin’in elini sıkmadığı iddiası)"; iddia.value = c.teyitBaslik.slice(0, 160);
+    const son = el("select"); ["Yanlış","Doğru","Karışık","Bağlamından koparılmış","Doğrulanamadı"].forEach(x => { const o = el("option", null, x); son.appendChild(o); });
+    const ok = el("button","btn","Onayla"); ok.type = "button";
+    ok.onclick = async () => { ok.disabled = true; const r = await fetch(SAYAC + "/onay", {method:"POST", body: JSON.stringify({ key: store.get("gk-admin",""), teyit: c.teyit, haber: c.haber, iddia: iddia.value.trim(), sonuc: son.value, baslik: c.teyitBaslik })}); toast(r.ok ? "Onaylandı; bir sonraki güncellemede sitede görünür" : "Onaylanamadı"); if (r.ok) d.remove(); else ok.disabled = false; };
+    d.append(a1, a2, iddia, son, ok); box.appendChild(d);
+  });
+  if (!(data.checkCands || []).length) box.appendChild(el("p","hint","Şu an aday eşleşme yok."));
+  if (onaylar.length){ box.appendChild(el("h4", null, "Onaylanmış eşleşmeler")); onaylar.forEach(o => { const d = el("div","cand"); d.appendChild(el("p", null, o.sonuc + " · " + (o.iddia || o.baslik))); const x = el("button","btn ghost","Kaldır"); x.type = "button"; x.onclick = async () => { const r = await fetch(SAYAC + "/onay-sil", {method:"POST", body: JSON.stringify({ key: store.get("gk-admin",""), teyit: o.teyit, haber: o.haber })}); if (r.ok){ d.remove(); toast("Kaldırıldı"); } }; d.appendChild(x); box.appendChild(d); }); }
   const ns = store.get("gk-nosay", false);
   const tg = el("label"); tg.style.cssText = "display:flex;gap:10px;align-items:center;margin-top:16px;font-size:15px";
   const cb = el("input"); cb.type = "checkbox"; cb.checked = ns; cb.onchange = () => { store.set("gk-nosay", cb.checked); toast(cb.checked ? "Bu cihazın ziyaretleri artık sayılmıyor" : "Bu cihaz yeniden sayılıyor"); };
@@ -3324,6 +3369,110 @@ function openCompareFromHash(h){
   openBias(s, true);
 }
 
+
+// ---- Haber linkini karşılaştır: arama kutusuna yapıştırılan yayıncı bağlantısı ----
+function normUrl(u){
+  try {
+    const x = new URL(u.trim());
+    let host = x.hostname.toLowerCase().replace(/^(www|m|mobile|amp)\./, "");
+    [...x.searchParams.keys()].forEach(k => { if (/^(utm_|fbclid|gclid|igshid|ref|_gl|s$|share|from|ito|cmpid|mc_)/i.test(k)) x.searchParams.delete(k); });
+    let path = x.pathname.replace(/\/amp\/?$/i, "").replace(/\/+$/, "");
+    const qs = x.searchParams.toString();
+    return host + path + (qs ? "?" + qs : "");
+  } catch(e){ return null; }
+}
+function findByUrl(u){
+  const n = normUrl(u); if (!n) return null;
+  const slug = n.split("?")[0].split("/").pop();
+  for (const s of data.stories) for (const i of s.items){ if (normUrl(i.url) === n) return {s, i}; }
+  // Yedek: aynı site ve aynı haber kısa adı (en az 12 karakter)
+  if (slug && slug.length >= 12) for (const s of data.stories) for (const i of s.items){ const m = normUrl(i.url); if (m && m.split("/")[0] === n.split("/")[0] && m.split("?")[0].endsWith(slug)) return {s, i}; }
+  return null;
+}
+function linkResult(q){
+  const box = el("div","blind-intro");
+  const hit = findByUrl(q);
+  track("linkten-karsilastir:" + (hit ? "bulundu" : "bulunamadi"));
+  if (!hit){
+    box.append(el("h2", null, "Bu haber Harman’da bulunamadı"), el("p", null, "Yapıştırdığın bağlantı, izlediğimiz kaynakların son iki günlük haberleri arasında yok. Haber daha eskiyse, izlemediğimiz bir siteden geliyorsa ya da bağlantı kısaltılmışsa (bit.ly gibi) bulunamaz."));
+    return box;
+  }
+  const n = uniqSrc(hit.s).length;
+  box.append(el("h2", null, "Haber bulundu"), el("p", null, src(hit.i.source).name + ": “" + hit.i.title + "”"));
+  box.appendChild(el("p","hint", n > 1 ? "Bu olayı " + n + " kaynak verdi." : "Bu olayı şimdilik yalnızca bu kaynak verdi."));
+  if (n > 1){ const b = el("button","cmp big","⇄ " + n + " kaynağın başlığını karşılaştır"); b.type = "button"; b.onclick = () => { const other = hit.s.items.find(i => i.source !== hit.i.source && leanOf(i.source) !== leanOf(hit.i.source)) || hit.s.items.find(i => i.source !== hit.i.source); cmpPick = [hit.i.source, other.source]; biasOf(hit.s) ? openBias(hit.s, true) : openSources(hit.s); }; box.appendChild(b); }
+  return box;
+}
+
+// ---- İlk kaynak: açık ajans imzaları ----
+const AG_DAT = {"AA":"AA’ya","DHA":"DHA’ya","İHA":"İHA’ya","ANKA":"ANKA’ya","Reuters":"Reuters’a","AFP":"AFP’ye","AP":"AP’ye"};
+function originLine(story){
+  if (!story.origin) return null;
+  const o = story.origin;
+  const p = el("p","origin"); p.append(el("b", null, uniqSrc(story).length + " yayın"), " · " + numPoss(o.n) + " " + (AG_DAT[o.ag] || o.ag) + " atıf yapıyor");
+  p.title = "Haber sayfalarındaki açık ajans imzalarına göre (ör. “(AA)”, “Kaynak: DHA”). İmza bulunamayan yayınlar sayılmaz.";
+  return p;
+}
+
+// ---- Başlığın değişim geçmişi ----
+function titleHistory(i){
+  if (!i.prev) return null;
+  const b = el("button","rl hist","✎ Başlık güncellendi"); b.type = "button";
+  b.onclick = e => { e.stopPropagation?.();
+    const body = $("#actBody"); body.textContent = ""; $("#actTitle").textContent = src(i.source).name + ": başlık değişikliği";
+    const t = d => new Date(d).toLocaleString("tr-TR", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+    const v1 = el("div","hv"); v1.append(el("small", null, "İlk gördüğümüz başlık · " + t(i.prev.at)), el("p", null, i.prev.t));
+    const v2 = el("div","hv"); v2.append(el("small", null, "Şimdiki başlık · " + t(i.prev.ch) + " itibarıyla"), el("p", null, i.title));
+    body.append(v1, v2, el("p","hint", "Aynı adreste başlık değiştiğinde kaydedilir; noktalama ve büyük-küçük harf değişiklikleri sayılmaz. Yayıncı bir düzeltme notu düşmediyse bu değişiklik düzeltme anlamına gelmeyebilir."));
+    if (!$("#actSheet").open) $("#actSheet").showModal();
+  };
+  return b;
+}
+
+// ---- Bu iddia incelendi mi? (editör onaylı Teyit eşleşmeleri) ----
+function checkChip(story){
+  const c = story.check?.[0]; if (!c) return null;
+  const b = el("button","rl chk","🔎 Teyit: " + (c.sonuc || "incelendi")); b.type = "button";
+  b.onclick = () => {
+    const body = $("#actBody"); body.textContent = ""; $("#actTitle").textContent = "Bu iddia incelendi";
+    story.check.forEach(x => { const d = el("div","hv"); d.append(el("small", null, "İddia"), el("p", null, x.iddia || x.baslik), el("small", null, "Teyit’in sonucu"), el("p","sonuc", x.sonuc || "—")); const a = el("a","btn ghost","Teyit’te incelemeyi oku"); a.href = x.url; a.target = "_blank"; a.rel = "noopener"; d.appendChild(a); body.appendChild(d); });
+    body.appendChild(el("p","hint","Sonuç yalnızca yukarıdaki iddia ve tarihi için geçerlidir; haberin tamamına dair bir değerlendirme değildir. Eşleşmeler editör onayından geçer."));
+    track("dogrulama:acildi");
+    if (!$("#actSheet").open) $("#actSheet").showModal();
+  };
+  return b;
+}
+
+// ---- Sırada ne var? (resmî takvim) ----
+function icsHref(e){
+  const d = e.tarih.replace(/-/g, ""), t = (e.saat || "09:00").replace(":", "") + "00";
+  const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Harman Haber//TR","BEGIN:VEVENT","UID:" + e.id + "@harmanhaber.app","DTSTART;TZID=Europe/Istanbul:" + d + "T" + t, e.saat ? "DURATION:PT30M" : "DURATION:PT1H","SUMMARY:" + e.baslik,"DESCRIPTION:Kaynak: " + e.kaynak + " " + e.url,"END:VEVENT","END:VCALENDAR"].join("\r\n");
+  return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+}
+function nextEvents(words){
+  const ev = data.takvim || [];
+  if (!words) return ev;
+  const hay = words.toLocaleLowerCase("tr");
+  return ev.filter(e => e.anahtar.some(k => hay.includes(k)));
+}
+function nextSection(list, title){
+  if (!list.length) return null;
+  const sec = el("section","next-ev"); sec.appendChild(el("h3", null, title || "Sırada ne var?"));
+  list.slice(0, 3).forEach(e => {
+    const r = el("div","ev");
+    const d = new Date(e.tarih + "T12:00:00+03:00");
+    const dd = el("div","ev-d"); dd.append(el("b", null, d.toLocaleDateString("tr-TR", {day:"numeric"})), el("span", null, d.toLocaleDateString("tr-TR", {month:"short"})));
+    const tx = el("div","ev-t"); tx.append(el("b", null, e.baslik));
+    const meta = el("small"); meta.append(d.toLocaleDateString("tr-TR", {weekday:"long"}) + (e.saat ? ", " + e.saat.replace(":", ".") + " TSİ" : ", saat açıklanmadı") + " · ");
+    const a = el("a", null, e.kaynak); a.href = e.url; a.target = "_blank"; a.rel = "noopener"; meta.append(a, " · son kontrol " + new Date(e.kontrol + "T12:00:00").toLocaleDateString("tr-TR", {day:"numeric", month:"short"}));
+    tx.appendChild(meta);
+    if (e.eski) tx.appendChild(el("small","ev-old", "Önceki tarih: " + e.eski + " (ertelendi)"));
+    const ic = el("a","rl","📅 Takvime ekle"); ic.href = icsHref(e); ic.download = e.id + ".ics"; ic.onclick = () => track("takvim:ekle"); tx.appendChild(ic);
+    r.append(dd, tx); sec.appendChild(r);
+  });
+  return sec;
+}
+
 // ---- Konu sayfaları ----
 let topicSlug = null;
 function topicOfStory(id){ const s = (data.stories || []).find(x => x.id === id); return (data.topics || []).find(t => (t.storyIds || []).includes(id) && (!s || inTopicOk(t, s))); }
@@ -3355,6 +3504,7 @@ function renderTopic(){
   const fb = el("button", isFollowed(t) ? "btn" : "btn ghost", isFollowed(t) ? "✓ Takip ediliyor" : "☆ Konuyu takip et"); fb.type = "button"; fb.onclick = () => toggleFollow(t);
   sr.append(fb, sb); head.appendChild(sr);
   top.appendChild(head);
+  const ne = nextSection(nextEvents((t.title || "") + " " + t.label + " " + list.slice(0, 8).map(s => s.items[0].title).join(" "))); if (ne) top.appendChild(ne);
   const tl = timelineSection(list); if (tl) top.appendChild(tl);
   // Kesimlere göre başlıklar
   const sec = el("div","sec"); sec.appendChild(el("h3", null, "Kim nasıl verdi?")); top.appendChild(sec);
@@ -3433,6 +3583,7 @@ let cmpPick = [];
 function openBias(story, keepPick){
   const b = biasOf(story), body = $("#biasBody"); body.textContent = "";
   body.appendChild(el("p","cmp-q", headline(story)));
+  const og = originLine(story); if (og) body.appendChild(og);
   // İki yayın seç: varsayılan olarak farklı kesimlerden birer yayın
   const its = []; const seenS = new Set(); story.items.forEach(i => { if (!seenS.has(i.source)){ seenS.add(i.source); its.push(i); } });
   if (!keepPick || cmpPick.length !== 2 || !cmpPick.every(id => seenS.has(id))){
@@ -3452,7 +3603,7 @@ function openBias(story, keepPick){
   pick.appendChild(chips); body.appendChild(pick);
   if (cmpPick.length === 2){
     const pair = el("div","cmp-pair");
-    cmpPick.forEach(id => { const i = its.find(x => x.source === id); const card = el("div","cmp-card"); const hd = el("div","cmp-h"); hd.append(mono(id), el("b", null, src(id).name)); const lg = leanOf(id); hd.appendChild(el("span","cmp-g " + (lg || "none"), lg ? GL[lg] : "Sınıflandırma dışı")); card.appendChild(hd); card.appendChild(link(i.title, i.url)); if (i.gist) card.appendChild(el("small", null, "Özü: " + i.gist)); card.appendChild(el("span","cmp-t", ago(i.date))); pair.appendChild(card); });
+    cmpPick.forEach(id => { const i = its.find(x => x.source === id); const card = el("div","cmp-card"); const hd = el("div","cmp-h"); hd.append(mono(id), el("b", null, src(id).name)); const lg = leanOf(id); hd.appendChild(el("span","cmp-g " + (lg || "none"), lg ? GL[lg] : "Sınıflandırma dışı")); card.appendChild(hd); card.appendChild(link(i.title, i.url)); const thc = titleHistory(i); if (thc) card.appendChild(thc); if (i.gist) card.appendChild(el("small", null, "Özü: " + i.gist)); card.appendChild(el("span","cmp-t", ago(i.date))); pair.appendChild(card); });
     body.appendChild(pair);
     const shb = el("button","btn ghost","Bu karşılaştırmayı paylaş"); shb.type = "button"; shb.style.marginTop = "6px"; shb.onclick = () => shareCompare(story, cmpPick[0], cmpPick[1]); body.appendChild(shb);
   }

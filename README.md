@@ -64,6 +64,14 @@ Sunucu, veritabanı ya da ücretli servis yok. Repo **public** olduğu sürece G
 
 `GEMINI_API_KEY` asıl, `GEMINI_API_KEY_2` yedek anahtardır (ikisi de repo secret). İlk anahtar kota sınırına (429) takılırsa ya da geçersizse aynı istek yedekle yapılır. Yedek tanımlıyken günlük istek tavanı 400’den 800’e çıkar (`GEMINI_DAILY_CAP` ile değiştirilebilir). Google’ın kotası proje başınadır; yedek anahtar ancak farklı bir Google Cloud projesinden alındıysa ek kota sağlar.
 
+## Kaynak ve doğrulama özellikleri (21 Kasım 2026)
+
+- **Haber linkini karşılaştır:** Arama kutusuna yapıştırılan yayıncı bağlantısı, takip parametreleri (utm, fbclid…), mobil/AMP adres farkları temizlenerek kayıtlı haberlerle eşleştirilir; bulunursa karşılaştırma o yayın seçili açılır, bulunamazsa açıkça söylenir.
+- **İlk kaynak** (`scripts/origin.mjs`): 3+ kaynaklı olaylarda haber sayfalarındaki AÇIK ajans imzaları (yapılandırılmış veride yazar olarak ajans, “(AA)”, “Kaynak: DHA”, “İHA muhabiri”) okunur: “9 yayın · 3’ü AA’ya atıf yapıyor”. Kanıt yoksa köken belirsiz bırakılır.
+- **Sırada ne var?** (`data/takvim.json`): yalnızca resmî takvimden doğrulanmış tarihler (TCMB, TÜİK); kaynak, son kontrol günü ve takvime ekleme (.ics). Konu sayfalarında anahtar kelimeyle, Ekonomi sekmesinde genel liste. Tarih değişirse eskisi `eski` alanına yazılır.
+- **Başlık değişim geçmişi:** Aynı adreste başlık değişirse (noktalama/harf büyüklüğü hariç) ilk ve son sürüm gözlem saatleriyle; “düzeltme” etiketi kullanılmaz.
+- **Bu iddia incelendi mi?** (`scripts/factcheck.mjs`): Teyit analizleri haberlerle otomatik eşleştirilir ama yalnızca ADAY olur; yönetici sayfasında editör iddiayı ve sonucu yazıp onaylarsa (Worker `/onay`, D1 `onay` tablosu) haberin altında “🔎 Teyit” olarak görünür.
+
 ## Performans
 
 - **Veri ayrımı:** `news.json` yalnızca sitenin kullandığı alanları içerir (gzip ~190 KB). İlk ekran için en yeni 40 hikâyeyi taşıyan `head.json` (gzip ~15 KB) paralel istenir ve önce çizilir. Sunucunun kendi hafızası (özet önbellekleri, arşivler, bildirim durumu) `state.json`’dadır; okuyucu bu dosyayı indirmez.

@@ -1,6 +1,6 @@
 // Only count known channels. Never transmit full campaign URLs or identifiers.
 const source = new URLSearchParams(location.search).get('utm_source');
-const channel = ['x', 'whatsapp', 'bulten'].includes(source) ? source : 'diger';
+const channel = ['x', 'whatsapp', 'bulten', 'kart', 'arsiv', 'rss'].includes(source) ? source : 'diger';
 function count(action) {
   if (location.hostname !== 'harmanhaber.app' || navigator.webdriver) return;
   try {

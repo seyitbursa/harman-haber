@@ -1441,6 +1441,7 @@ function render(){
       const rail = el("div","rail"); talked.forEach(s => rail.appendChild(talkCard(s))); top.appendChild(rail);
     }
   }
+  if (front && cat === "saglik"){ const videos = ytFeedModule(true); if (videos) top.appendChild(videos); }
   if (view === "yerel"){
     const al = quakeAlert(); if (al) top.appendChild(al);
     const w = weatherModule(); w.style.marginTop = "12px"; top.appendChild(w);
@@ -2424,7 +2425,7 @@ function renderYTTab(){
   const intro = el("div","blind-intro"); intro.appendChild(el("h2", null, "YouTube"));
   if (!y?.items?.length){ intro.appendChild(el("p", null, "Videolar şu an alınamıyor.")); top.appendChild(intro); renderAside(); return; }
   const on = y.channels.filter(c => !ytOff.has(c.key));
-  const pi = el("p"); pi.append("Haber kanallarının son 36 saatteki, gazetecilerin son 7 gündeki videoları. " + on.length + " kanal açık. ");
+  const pi = el("p"); pi.append("Haber kanallarının son 36 saatteki, gazetecilerin ve sağlık kanallarının son 7 gündeki videoları. " + on.length + " kanal açık. ");
   const ed = el("button","xt-more","Kanalları düzenle"); ed.type = "button"; ed.style.margin = "0"; ed.onclick = () => { openSheet(); setTimeout(() => $("#ytBox").scrollIntoView({block:"start"}), 50); };
   pi.appendChild(ed); intro.appendChild(pi);
   const tools = el("div","yt-tools");
@@ -2453,7 +2454,7 @@ function renderYTSettings(){
   const y = data.youtube; if (!y?.channels?.length) return;
   box.appendChild(el("h3", null, "YouTube kanalları"));
   box.appendChild(el("p", null, "YouTube sekmesinde ve haberlerin altındaki video bağlantılarında görmek istemediğin kanalları kapat. Gazeteci kanalları kaynak dağılımı çubuğuna katılmaz ve siyasi olarak etiketlenmez."));
-  [["kurum","Haber kanalları"],["gazeteci","Gazeteciler"]].forEach(([t, lab]) => {
+  [["kurum","Haber kanalları"],["gazeteci","Gazeteciler"],["saglik-kurum","Sağlık kurumları"],["saglik-kisisel","Kişisel sağlık kanalları"]].forEach(([t, lab]) => {
     const list = y.channels.filter(c => (c.type || "kurum") === t); if (!list.length) return;
     box.appendChild(el("p","lbl", lab)).style.cssText = "font-weight:700;color:var(--ink);margin:12px 0 6px";
     const g = el("div","src-grid");
@@ -3157,12 +3158,12 @@ function quickStrip(){
   return row;
 }
 // Akışın içinde YouTube şeridi: haberlerle eşleşen en çok izlenen videolar
-function ytFeedModule(){
+function ytFeedModule(healthOnly = false){
   const y = data.youtube; if (!y?.items?.length) return null;
-  const vids = y.items.filter(v => !v.s && !ytOff.has(v.ch)).sort((a, b) => (b.story ? 1 : 0) - (a.story ? 1 : 0) || b.views - a.views).slice(0, 8);
-  if (vids.length < 3) return null;
+  const vids = y.items.filter(v => !ytOff.has(v.ch) && (healthOnly ? ytChan(v.ch).type?.startsWith("saglik-") : !v.s)).sort((a, b) => (b.story ? 1 : 0) - (a.story ? 1 : 0) || b.views - a.views).slice(0, 8);
+  if (vids.length < (healthOnly ? 1 : 3)) return null;
   const m = el("section","mod feed-yt");
-  const h = el("div","mod-h"); h.append(el("h3", null, "YouTube’da gündem"));
+  const h = el("div","mod-h"); h.append(el("h3", null, healthOnly ? "Sağlık videoları" : "YouTube’da gündem"));
   const all = el("button","xt-more","Tümü"); all.type = "button"; all.style.margin = "0"; all.onclick = () => { location.hash = "youtube"; window.scrollTo({top:0}); };
   h.appendChild(all); m.appendChild(h);
   const rail = el("div","yt-rail");
@@ -3179,7 +3180,7 @@ function ytFeedModule(){
 // Yan sütun için kısa YouTube listesi
 function ytAsideModule(){
   const y = data.youtube; if (!y?.items?.length) return null;
-  const vids = y.items.filter(v => !v.s && !ytOff.has(v.ch)).sort((a, b) => b.views - a.views).slice(0, 4);
+  const vids = y.items.filter(v => !ytOff.has(v.ch) && (healthOnly ? ytChan(v.ch).type?.startsWith("saglik-") : !v.s)).sort((a, b) => b.views - a.views).slice(0, 4);
   if (!vids.length) return null;
   const m = el("section","mod"), h = el("div","mod-h"); h.append(el("h3", null, "YouTube"));
   const all = el("button","xt-more","Tümü"); all.type = "button"; all.style.margin = "0"; all.onclick = () => { location.hash = "youtube"; window.scrollTo({top:0}); }; h.appendChild(all); m.appendChild(h);

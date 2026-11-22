@@ -498,6 +498,18 @@
   },
   "youtube": [
     {
+      "key": "saglikbakanligi",
+      "name": "T.C. Sağlık Bakanlığı",
+      "channelId": "UCZJnqMUewKd2OdHOJmOKGgQ",
+      "type": "saglik-kurum"
+    },
+    {
+      "key": "osmanmuftuoglu",
+      "name": "Osman Müftüoğlu ile Yaşasın Hayat",
+      "channelId": "UCZlKOBtrG2jeZ6ILiKMTCHw",
+      "type": "saglik-kisisel"
+    },
+    {
       "key": "trt",
       "name": "TRT Haber",
       "channelId": "UCBgTP2LOFVPmq15W-RH-WXA",

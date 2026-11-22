@@ -38,7 +38,7 @@ export async function getYoutube({ channels, stories, hours = 36, max = 320 }) {
   // Shorts (dikey kısa videolar) ayrı tutulur: izlenme sıralamasını bozmasınlar
   const typeOf = Object.fromEntries(channels.map(c => [c.key, c.type || "kurum"]));
   const sinceJ = Date.now() - 7 * 24 * 3600e3;   // gazeteciler daha seyrek yayın yaptığı için 7 gün
-  vids = vids.filter(v => new Date(v.date).getTime() >= (typeOf[v.ch] === "gazeteci" ? sinceJ : since)).map(({ short, ...v }) => (short || /#shorts?\b/i.test(v.title)) ? { ...v, s: 1 } : v);
+  vids = vids.filter(v => new Date(v.date).getTime() >= ((typeOf[v.ch] === "gazeteci" || typeOf[v.ch].startsWith("saglik-")) ? sinceJ : since)).map(({ short, ...v }) => (short || /#shorts?\b/i.test(v.title)) ? { ...v, s: 1 } : v);
   // Her kanaldan en çok izlenen 8 video ve 4 kısa video: büyük kanallar küçükleri listeden silmesin
   const per = new Map();
   vids.sort((a, b) => b.views - a.views).forEach(v => { const k = v.ch + (v.s ? "s" : ""), n = per.get(k) || 0; if (n < (v.s ? 4 : 8)){ per.set(k, n + 1); v.keep = true; } });

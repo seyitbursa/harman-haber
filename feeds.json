@@ -273,6 +273,11 @@
   },
   "feeds": [
     {
+      "source": "trt",
+      "category": "saglik",
+      "url": "https://www.trthaber.com/saglik_articles.rss"
+    },
+    {
       "source": "aa",
       "category": "gundem",
       "url": "https://www.aa.com.tr/tr/rss/default?cat=guncel"

@@ -39,6 +39,7 @@ const parser = new Parser({
 // URL yolundaki ve RSS kategorilerindeki ipuçlarıyla kategori tahmini
 const RULES = [
   ["spor",      /\b(spor|futbol|basketbol|voleybol|super-?lig|süper lig|transfer)\b/i],
+  ["saglik",    /\b(?:saglik|sağlık|health|tıp)\b/i],
   ["ekonomi",   /\b(ekonomi|finans|borsa|piyasa|dolar|altin|altın|enflasyon|is-dunyasi|iş dünyası)\b/i],
   ["dunya",     /\b(dunya|dünya|world|uluslararasi|uluslararası)\b/i],
   ["teknoloji", /\b(teknoloji|tekno|bilim|bilim-teknoloji|yapay-zeka|yapay zeka|otomobil)\b/i],
@@ -47,6 +48,9 @@ const RULES = [
 // Yapay zekâ haberleri tüm akışlardan ayıklanır (başlıkta ya da özetin ilk cümlesinde geçiyorsa)
 const AI = /(yapay\s*zek[aâ]|\bAI\b|\bA\.I\.|chatgpt|openai|\bgemini\b|\bclaude\b|anthropic|copilot|\bllm\b|dil modeli|makine öğren|derin öğren|deepfake|deepseek|\bgrok\b|mistral ai|\bsora\b|nöral ağ|üretken zek|t3ai|yapay genel zek)/i;
 function guessCategory(item, fallback) {
+  const title = (item.title || "").toLocaleLowerCase("tr");
+  if (/sağlık kontrol/.test(title) && /transfer|forvet|futbolcu|basketbolcu|kaleci|oyuncu|imza|kulüb/.test(title)) return "spor";
+  if (fallback === "saglik") return fallback;
   if (AI.test(item.title || "") || /yapay\s*zek[aâ]/i.test((item.contentSnippet || "").split(/[.!?…]\s/)[0])) return "yapayzeka";
   if (fallback !== "gundem") return fallback;
   let path = "";
@@ -55,6 +59,7 @@ function guessCategory(item, fallback) {
   const hay = (path + " " + cats).replace(/[-_]/g, " ");
   for (const [cat, re] of RULES) if (re.test(hay)) return cat;
   // Akışların çoğu siyaset haberini "gündem" altında veriyor: başlıktan tanı (partiler, Meclis, seçim, siyasetçiler)
+  if (/\bmhrs\b|e-nabız|aile hekim|halk sağlığı|sağlık bakan|aşılama|kanser tarama|klinik araştırma|klinik çalışma|tıbbi araştırma/.test(title)) return "saglik";
   if (POLITICS.test(item.title || "") && !SPORTY.test(item.title || "")) return "siyaset";
   return fallback;
 }

@@ -39,6 +39,7 @@ const parser = new Parser({
 // URL yolundaki ve RSS kategorilerindeki ipuçlarıyla kategori tahmini
 const RULES = [
   ["spor",      /\b(spor|futbol|basketbol|voleybol|super-?lig|süper lig|transfer)\b/i],
+  ["magazin", /\bmagazin\b/i],
   ["saglik",    /\b(?:saglik|sağlık|health|tıp)\b/i],
   ["ekonomi",   /\b(ekonomi|finans|borsa|piyasa|dolar|altin|altın|enflasyon|is-dunyasi|iş dünyası)\b/i],
   ["dunya",     /\b(dunya|dünya|world|uluslararasi|uluslararası)\b/i],

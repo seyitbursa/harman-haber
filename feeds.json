@@ -272,6 +272,8 @@
     }
   },
   "feeds": [
+    {"source":"haberturk","category":"magazin","url":"https://www.haberturk.com/rss/kategori/magazin.xml"},
+    {"source":"sabah","category":"magazin","url":"https://www.sabah.com.tr/rss/magazin.xml"},
     {
       "source": "trt",
       "category": "saglik",

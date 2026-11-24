@@ -3180,7 +3180,7 @@ function ytFeedModule(healthOnly = false){
 // Yan sütun için kısa YouTube listesi
 function ytAsideModule(){
   const y = data.youtube; if (!y?.items?.length) return null;
-  const vids = y.items.filter(v => !ytOff.has(v.ch) && (healthOnly ? ytChan(v.ch).type?.startsWith("saglik-") : !v.s)).sort((a, b) => b.views - a.views).slice(0, 4);
+  const vids = y.items.filter(v => !ytOff.has(v.ch) && !v.s).sort((a, b) => b.views - a.views).slice(0, 4);
   if (!vids.length) return null;
   const m = el("section","mod"), h = el("div","mod-h"); h.append(el("h3", null, "YouTube"));
   const all = el("button","xt-more","Tümü"); all.type = "button"; all.style.margin = "0"; all.onclick = () => { location.hash = "youtube"; window.scrollTo({top:0}); }; h.appendChild(all); m.appendChild(h);

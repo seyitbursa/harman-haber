@@ -106,6 +106,13 @@ a{color:inherit} button,select,input{font:inherit;color:inherit}
 .stack.big .mono{width:34px;height:34px;border-radius:10px;font-size:11px;margin-left:-5px;box-shadow:0 0 0 3px var(--surface)}
 .stack.big .mono:first-child{margin-left:0}
 
+.headline-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+.headline-track>.hero{flex:0 0 100%;min-width:0;scroll-snap-align:start;margin-top:0}
+.headline-nav{display:flex;align-items:center;gap:10px;margin:16px 0 8px}
+.headline-nav h2{margin:0 auto 0 0;font-size:20px}
+.headline-nav button{min-width:40px;min-height:40px}
+.aside-options{display:grid;gap:8px}
+.aside-options label{display:flex;align-items:center;gap:8px;min-height:34px}
 /* ---------- Manşet ---------- */
 .hero{position:relative;background:var(--surface);border-radius:18px;overflow:hidden;margin-top:12px;box-shadow:0 1px 0 var(--line),0 10px 30px -18px var(--shade)}
 .hero .img{display:block;width:100%;aspect-ratio:2/1;object-fit:cover;background:var(--line)}
@@ -996,9 +1003,10 @@ footer button{border:0;background:none;color:var(--accent);font-weight:600;paddi
   <div class="sheet-in">
     <div class="sheet-h"><h2 id="sheetTitle">Ayarlar</h2><button class="icon-btn" type="button" id="sheetClose" aria-label="Kapat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <nav class="set-nav" aria-label="Ayarlar bölümleri">
-      <button type="button" data-jump="teamBox">Takımım</button><button type="button" data-jump="notifBox">Bildirimler</button><button type="button" data-jump="srcHead">Kaynaklar</button><button type="button" data-jump="ytBox">YouTube</button><button type="button" data-jump="leanBox">Eğilim etiketleri</button>
+      <button type="button" data-jump="asideHead">Sağ sütun</button><button type="button" data-jump="teamBox">Takımım</button><button type="button" data-jump="notifBox">Bildirimler</button><button type="button" data-jump="srcHead">Kaynaklar</button><button type="button" data-jump="ytBox">YouTube</button><button type="button" data-jump="leanBox">Eğilim etiketleri</button>
     </nav>
     <div id="teamBox"></div>
+    <h3 id="asideHead">Sağ sütun</h3><div class="aside-options" id="asideOptions"></div>
     <div id="notifBox"></div>
     <h3 id="srcHead">Kaynaklar</h3>
     <p>Okumak istemediğin kaynakları kapat. Seçimin bu cihazda saklanır.</p>
@@ -1427,19 +1435,20 @@ function render(){
   if (front && list.length){
     const since = Date.now() - 12 * 3600e3;
     if (cat === "all"){
-      const big = list.filter(s => s.items.length >= 3 && new Date(s.date) > since).sort((a,b) => b.items.length - a.items.length || b.date.localeCompare(a.date));
-      hero = big[0] || list.find(s => s.items[0].image) || list[0];
-      talked = list.filter(s => s !== hero && s.items.length >= 2 && new Date(s.date) > since).sort((a,b) => b.items.length - a.items.length || b.date.localeCompare(a.date)).slice(0, 3);
+      const ranked = list.filter(s => new Date(s.date) > since)
+        .map(story => ({story, count: uniqSrc(story).length}))
+        .filter(entry => entry.count >= 2)
+        .sort((a,b) => b.count - a.count || b.story.date.localeCompare(a.story.date))
+        .map(entry => entry.story);
+      hero = ranked[0] || list.find(s => s.items[0].image) || list[0];
+      talked = ranked.slice(1, 8);
     } else hero = list.find(s => s.items[0].image) || list[0];
-    top.appendChild(heroCard(hero));
+    top.appendChild(talked.length ? headlineRail([hero, ...talked]) : heroCard(hero));
     // Telefonda: manşetten sonra piyasa şeridi ve bölüm kısayolları
     if (narrow){ const tk = $("#ticker"); tk.classList.add("in-feed"); top.appendChild(tk); if (cat === "all"){ const qs = quickStrip(); if (qs) top.appendChild(qs); } }
     if (cat === "all" || cat === "gundem"){ const tp = topicsRow(); if (tp){ tp.classList.add("mobile"); top.appendChild(tp); } }
 
-    if (talked.length){
-      const sec = el("div","sec"); sec.appendChild(el("h3", null, "Çok konuşulanlar")); top.appendChild(sec);
-      const rail = el("div","rail"); talked.forEach(s => rail.appendChild(talkCard(s))); top.appendChild(rail);
-    }
+
   }
   if (front && cat === "saglik"){ const videos = ytFeedModule(true); if (videos) top.appendChild(videos); }
   if (view === "yerel"){
@@ -1552,10 +1561,27 @@ function appendComparison(parent, story){
   parent.appendChild(a);
   if (!seenComparisonCards.has(story.comparison.path)) comparisonObserver?.observe(a);
 }
-function heroCard(story){
+function headlineRail(stories){
+  const section = el("section"), nav = el("div","headline-nav"), track = el("div","headline-track");
+  const prev = el("button","btn ghost","‹"), next = el("button","btn ghost","›"), count = el("span");
+  prev.type = next.type = "button";
+  prev.setAttribute("aria-label","Önceki manşet"); next.setAttribute("aria-label","Sonraki manşet");
+  nav.append(el("h2",null,"Çok konuşulan manşetler"),prev,count,next);
+  stories.forEach((s,i) => track.appendChild(heroCard(s, i === 0)));
+  const index = () => Math.round(track.scrollLeft / (track.clientWidth || 1));
+  const update = () => {
+    const i = index();
+    count.textContent = (i + 1) + " / " + stories.length;
+    prev.disabled = i <= 0; next.disabled = i >= stories.length - 1;
+  };
+  prev.onclick = () => track.scrollBy({left:-track.clientWidth});
+  next.onclick = () => track.scrollBy({left:track.clientWidth});
+  track.onscroll = update; update(); section.append(nav,track); return section;
+}
+function heroCard(story, eager = true){
   const i = story.items[0];
   const c = el("article","hero" + (i.image ? "" : " noimg"));
-  if (i.image){ const im = img(i.image, "img", true); im.onerror = () => { im.remove(); c.classList.add("noimg"); }; c.appendChild(im); }
+  if (i.image){ const im = img(i.image, "img", eager); im.onerror = () => { im.remove(); c.classList.add("noimg"); }; c.appendChild(im); }
   const body = el("div","body");
   if (story.items.length >= 2){ const wl = weightLabel(story); wl.style.cursor = "pointer"; wl.setAttribute("role","button"); wl.tabIndex = 0; wl.setAttribute("aria-label", story.items.length + " kaynak verdi. Kaynakları göster"); wl.onclick = () => biasOf(story) ? openBias(story) : openSources(story); wl.onkeydown = e => { if (e.key === "Enter") wl.click(); }; body.appendChild(wl); }
   const h = el("h2"); h.appendChild(storyLink(story)); body.appendChild(h);
@@ -1662,12 +1688,26 @@ function xModule(inFeed){
   m.appendChild(f);
   return m;
 }
+const asideLabels = {weather:"Hava durumu", prayer:"Namaz vakitleri", quake:"Son depremler", x:"X gündemi", yt:"YouTube", topics:"Gündemde"};
+function asideHidden(){ return new Set(store.get("hh-aside-hidden", [])); }
+function renderAsideOptions(){
+  const box = $("#asideOptions"), hidden = asideHidden(); box.replaceChildren();
+  for (const [id,label] of Object.entries(asideLabels)){
+    const row = el("label"), cb = el("input"); cb.type = "checkbox"; cb.checked = !hidden.has(id);
+    cb.onchange = () => {
+      if (cb.checked) hidden.delete(id); else hidden.add(id);
+      store.set("hh-aside-hidden",[...hidden]); renderAside();
+    };
+    row.append(cb,label); box.appendChild(row);
+  }
+}
 function renderAside(){
   const a = $("#aside"); a.textContent = "";
-  if (view !== "yerel"){ a.appendChild(weatherModule()); const pm = prayerModule(); if (pm) a.appendChild(pm); const qm = quakeModule(); if (qm) a.appendChild(qm); }
-  const x = xModule(false); if (x) a.appendChild(x);
-  const ya = ytAsideModule(); if (ya) a.appendChild(ya);
-  if (view === "feed"){ const t = topicsRow(); if (t){ const m = el("section","mod"); const h = el("div","mod-h"); h.appendChild(el("h3",null,"Gündemde")); m.appendChild(h); t.querySelector(".lbl").remove(); t.style.margin = "6px 0 0"; m.appendChild(t); a.appendChild(m); } }
+  const hidden = asideHidden();
+  const add = (id,make) => { if (!hidden.has(id)){ const node = make(); if (node) a.appendChild(node); } };
+  if (view !== "yerel"){ add("weather",weatherModule); add("prayer",prayerModule); add("quake",quakeModule); }
+  add("x",() => xModule(false)); add("yt",ytAsideModule);
+  if (view === "feed" && !hidden.has("topics")){ const t = topicsRow(); if (t){ const m = el("section","mod"); const h = el("div","mod-h"); h.appendChild(el("h3",null,"Gündemde")); m.appendChild(h); t.querySelector(".lbl").remove(); t.style.margin = "6px 0 0"; m.appendChild(t); a.appendChild(m); } }
 }
 
 
@@ -3904,7 +3944,7 @@ function renderSheet(){
     g.appendChild(b);
   });
 }
-function openSheet(){ renderSheet(); renderNotif(); renderLeanSettings(); renderYTSettings(); renderTeamSettings(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
+function openSheet(){ renderAsideOptions(); renderSheet(); renderNotif(); renderLeanSettings(); renderYTSettings(); renderTeamSettings(); const d = $("#sheet"); if (d.showModal) d.showModal(); else d.setAttribute("open",""); }
 function closeSheet(){ const d = $("#sheet"); d.close ? d.close() : d.removeAttribute("open"); }
 $("#sheet").addEventListener("close", () => { shown = PAGE; render(); });
 $("#sheet").addEventListener("click", e => { if (e.target === $("#sheet")) closeSheet(); });

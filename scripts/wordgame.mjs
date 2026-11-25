@@ -2,8 +2,25 @@
 // Gün boyunca aynı kalır (yayındaki bir önceki news.json’dan okunur).
 import { readFile } from "node:fs/promises";
 
-const BLOCK = new Set(["savaş","ceset","katil","bomba","şehit","silah","ölüye","yaralı","kanlı","terör","tecav","intih","darbe","cinsi","fuhuş","irkçı","ırkçı","kurşu","hapis","zehir","vahşi","işkence"].filter(w => w.length === 5));
-const FALLBACK = ["haber","kalem","deniz","güneş","şehir","kitap","yazar","dünya","bahar","sokak","kural","fiyat","hasat","sorun","tarih","kanun","seçim","altın","bilgi","yarış","ödül","konuk","umut","adalet"].filter(w => w.length === 5);
+// Çözümler gündelik dilde tek başına anlam taşıyan kelimelerden seçilir.
+// Tahminler için tam sözlük kullanılmaya devam eder.
+const ANSWERS = new Set(
+  `ahenk ahşap akort altın armut arıcı arşiv aslan atlas avize badem bahar bakla
+   bakır balık belge beste biber biblo bilim bulut buluş buzul börek ceviz dalga
+   davul demir deney deniz dergi desen dolap doruk duvar dünya ekmek ekran elmas
+   fener fidan forma fosil gazel geyik gölge gümüş güney güneş güreş halat hamak
+   hamur hasat hasır havlu havuç hekim helva hurma iklim incir iplik kabak kalem
+   kanat kapak kavak kaval kavun kayak kayaç kazan kaşık keman kemer kiler kilim
+   kiraz kitap konak konuk kovan kulis kumaş kutup kuzey kömür köprü kürek ladin
+   levha liman limon lodos magma makas martı marul masal merak meyve mimar motor
+   müzik mısır nakış nohut orman palto panda perde petek pilot plato pınar radar
+   radyo rende resim reçel ritim robot roket roman sabah sabun sahne saman sanat
+   saray sebze sedef sehpa semer sepet sergi servi simit sokak soğan söğüt süsen
+   tabak takım tarih tarım taşra tenis tepsi teras terzi tilki tohum turna tuğla
+   tünel türkü vagon vapur vaşak vişne yakut yamaç yarış yazar yağış yelek yonca
+   yosun yılan zebra çadır çatal çayır çelik çilek çimen çizgi çizim çiçek çoban
+   çorap çörek çınar çırak ölçüm ördek ırmak şahin şarkı şehir şeker`.split(/\s+/)
+);
 const low = s => s.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase();
 const trDate = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date());
 const enc = w => Buffer.from([...w].reverse().join(""), "utf8").toString("base64");
@@ -40,9 +57,10 @@ export async function dailyWord({ stories, prevGame }) {
   if (prevGame?.date === date && prevGame.w) word = dec(prevGame.w);
   else {
     const used = new Set(history);
-    const cands = [...count.entries()].filter(([w, n]) => n >= 2 && !BLOCK.has(w) && !used.has(w)).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([w]) => w);
+    const cands = [...count.entries()].filter(([w, n]) => n >= 2 && ANSWERS.has(w) && !used.has(w)).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([w]) => w);
     const rnd = seeded(date);
-    word = cands.length ? cands[Math.floor(rnd() * cands.length)] : FALLBACK.filter(w => !used.has(w))[Math.floor(rnd() * FALLBACK.length)] || FALLBACK[0];
+    const pool = cands.length ? cands : [...ANSWERS].filter(w => dict.has(w) && !used.has(w));
+    word = pool[Math.floor(rnd() * pool.length)];
     history.push(word);
   }
   // Kelimenin geçtiği güncel haberler (çözünce gösterilir)

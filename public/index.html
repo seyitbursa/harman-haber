@@ -106,8 +106,14 @@ a{color:inherit} button,select,input{font:inherit;color:inherit}
 .stack.big .mono{width:34px;height:34px;border-radius:10px;font-size:11px;margin-left:-5px;box-shadow:0 0 0 3px var(--surface)}
 .stack.big .mono:first-child{margin-left:0}
 
-.headline-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
-.headline-track>.hero{flex:0 0 100%;min-width:0;scroll-snap-align:start;margin-top:0}
+.headline-track{--peek:clamp(32px,9%,90px);position:relative;gap:12px;scrollbar-width:none;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+.headline-track::after{content:"";flex:0 0 calc(var(--peek) - 12px)}
+.headline-track::-webkit-scrollbar{display:none}
+.headline-track>.hero{flex:0 0 calc(100% - var(--peek));min-width:0;scroll-snap-align:start;margin-top:0}
+.headline-dots{display:flex;justify-content:center}
+.headline-dots button{border:0;background:transparent;color:var(--muted);height:32px;width:28px;cursor:pointer;padding:0}
+.headline-dots button::before{content:"";display:inline-block;width:6px;height:6px;border-radius:8px;background:currentColor}
+.headline-dots button[aria-current="true"]::before{width:18px;background:var(--text,currentColor)}
 .headline-nav{display:flex;align-items:center;gap:10px;margin:16px 0 8px}
 .headline-nav h2{margin:0 auto 0 0;font-size:20px}
 .headline-nav button{min-width:40px;min-height:40px}
@@ -1568,15 +1574,30 @@ function headlineRail(stories){
   prev.setAttribute("aria-label","Önceki manşet"); next.setAttribute("aria-label","Sonraki manşet");
   nav.append(el("h2",null,"Çok konuşulan manşetler"),prev,count,next);
   stories.forEach((s,i) => track.appendChild(heroCard(s, i === 0)));
-  const index = () => Math.round(track.scrollLeft / (track.clientWidth || 1));
+  section.setAttribute("aria-label","Çok konuşulan manşetler");
+  section.setAttribute("aria-roledescription","karusel");
+  const cards = Array.from(track.children);
+  const index = () => cards.reduce((nearest, card, i) =>
+    Math.abs(card.offsetLeft - track.scrollLeft) < Math.abs(cards[nearest].offsetLeft - track.scrollLeft) ? i : nearest, 0);
+  const go = i => track.scrollTo({left:cards[i].offsetLeft,
+    behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"});
+  const dots = el("div","headline-dots");
+  cards.forEach((card,i) => {
+    const dot = el("button");
+    dot.type = "button";
+    dot.setAttribute("aria-label",(i + 1) + ". manşete git");
+    dot.onclick = () => go(i);
+    dots.appendChild(dot);
+  });
   const update = () => {
     const i = index();
-    count.textContent = (i + 1) + " / " + stories.length;
-    prev.disabled = i <= 0; next.disabled = i >= stories.length - 1;
+    count.textContent = (i + 1) + " / " + cards.length;
+    prev.disabled = i === 0; next.disabled = i === cards.length - 1;
+    Array.from(dots.children).forEach((dot,n) => dot.setAttribute("aria-current",String(i === n)));
   };
-  prev.onclick = () => track.scrollBy({left:-track.clientWidth});
-  next.onclick = () => track.scrollBy({left:track.clientWidth});
-  track.onscroll = update; update(); section.append(nav,track); return section;
+  prev.onclick = () => go(Math.max(0,index() - 1));
+  next.onclick = () => go(Math.min(cards.length - 1,index() + 1));
+  track.onscroll = update; update(); section.append(nav,track,dots); return section;
 }
 function heroCard(story, eager = true){
   const i = story.items[0];
